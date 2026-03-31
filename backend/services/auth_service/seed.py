@@ -30,7 +30,7 @@ async def seed():
                     "user:create", "user:read", "user:update", "user:delete",
                     "role:create", "role:read", "role:update", "role:delete",
                     "forest:create", "forest:read", "forest:update", "forest:delete",
-                    "partiel:create", "partiel:read", "partiel:update", "partiel:delete",
+                    "parcelle:create", "parcelle:read", "parcelle:update", "parcelle:delete",
                     "service:create", "service:read", "service:update", "service:delete",
                     "assignment:create", "assignment:read", "assignment:delete",
                     "incident:read", "incident:update", "incident:validate",
@@ -46,7 +46,7 @@ async def seed():
                     "user:read",
                     "forest:read",
                     "service:read",
-                    "partiel:read",
+                    "parcelle:read",
                     "assignment:create", "assignment:read", "assignment:delete",
                     "incident:read", "incident:update", "incident:validate",
                     "score:read", "score:update",
@@ -96,4 +96,3 @@ async def seed():
         print("Seed Complete")
     await engine.dispose()
 asyncio.run(seed())
-

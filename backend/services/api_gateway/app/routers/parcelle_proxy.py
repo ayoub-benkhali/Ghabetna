@@ -3,7 +3,7 @@ from fastapi import APIRouter,Request,Response
 from app.config import settings
 from app.middleware.rbac import verify_and_inject
 
-router=APIRouter(prefix="/api/forests",tags=["Partiels"])
+router=APIRouter(prefix="/api/forests",tags=["Parcelles"])
 
 async def _proxy(path: str, request: Request, payload: dict | None) -> Response:
     body = await request.body()
@@ -24,12 +24,12 @@ async def _proxy(path: str, request: Request, payload: dict | None) -> Response:
         media_type=resp.headers.get("content-type"),
     )
 
-@router.api_route("/{forest_id}/partiels",methods=["GET","POST"])
-async def partiels_root(forest_id:int,request:Request):
+@router.api_route("/{forest_id}/parcelles",methods=["GET","POST"])
+async def parcelles_root(forest_id:int,request:Request):
     payload=await verify_and_inject(request)
-    return await _proxy(f"/{forest_id}/partiels",request,payload)
+    return await _proxy(f"/{forest_id}/parcelles",request,payload)
 
-@router.api_route("/{forest_id}/partiels/{partiel_id}",methods=["GET", "PUT", "DELETE"])
-async def partiel_by_id(forest_id:int,partiel_id:int,request:Request):
+@router.api_route("/{forest_id}/parcelles/{parcelle_id}",methods=["GET", "PUT", "DELETE"])
+async def parcelle_by_id(forest_id:int,parcelle_id:int,request:Request):
     payload=await verify_and_inject(request)
-    return await _proxy(f"/{forest_id}/partiels/{partiel_id}",request,payload)
+    return await _proxy(f"/{forest_id}/parcelles/{parcelle_id}",request,payload)

@@ -43,11 +43,11 @@ ROUTE_PERMISSIONS: dict[tuple[str, str], str] = {
     ("DELETE", "/api/services/"): "service:delete",
 }
 
-PARTIEL_PERMISSIONS = {
-    "GET":    "partiel:read",
-    "POST":   "partiel:create",
-    "PUT":    "partiel:update",
-    "DELETE": "partiel:delete",
+PARCELLE_PERMISSIONS = {
+    "GET":    "parcelle:read",
+    "POST":   "parcelle:create",
+    "PUT":    "parcelle:update",
+    "DELETE": "parcelle:delete",
 }
 
 def _get_required_permission(method: str, path: str) -> str | None:
@@ -56,9 +56,9 @@ def _get_required_permission(method: str, path: str) -> str | None:
     if (method,path) in SELF_ROUTES:
         return None
 
-    # Check partiels first — more specific, avoids collision with /api/forests prefix
-    if "/partiels" in path:
-        return PARTIEL_PERMISSIONS.get(method)
+    # Check parcelles first — more specific, avoids collision with /api/forests prefix
+    if "/parcelles" in path:
+        return PARCELLE_PERMISSIONS.get(method)
 
     for (route_method, prefix), perm in ROUTE_PERMISSIONS.items():
         if method == route_method and path.startswith(prefix):

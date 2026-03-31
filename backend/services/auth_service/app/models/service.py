@@ -17,5 +17,5 @@ class Service(Base):
     id:Mapped[int]=mapped_column(primary_key=True)
     name:Mapped[str]=mapped_column(String(100),unique=True,nullable=False)
     type:Mapped[ServiceType]=mapped_column(Enum(ServiceType),nullable=False)
-    desciption:Mapped[str|None]=mapped_column(Text,nullable=True)
+    description:Mapped[str|None]=mapped_column(Text,nullable=True)
     created_at:Mapped[datetime]=mapped_column(default=func.now(),server_default=func.now())

@@ -108,5 +108,3 @@ volumes:
   auth_db_data:
   forest_db_data:
   redis_data:
-
-

@@ -5,8 +5,8 @@ from sqlalchemy import String,Text,func,ForeignKey
 from sqlalchemy.orm import Mapped,mapped_column,relationship
 from app.database import Base
 
-class Partiel(Base):
-    __tablename__="partiels"
+class Parcelle(Base):
+    __tablename__="parcelles"
 
     id:Mapped[int]=mapped_column(primary_key=True)
     forest_id:Mapped[int]=mapped_column(ForeignKey("forests.id",ondelete="CASCADE"),nullable=False)

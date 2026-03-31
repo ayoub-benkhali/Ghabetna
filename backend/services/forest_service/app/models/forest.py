@@ -4,7 +4,7 @@ from geoalchemy2 import Geometry
 from sqlalchemy import String,Text,Float,func
 from sqlalchemy.orm import Mapped,mapped_column, relationship
 from app.database import Base
-from app.models.partiel import Partiel
+from app.models.parcelle import Parcelle
 
 class Forest(Base):
     __tablename__="forests"
@@ -22,8 +22,7 @@ class Forest(Base):
     )
     area_hectars:Mapped[float|None]=mapped_column(Float,nullable=True)
 
-    partiels:Mapped[list["Partiel"]]=relationship("Partiel",back_populates=None,cascade="all, delete-orphan")
+    parcelles:Mapped[list["Parcelle"]]=relationship("Parcelle",back_populates=None,cascade="all, delete-orphan")
 
     created_at:Mapped[datetime]=mapped_column(default=func.now(),server_default=func.now())
     updated_at:Mapped[datetime]=mapped_column(default=func.now(),server_default=func.now(),onupdate=func.now())
-

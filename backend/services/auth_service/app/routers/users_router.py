@@ -51,4 +51,3 @@ async def deactivate_user(
     _:None=Depends(require_permission("user:delete"))
 ):
     await user_service.delete_user(user_id,db)
-

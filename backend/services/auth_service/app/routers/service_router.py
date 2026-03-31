@@ -42,4 +42,3 @@ async def delete_service(service_id:int,db:AsyncSession=Depends(get_db),_=Depend
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Service Not Found")
     await db.delete(s)
     await db.commit()
-    

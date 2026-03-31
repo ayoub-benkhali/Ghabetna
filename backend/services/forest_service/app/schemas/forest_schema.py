@@ -26,9 +26,9 @@ class ForestReponse(BaseModel):
     center_lat:float|None
     center_lng:float|None
     boundary_geojson:dict|None
+    parcelle_count: int
     created_at:datetime
     updated_at:datetime
 
     class Config:
         from_attributes=True
-    

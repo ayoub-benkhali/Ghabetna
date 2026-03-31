@@ -1,17 +1,17 @@
 from datetime import datetime
 from pydantic import BaseModel
 
-class PartielCreate(BaseModel):
+class ParcelleCreate(BaseModel):
     name:str
     description:str|None=None
     boundary_geojson:dict
 
-class PartielUpdate(BaseModel):
+class ParcelleUpdate(BaseModel):
     name:str|None=None
     description:str|None=None
     boundary_geojson:dict|None=None
 
-class PartielResponse(BaseModel):
+class ParcelleResponse(BaseModel):
     id:int
     forest_id:int
     name:str

@@ -9,6 +9,7 @@ from app.utils.deps import require_permission
 router=APIRouter(prefix="/roles",tags=["Roles"])
 
 VALID_PERMISSONS={
+    "parcelle:create", "parcelle:read", "parcelle:update", "parcelle:delete",
     "user:create", "user:read", "user:update", "user:delete",
     "role:create", "role:read", "role:update", "role:delete",
     "forest:create", "forest:read", "forest:update", "forest:delete",
