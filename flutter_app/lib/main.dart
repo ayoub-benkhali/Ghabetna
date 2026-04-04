@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
 import 'package:flutter_app/routing/app_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 
 void main() {
+  usePathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const ProviderScope(child:GhabetnaApp()));
 }

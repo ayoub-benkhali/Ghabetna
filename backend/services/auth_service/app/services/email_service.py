@@ -1,5 +1,11 @@
 from fastapi_mail import FastMail,MessageSchema,ConnectionConfig,MessageType
 from app.config import settings
+import logging
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 conf=ConnectionConfig(
     MAIL_USERNAME=settings.MAIL_USERNAME,
     MAIL_PASSWORD=settings.MAIL_PASSWORD,
@@ -13,8 +19,11 @@ conf=ConnectionConfig(
 mail=FastMail(conf)
 
 async def send_activation_email(to_email:str,full_name:str,activation_token:str)->None:
-    activation_url=f"{settings.FRONTEND_URL}/activate?token={activation_token}"
+    activation_url=f"http://localhost:3000/activate?token={activation_token}"
+    logger.info(f"FRONTEND_URL: {settings.FRONTEND_URL}")
+    logger.info(f"ACTIVATION URL: {activation_url}")
 
+    
     html_body=f"""
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #2E7D32;">Bienvenue sur Ghabetna 🌲</h2>

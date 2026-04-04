@@ -1,6 +1,10 @@
 from pathlib import Path
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 env_path = Path(__file__).parent.parent.parent.parent / '.env'
 load_dotenv(dotenv_path=env_path)
@@ -26,6 +30,7 @@ class Settings(BaseSettings):
     MAIL_PORT: int = 587
     FRONTEND_URL: str = "http://localhost:3000"
 
-print(env_path.exists())
-settings = Settings()
-print(settings.AUTH_DATABASE_URL)
+settings = Settings()  # type: ignore
+logger.info(f"the path variable exists: {env_path.exists()}")
+logger.info(f"AUTH_DATABASE_URL: {settings.AUTH_DATABASE_URL}")
+logger.info(f"FRONTEND_URL: {settings.FRONTEND_URL}")

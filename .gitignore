@@ -24,6 +24,7 @@ build/
 .vscode/settings.json
 .idea/
 *.swp
+DEEP_LINK_SETUP.md
 
 # OS
 .DS_Store
