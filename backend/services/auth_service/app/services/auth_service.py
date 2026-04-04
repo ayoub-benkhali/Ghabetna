@@ -24,7 +24,13 @@ async def login(email:str,password:str,db:AsyncSession,redis:aioredis.Redis):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Invalid Password")
     
     permissions=user.role.permissions if user.role else []
-    access_token=create_access_token(user.id,user.role_id,permissions)
+    access_token=create_access_token(
+        user.id,
+        user.role_id,
+        permissions,
+        service_id=user.service_id,
+        parcelle_id=user.parcelle_id
+        )
     refresh_token=create_refresh_token(user.id)
 
     await redis.setex(
@@ -54,7 +60,13 @@ async def refresh(refresh_token:str,db:AsyncSession,redis:aioredis.Redis):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Account not activated")
     
     permissions=user.role.permissions if user.role else []
-    new_access_token=create_access_token(user.id,user.role_id,permissions)
+    new_access_token=create_access_token(
+        user.id,
+        user.role_id,
+        permissions,
+        service_id=user.service_id,
+        parcelle_id=user.parcelle_id
+        )
     return new_access_token
 
 async def logout(refresh_token:str,redis:aioredis.Redis):

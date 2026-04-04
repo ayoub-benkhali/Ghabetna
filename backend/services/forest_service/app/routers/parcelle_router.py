@@ -16,12 +16,12 @@ async def create_parcelle(forest_id:int,data:ParcelleCreate,db:AsyncSession=Depe
     return await parcelle_service.create_parcelle(forest_id,data,db)
 
 @router.get("/{parcelle_id}",response_model=ParcelleResponse)
-async def get_parcelle(parcelle_id:int,db:AsyncSession=Depends(get_db),_=Depends(require_permission("parcelle:read"))):
-    return await parcelle_service.get_parcelle(parcelle_id,db)
+async def get_parcelle(forest_id:int,parcelle_id:int,db:AsyncSession=Depends(get_db),_=Depends(require_permission("parcelle:read"))):
+    return await parcelle_service.get_parcelle(forest_id,parcelle_id,db)
 
 @router.put("/{parcelle_id}",response_model=ParcelleResponse)
 async def update_parcelle(forest_id:int,parcelle_id:int,data:ParcelleUpdate,db:AsyncSession=Depends(get_db),_=Depends(require_permission("parcelle:update"))):
-    return await parcelle_service.update_parcelle(parcelle_id,data,db)
+    return await parcelle_service.update_parcelle(forest_id,parcelle_id,data,db)
 
 @router.delete("/{parcelle_id}",status_code=204)
 async def delete_parcelle(forest_id:int,parcelle_id:int,db:AsyncSession=Depends(get_db),_=Depends(require_permission("parcelle:delete"))):

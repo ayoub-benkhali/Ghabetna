@@ -1,0 +1,2229 @@
+This file is a merged representation of a subset of the codebase, containing files not matching ignore patterns, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of a subset of the repository's contents that is considered the most important context.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching these patterns are excluded: **/__pycache__, *.pyc
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.env.example
+docker-compose.yml
+services/api_gateway/app/config.py
+services/api_gateway/app/main.py
+services/api_gateway/app/middleware/rbac.py
+services/api_gateway/app/routers/auth_proxy.py
+services/api_gateway/app/routers/forest_proxy.py
+services/api_gateway/app/routers/parcelle_proxy.py
+services/api_gateway/app/routers/roles_proxy.py
+services/api_gateway/app/routers/service_proxy.py
+services/api_gateway/app/routers/users_proxy.py
+services/api_gateway/Dockerfile
+services/api_gateway/requirements.txt
+services/auth_service/app/config.py
+services/auth_service/app/database.py
+services/auth_service/app/main.py
+services/auth_service/app/models/role.py
+services/auth_service/app/models/service.py
+services/auth_service/app/models/user.py
+services/auth_service/app/routers/auth.py
+services/auth_service/app/routers/roles_router.py
+services/auth_service/app/routers/service_router.py
+services/auth_service/app/routers/users_router.py
+services/auth_service/app/schemas/auth.py
+services/auth_service/app/schemas/role_schema.py
+services/auth_service/app/schemas/service_schema.py
+services/auth_service/app/schemas/user_schema.py
+services/auth_service/app/services/auth_service.py
+services/auth_service/app/services/email_service.py
+services/auth_service/app/services/user_service.py
+services/auth_service/app/utils/deps.py
+services/auth_service/app/utils/jwt.py
+services/auth_service/app/utils/password.py
+services/auth_service/Dockerfile
+services/auth_service/requirements.txt
+services/auth_service/seed.py
+services/forest_service/app/config.py
+services/forest_service/app/database.py
+services/forest_service/app/main.py
+services/forest_service/app/models/forest.py
+services/forest_service/app/models/parcelle.py
+services/forest_service/app/routers/forest_router.py
+services/forest_service/app/routers/parcelle_router.py
+services/forest_service/app/schemas/forest_schema.py
+services/forest_service/app/schemas/parcelle_schema.py
+services/forest_service/app/services/forest_service.py
+services/forest_service/app/services/parcelle_service.py
+services/forest_service/app/utils/deps.py
+services/forest_service/app/utils/jwt.py
+services/forest_service/Dockerfile
+services/forest_service/requirements.txt
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path=".env.example">
+#========= Auth Service DB =========
+AUTH_DB_USER=auth_user
+AUTH_DB_PASSWORD=auth_strong_password
+AUTH_DB_NAME=auth_db
+AUTH_DB_PORT=5432
+
+#========= Forest Service DB =========
+FOREST_DB_USER=forest_user
+FOREST_DB_PASSWORD=forest_strong_password
+FOREST_DB_NAME=forest_db
+FOREST_DB_PORT=5433
+
+#========= REDIS =========
+REDIS_PORT=6379
+
+#========= JWT =========
+JWT_SECRET=CHANGE_ME_TO_A_LONG_RANDOM_STRING_AT_LEAST_32_CHARS
+JWT_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+REFRESH_TOKEN_EXPIRE_DAYS=7
+
+#========= EMAIL (Gmail App Password) =========
+MAIL_USERNAME=your_gmail@gmail.com
+MAIL_PASSWORD=your_16_char_app_password
+MAIL_FROM=your_gmail@gmail.com
+MAIL_PORT=587
+
+
+#========= Frontend URL (for activation email links) =========
+FRONTEND_URL=http://localhost:3000
+</file>
+
+<file path="docker-compose.yml">
+version: "3.9"
+
+services:
+  #========= Databases =========
+  auth-db:
+    image: postgres:16-alpine
+    container_name: ghabetna_auth_db
+    environment:
+      POSTGRES_USER: ${AUTH_DB_USER}
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD}
+      POSTGRES_DB: ${AUTH_DB_NAME}
+    ports:
+      - "${AUTH_DB_PORT}:5432"
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${AUTH_DB_USER} -d ${AUTH_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  forest-db:
+    image: postgis/postgis:16-3.4-alpine
+    container_name: ghabetna_forest_db
+    environment:
+      POSTGRES_USER: ${FOREST_DB_USER}
+      POSTGRES_PASSWORD: ${FOREST_DB_PASSWORD}
+      POSTGRES_DB: ${FOREST_DB_NAME}
+    ports:
+      - "${FOREST_DB_PORT}:5432"
+    volumes:
+      - forest_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${FOREST_DB_USER} -d ${FOREST_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ghabetna_redis
+    ports:
+      - "${REDIS_PORT}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli","ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+#========= Services =========
+  auth-service:
+    build: ./services/auth_service
+    container_name: ghabetna_auth_service
+    env_file: .env
+    environment:
+      AUTH_DATABASE_URL: postgresql+asyncpg://${AUTH_DB_USER}:${AUTH_DB_PASSWORD}@auth-db:5432/${AUTH_DB_NAME}
+      AUTH_DATABASE_URL_SYNC: postgresql+psycopg2://${AUTH_DB_USER}:${AUTH_DB_PASSWORD}@auth-db:5432/${AUTH_DB_NAME}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      auth-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./services/auth_service:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+  
+  forest-service:
+    build: ./services/forest_service
+    container_name: ghabetna_forest_service
+    env_file: .env
+    environment:
+      FOREST_DATABASE_URL: postgresql+asyncpg://${FOREST_DB_USER}:${FOREST_DB_PASSWORD}@forest-db:5432/${FOREST_DB_NAME}
+      FOREST_DATABASE_URL_SYNC: postgresql+psycopg2://${FOREST_DB_USER}:${FOREST_DB_PASSWORD}@forest-db:5432/${FOREST_DB_NAME}
+      REDIS_URL: redis://redis:6379/1
+    depends_on:
+      forest-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8002:8000"
+    volumes:
+      - ./services/forest_service:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  api-gateway:
+    build: ./services/api_gateway/
+    container_name: ghabetna_api_gateway
+    env_file: .env
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:8000
+      FOREST_SERVICE_URL: http://forest-service:8000
+    depends_on:
+      - auth-service
+      - forest-service
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./services/api_gateway:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  auth_db_data:
+  forest_db_data:
+  redis_data:
+</file>
+
+<file path="services/api_gateway/app/config.py">
+from pathlib import Path
+from dotenv import load_dotenv
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+env_path = Path(__file__).parent.parent.parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=env_path,
+        extra="allow"
+    )
+
+    AUTH_SERVICE_URL:str="http://auth-service:8000"
+    FOREST_SERVICE_URL:str="http://forest-service:8000"
+    JWT_SECRET: str
+    JWT_ALGORITHM: str = "HS256"
+
+print(env_path.exists())
+settings = Settings()
+</file>
+
+<file path="services/api_gateway/app/main.py">
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.routers.auth_proxy import router as auth_router
+from app.routers.forest_proxy import router as forests_router
+from app.routers.roles_proxy import router as roles_router
+from app.routers.users_proxy import router as users_router
+from app.routers.parcelle_proxy import router as parcelles_router
+from app.routers.service_proxy import router as services_router
+
+app=FastAPI(title="Ghabetna - API Gateway",version="1.0.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(auth_router)
+app.include_router(forests_router)
+app.include_router(parcelles_router)
+app.include_router(roles_router)
+app.include_router(users_router)
+app.include_router(services_router)
+
+@app.get("/health")
+async def health():
+    return {"status":"ok","service":"api-gateway"}
+</file>
+
+<file path="services/api_gateway/app/middleware/rbac.py">
+from fastapi import Request,HTTPException,status
+from jose import JWTError, jwt
+from app.config import settings
+
+"""
+Decodes JWT locally (no roundtrip to auth-service).
+Checks permissions for protected routes.
+Public routes bypass auth entirely.
+"""
+
+SELF_ROUTES={
+    ("GET","/api/users/me"),
+    ("PUT","/api/users/me"),
+}
+
+PUBLIC_ROUTES={
+    ("POST","/api/auth/login"),
+    ("POST", "/api/auth/refresh"),
+    ("POST", "/api/auth/activate"),
+    ("POST", "/api/auth/logout"),
+}
+
+#(METHOD, path_prefix)-> req perm
+ROUTE_PERMISSIONS: dict[tuple[str, str], str] = {
+    ("GET",    "/api/users"):     "user:read",
+    ("POST",   "/api/users"):     "user:create",
+    ("PUT",    "/api/users/"):    "user:update",
+    ("DELETE", "/api/users/"):    "user:delete",
+
+    ("GET",    "/api/roles"):     "role:read",
+    ("POST",   "/api/roles"):     "role:create",
+    ("PUT",    "/api/roles/"):    "role:update",
+    ("DELETE", "/api/roles/"):    "role:delete",
+
+    ("GET",    "/api/forests"):   "forest:read",
+    ("POST",   "/api/forests"):   "forest:create",
+    ("PUT",    "/api/forests/"):  "forest:update",
+    ("DELETE", "/api/forests/"):  "forest:delete",
+
+    ("GET",    "/api/services"):  "service:read",
+    ("POST",   "/api/services"):  "service:create",
+    ("PUT",    "/api/services/"): "service:update",
+    ("DELETE", "/api/services/"): "service:delete",
+}
+
+PARCELLE_PERMISSIONS = {
+    "GET":    "parcelle:read",
+    "POST":   "parcelle:create",
+    "PUT":    "parcelle:update",
+    "DELETE": "parcelle:delete",
+}
+
+def _get_required_permission(method: str, path: str) -> str | None:
+
+    # Self routes are authenticated but no specific permission required
+    if (method,path) in SELF_ROUTES:
+        return None
+
+    # Check parcelles first — more specific, avoids collision with /api/forests prefix
+    if "/parcelles" in path:
+        return PARCELLE_PERMISSIONS.get(method)
+
+    for (route_method, prefix), perm in ROUTE_PERMISSIONS.items():
+        if method == route_method and path.startswith(prefix):
+            return perm
+    return None
+
+async def verify_and_inject(request:Request)-> dict| None:
+    """
+    Returns decoded JWT payload for authenticated routes.
+    Returns None for public routes.
+    Raises HTTPException on auth/permission failure.
+    """
+    path=request.url.path
+    method=request.method
+
+    if (method,path) in PUBLIC_ROUTES:
+        return None
+    
+    auth_header=request.headers.get("Authorization","")
+    if not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Missing Token")
+    
+    token=auth_header.split(" ",1)[1]
+    try:
+        payload=jwt.decode(token,settings.JWT_SECRET,algorithms=[settings.JWT_ALGORITHM])
+        if payload.get("type")!="access":
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Invalid Token Type")
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Invalid or Expired Token")
+    
+    required= _get_required_permission(method,path)
+    if required and required not in payload.get("permissions",[]):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,detail=f"Permission '{required} Required"
+        )
+    
+    return payload
+</file>
+
+<file path="services/api_gateway/app/routers/auth_proxy.py">
+import httpx
+from fastapi import APIRouter,Request,Response
+from app.config import settings
+
+router=APIRouter(prefix="/api/auth",tags=["Auth"])
+
+async def _proxy(path:str,request:Request)->Response:
+    body=await request.body()
+    async with httpx.AsyncClient(base_url=settings.AUTH_SERVICE_URL) as client:
+        resp=await client.request(
+            method=request.method,
+            url=f"/auth{path}",
+            content=body,
+            headers={"Content-Type":request.headers.get("Content-Type","application/json")}
+        )
+    return Response(
+        content=resp.content,
+        status_code=resp.status_code,
+        media_type=resp.headers.get("content-type")
+    )
+
+@router.post("/login")
+async def login(request:Request):
+    return await _proxy("/login",request)
+
+@router.post("/refresh")
+async def refresh(request:Request):
+    return await _proxy("/refresh",request)
+
+@router.post("/logout")
+async def logout(request:Request):
+    return await _proxy("/logout",request)
+
+@router.post("/activate")
+async def activate(request:Request):
+    return await _proxy("/activate",request)
+</file>
+
+<file path="services/api_gateway/app/routers/forest_proxy.py">
+import httpx
+from fastapi import APIRouter,Request,Response
+from app.config import settings
+from app.middleware.rbac import verify_and_inject
+
+router=APIRouter(prefix="/api/forests",tags=["Forests"])
+
+async def _proxy(path: str, request: Request, payload: dict | None) -> Response:
+    body = await request.body()
+    headers = {
+        "Content-Type": request.headers.get("Content-Type", "application/json"),
+        "Authorization": request.headers.get("Authorization", ""),
+    }
+    async with httpx.AsyncClient(base_url=settings.FOREST_SERVICE_URL) as client:
+        resp = await client.request(
+            method=request.method,
+            url=f"/forests{path}",
+            content=body,
+            headers=headers,
+        )
+    return Response(
+        content=resp.content,
+        status_code=resp.status_code,
+        media_type=resp.headers.get("content-type"),
+    )
+
+@router.api_route("",methods=["GET","POST"])
+async def forests_root(request:Request):
+    payload=await verify_and_inject(request)
+    return await _proxy("",request,payload)
+
+@router.api_route("/{forest_id}", methods=["GET", "PUT", "DELETE"])
+async def forest_by_id(forest_id:int,request:Request):
+    payload=await verify_and_inject(request)
+    return await _proxy(f"/{forest_id}",request,payload)
+</file>
+
+<file path="services/api_gateway/app/routers/parcelle_proxy.py">
+import httpx
+from fastapi import APIRouter,Request,Response
+from app.config import settings
+from app.middleware.rbac import verify_and_inject
+
+router=APIRouter(prefix="/api/forests",tags=["Parcelles"])
+
+async def _proxy(path: str, request: Request, payload: dict | None) -> Response:
+    body = await request.body()
+    headers = {
+        "Content-Type": request.headers.get("Content-Type", "application/json"),
+        "Authorization": request.headers.get("Authorization", ""),
+    }
+    async with httpx.AsyncClient(base_url=settings.FOREST_SERVICE_URL) as client:
+        resp = await client.request(
+            method=request.method,
+            url=f"/forests{path}",
+            content=body,
+            headers=headers,
+        )
+    return Response(
+        content=resp.content,
+        status_code=resp.status_code,
+        media_type=resp.headers.get("content-type"),
+    )
+
+@router.api_route("/{forest_id}/parcelles",methods=["GET","POST"])
+async def parcelles_root(forest_id:int,request:Request):
+    payload=await verify_and_inject(request)
+    return await _proxy(f"/{forest_id}/parcelles",request,payload)
+
+@router.api_route("/{forest_id}/parcelles/{parcelle_id}",methods=["GET", "PUT", "DELETE"])
+async def parcelle_by_id(forest_id:int,parcelle_id:int,request:Request):
+    payload=await verify_and_inject(request)
+    return await _proxy(f"/{forest_id}/parcelles/{parcelle_id}",request,payload)
+</file>
+
+<file path="services/api_gateway/app/routers/roles_proxy.py">
+import httpx
+from fastapi import APIRouter,Request,Response
+from app.config import settings
+from app.middleware.rbac import verify_and_inject
+
+router=APIRouter(prefix="/api/roles",tags=["Roles"])
+
+async def _proxy(path:str,request:Request,payload:dict|None)->Response:
+    body=await request.body()
+    headers={
+        "Content-Type":request.headers.get("Content-Type","application/json"),
+        "Authorization": request.headers.get("Authorization","")
+    }
+    async with httpx.AsyncClient(base_url=settings.AUTH_SERVICE_URL) as client:
+        resp=await client.request(
+            method=request.method,
+            url=f"/roles{path}",
+            content=body,
+            headers=headers
+        )
+    return Response(
+        content=resp.content,
+        status_code=resp.status_code,
+        media_type=resp.headers.get("content-type")
+    )
+
+@router.api_route("",methods=["GET","POST"])
+async def roles_root(request:Request):
+    payload=await verify_and_inject(request)
+    return await _proxy("",request,payload)
+
+@router.api_route("/{role_id}",methods=["GET", "PUT", "DELETE"])
+async def roles_by_id(role_id:int,request:Request):
+    payload=await verify_and_inject(request)
+    return await _proxy(f"/{role_id}",request,payload)
+</file>
+
+<file path="services/api_gateway/app/routers/service_proxy.py">
+import httpx
+from fastapi import APIRouter,Request,Response
+from app.config import settings
+from app.middleware.rbac import verify_and_inject
+
+router=APIRouter(prefix="/api/services",tags=["Services"])
+
+async def _proxy(path: str, request: Request, payload: dict | None) -> Response:
+    body = await request.body()
+    headers = {
+        "Content-Type": request.headers.get("Content-Type", "application/json"),
+        "Authorization": request.headers.get("Authorization", ""),
+    }
+    async with httpx.AsyncClient(base_url=settings.AUTH_SERVICE_URL) as client:
+        resp = await client.request(
+            method=request.method,
+            url=f"/services{path}",
+            content=body,
+            headers=headers,
+        )
+    return Response(
+        content=resp.content,
+        status_code=resp.status_code,
+        media_type=resp.headers.get("content-type"),
+    )
+
+@router.api_route("",methods=["GET","POST"])
+async def services_rout(request:Request):
+    payload=await verify_and_inject(request)
+    return await _proxy("",request,payload)
+
+@router.api_route("/{service_id}", methods=["GET", "PUT", "DELETE"])
+async def service_by_id(service_id:int,request:Request):
+    payload=await verify_and_inject(request)
+    return await _proxy(f"/{service_id}",request,payload)
+</file>
+
+<file path="services/api_gateway/app/routers/users_proxy.py">
+import httpx
+from fastapi import APIRouter,Request,Response
+from app.config import settings
+from app.middleware.rbac import verify_and_inject
+
+router=APIRouter(prefix="/api/users",tags=["Users"])
+
+async def _proxy(path:str,request:Request,payload:dict|None)-> Response:
+    body=await request.body()
+    headers={
+        "Content-Type": request.headers.get("Content-Type","application/json"),
+        "Authorization": request.headers.get("Authorization","")
+    }
+    async with httpx.AsyncClient(base_url=settings.AUTH_SERVICE_URL) as client:
+        resp=await client.request(
+            method=request.method,
+            url=f"/users{path}",
+            content=body,
+            headers=headers
+        )
+    return Response(
+        content=resp.content,
+        status_code=resp.status_code,
+        media_type=resp.headers.get("content-type")
+    )
+
+@router.api_route("",methods=["GET","POST"])
+async def users_root(request:Request):
+    payload=await verify_and_inject(request)
+    return await _proxy("",request,payload)
+
+@router.api_route("/me",methods=["GET","PUT"])
+async def users_me(request:Request):
+    payload=await verify_and_inject(request)
+    return await _proxy("/me",request,payload)
+
+@router.api_route("/{user_id}",methods=["GET","PUT","DELETE"])
+async def users_by_id(user_id:int,request:Request):
+    payload=await verify_and_inject(request)
+    return await _proxy(f"/{user_id}",request,payload)
+</file>
+
+<file path="services/api_gateway/Dockerfile">
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+</file>
+
+<file path="services/api_gateway/requirements.txt">
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+httpx==0.27.0
+python-jose[cryptography]==3.3.0
+pydantic-settings==2.3.0
+python-dotenv==1.0.1
+</file>
+
+<file path="services/auth_service/app/config.py">
+from pathlib import Path
+from dotenv import load_dotenv
+from pydantic_settings import BaseSettings, SettingsConfigDict
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+env_path = Path(__file__).parent.parent.parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=env_path,
+        extra="allow"
+    )
+
+    AUTH_DATABASE_URL: str           
+    AUTH_DATABASE_URL_SYNC: str     
+    REDIS_URL: str = "redis://localhost:6379/0"
+    
+    JWT_SECRET: str
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    MAIL_USERNAME: str
+    MAIL_PASSWORD: str
+    MAIL_FROM: str
+    MAIL_SERVER: str = "smtp.gmail.com"
+    MAIL_PORT: int = 587
+    FRONTEND_URL: str = "http://localhost:3000"
+
+settings = Settings()  # type: ignore
+logger.info(f"the path variable exists: {env_path.exists()}")
+logger.info(f"AUTH_DATABASE_URL: {settings.AUTH_DATABASE_URL}")
+logger.info(f"FRONTEND_URL: {settings.FRONTEND_URL}")
+</file>
+
+<file path="services/auth_service/app/database.py">
+from sqlalchemy.ext.asyncio import AsyncSession,create_async_engine,async_sessionmaker
+from sqlalchemy.orm import DeclarativeBase
+from app.config import settings
+from typing import AsyncGenerator
+
+engine=create_async_engine(settings.AUTH_DATABASE_URL,echo=False,pool_pre_ping=True)
+AsyncSessionLocal=async_sessionmaker(engine,class_=AsyncSession,expire_on_commit=False)
+
+class Base(DeclarativeBase):
+    pass
+
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()
+</file>
+
+<file path="services/auth_service/app/main.py">
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.database import engine,Base
+from app.models.role import Role
+from app.models.user import User
+from app.routers import auth,users_router,roles_router,service_router
+
+@asynccontextmanager
+async def lifespan(app:FastAPI):
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
+
+app=FastAPI(
+    title="Ghabetna - Auth Service",
+    version="1.0.0",
+    lifespan=lifespan
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
+app.include_router(auth.router)
+app.include_router(users_router.router)
+app.include_router(roles_router.router)
+app.include_router(service_router.router)
+
+@app.get("/health")
+async def health():
+    return {"status":"ok","service":"auth-service"}
+</file>
+
+<file path="services/auth_service/app/models/role.py">
+from datetime import datetime
+from typing import List
+from sqlalchemy import String, Text, func
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped,mapped_column
+from app.database import Base
+
+class Role(Base):
+    __tablename__="roles"
+
+    id:Mapped[int]=mapped_column(primary_key=True)
+    name:Mapped[str]=mapped_column(String(50),unique=True,nullable=False)
+    permissions:Mapped[List[str]]=mapped_column(JSONB,default=list,nullable=False)
+    description: Mapped[str|None]=mapped_column(Text,nullable=True)
+    created_at:Mapped[datetime]=mapped_column(default=func.now(),server_default=func.now())
+    updated_at:Mapped[datetime]=mapped_column(default=func.now(),server_default=func.now(),onupdate=func.now())
+
+    def has_permission(self,permission:str)->bool:
+        return permission in self.permissions
+</file>
+
+<file path="services/auth_service/app/models/service.py">
+from datetime import datetime
+from enum import Enum as PyEnum
+from sqlalchemy import String,Text,Enum,func
+from sqlalchemy.orm import Mapped,mapped_column
+from app.database import Base
+
+class ServiceType(PyEnum):
+    administratif = "administratif"
+    informatique = "informatique"
+    juridique = "juridique"
+    financier = "financier"
+    terrain = "terrain"
+
+class Service(Base):
+    __tablename__="services"
+
+    id:Mapped[int]=mapped_column(primary_key=True)
+    name:Mapped[str]=mapped_column(String(100),unique=True,nullable=False)
+    type:Mapped[ServiceType]=mapped_column(Enum(ServiceType),nullable=False)
+    description:Mapped[str|None]=mapped_column(Text,nullable=True)
+    created_at:Mapped[datetime]=mapped_column(default=func.now(),server_default=func.now())
+</file>
+
+<file path="services/auth_service/app/models/user.py">
+import uuid
+from datetime import datetime
+from sqlalchemy import String, Boolean, ForeignKey, func,DateTime
+from sqlalchemy.orm import Mapped,mapped_column,relationship
+from app.database import Base
+from typing import Optional,TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.role import Role
+
+class User(Base):
+    __tablename__="users"
+
+    id:Mapped[int]=mapped_column(primary_key=True)
+    email:Mapped[str]=mapped_column(String(255),unique=True,nullable=False,index=True)
+    full_name:Mapped[str]=mapped_column(String(200),nullable=False)
+    hashed_password:Mapped[Optional[str]]=mapped_column(String(255),nullable=True)
+
+    role_id:Mapped[int]=mapped_column(ForeignKey("roles.id"),nullable=False)
+    role: Mapped[Optional["Role"]] = relationship("Role", lazy="joined")
+
+    service_id:Mapped[int|None]=mapped_column(ForeignKey("services.id",ondelete="SET NULL"),nullable=True)
+
+    is_active: Mapped[bool]=mapped_column(Boolean,default=False)
+    activation_token:Mapped[Optional[str]]=mapped_column(String(255),nullable=True)
+    activation_token_expires:Mapped[datetime|None]=mapped_column(DateTime(timezone=True),nullable=True)
+
+    created_at:Mapped[datetime]=mapped_column(default=func.now(),server_default=func.now())
+    updated_at:Mapped[datetime]=mapped_column(default=func.now(),server_default=func.now(),onupdate=func.now())
+
+    def generate_activation_token(self)->str:
+        token=str(uuid.uuid4())
+        self.activation_token=token
+        return token
+</file>
+
+<file path="services/auth_service/app/routers/auth.py">
+import redis.asyncio as aioredis
+from fastapi import Depends,APIRouter
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.config import settings
+from app.database import get_db
+from app.schemas.auth import LoginRequest,TokenResponse,RefreshRequest,ActivativateAccountRequest,AccessTokenResponse
+from app.services import auth_service
+
+router=APIRouter(prefix="/auth",tags=["Authentication"])
+
+_redis_pool:aioredis.Redis|None=None
+
+async def get_redis()-> aioredis.Redis:
+    global _redis_pool
+    if _redis_pool is None:
+        _redis_pool=aioredis.from_url(settings.REDIS_URL,decode_responses=True)
+    return _redis_pool
+
+@router.post("/login",response_model=TokenResponse)
+async def login(
+    data:LoginRequest,
+    db:AsyncSession=Depends(get_db),
+    redis:aioredis.Redis=Depends(get_redis)
+):
+    access_token,refresh_token=await auth_service.login(data.email,data.password,db,redis)
+    return TokenResponse(access_token=access_token,refresh_token=refresh_token)
+
+@router.post("/refresh",response_model=AccessTokenResponse)
+async def refresh(
+    data:RefreshRequest,
+    db:AsyncSession=Depends(get_db),
+    redis:aioredis.Redis=Depends(get_redis),
+):
+    access_token=await auth_service.refresh(data.refresh_token,db,redis)
+    return AccessTokenResponse(access_token=access_token)
+
+@router.post("/logout",status_code=204)
+async def logout(
+    data:RefreshRequest,
+    redis:aioredis.Redis=Depends(get_redis)
+):
+    await auth_service.logout(data.refresh_token,redis)
+
+@router.post("/activate",status_code=200)
+async def activate(data:ActivativateAccountRequest,db:AsyncSession=Depends(get_db)):
+    await auth_service.activate_account(data.token,data.password,db)
+    return {"message":"Account activated successfully"}
+</file>
+
+<file path="services/auth_service/app/routers/roles_router.py">
+from fastapi import APIRouter,Depends,HTTPException,status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.database import get_db
+from app.models.role import Role
+from app.schemas.role_schema import RoleCreate,RoleResponse,RoleUpdate
+from app.utils.deps import require_permission
+
+router=APIRouter(prefix="/roles",tags=["Roles"])
+
+VALID_PERMISSONS={
+    "parcelle:create", "parcelle:read", "parcelle:update", "parcelle:delete",
+    "user:create", "user:read", "user:update", "user:delete",
+    "role:create", "role:read", "role:update", "role:delete",
+    "forest:create", "forest:read", "forest:update", "forest:delete",
+    "assignment:create", "assignment:read", "assignment:delete",
+    "incident:create","incident:read", "incident:update", "incident:validate",
+    "score:read", "score:update",
+    "analytics:read",
+    "notification:send",
+}
+
+@router.get("",response_model=list[RoleResponse])
+async def list_roles(
+    db:AsyncSession=Depends(get_db),
+    _:None=Depends(require_permission("role:read"))
+):
+    result=await db.execute(select(Role))
+    return list(result.scalars().all())
+
+@router.post("",response_model=RoleResponse,status_code=status.HTTP_201_CREATED)
+async def create_role(
+    data:RoleCreate,
+    db:AsyncSession=Depends(get_db),
+    _:None=Depends(require_permission("role:create"))
+):
+    invalid=set(data.permissions)-VALID_PERMISSONS
+    if invalid:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail=f"Invalid permissions: {invalid}")
+    
+    existing=await db.execute(select(Role).where(Role.name==data.name))
+    if existing.scalar_one_or_none():
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail="Role name already exisits")
+    
+    role=Role(name=data.name,permissions=data.permissions,description=data.description)
+    db.add(role)
+    await db.commit()
+    await db.refresh(role)
+    return role
+
+@router.put("/{role_id}",response_model=RoleResponse)
+async def update_role(
+    role_id:int,
+    data:RoleUpdate,
+    db:AsyncSession=Depends(get_db),
+    _:None=Depends(require_permission("role:update"))
+):
+    result=await db.execute(select(Role).where(Role.id==role_id))
+    role=result.scalar_one_or_none()
+    if not role:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail='Role Not Found')
+    
+    if data.name is not None:
+        role.name=data.name
+    if data.permissions is not None:
+        invalid=set(data.permissions)-VALID_PERMISSONS
+        if invalid:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail=f"Invalid permissions: {invalid}")
+        role.permissions=data.permissions
+    if data.description is not None:
+        role.description=data.description
+
+    await db.commit()
+    await db.refresh(role)
+    return role
+
+@router.delete("/{role_id}",status_code=status.HTTP_204_NO_CONTENT)
+async def delete_role(
+    role_id:int,
+    db:AsyncSession=Depends(get_db),
+    _:None=Depends(require_permission("role:delete"))
+):
+    result=await db.execute(select(Role).where(Role.id==role_id))
+    role=result.scalar_one_or_none()
+    if not role:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail='Role Not Found')
+    await db.delete(role)
+    await db.commit()
+</file>
+
+<file path="services/auth_service/app/routers/service_router.py">
+from fastapi import APIRouter,Depends,HTTPException,status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.database import get_db
+from app.models.service import Service
+from app.schemas.service_schema import ServiceCreate,ServiceResponse,ServiceType,ServiceUpdate
+from app.utils.deps import require_permission
+
+router=APIRouter(prefix="/services",tags=["Services"])
+
+
+@router.get("",response_model=list[ServiceResponse])
+async def list_services(db:AsyncSession=Depends(get_db),_=Depends(require_permission("service:read"))):
+    result=await db.execute(select(Service))
+    return result.scalars().all()
+
+@router.post("",response_model=ServiceResponse,status_code=201)
+async def create_service(data:ServiceCreate,db:AsyncSession=Depends(get_db),_=Depends(require_permission("service:create"))):
+    s=Service(**data.model_dump())
+    db.add(s)
+    await db.commit()
+    await db.refresh(s)
+    return s
+
+@router.put("/{service_id}",response_model=ServiceResponse)
+async def update_service(service_id:int,data:ServiceUpdate,db:AsyncSession=Depends(get_db),_=Depends(require_permission("service:update"))):
+    result=await db.execute(select(Service).where(Service.id==service_id))
+    s=result.scalar_one_or_none()
+    if not s:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Service Not Found")
+    for k,v in data.model_dump(exclude_none=True).items():
+        setattr(s,k,v)
+    await db.commit()
+    await db.refresh(s)
+    return s
+
+@router.delete("/{service_id}",status_code=204)
+async def delete_service(service_id:int,db:AsyncSession=Depends(get_db),_=Depends(require_permission("service:delete"))):
+    result=await db.execute(select(Service).where(Service.id==service_id))
+    s=result.scalar_one_or_none()
+    if not s:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Service Not Found")
+    await db.delete(s)
+    await db.commit()
+</file>
+
+<file path="services/auth_service/app/routers/users_router.py">
+from fastapi import APIRouter,Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.database import get_db
+from app.schemas.user_schema import UserCreate,UserUpdate,UserWithRoleResponse
+from app.services import user_service
+from app.utils.deps import require_permission,get_current_user
+from app.models.user import User
+
+router=APIRouter(prefix="/users",tags=["Users"])
+
+@router.get("",response_model=list[UserWithRoleResponse])
+async def list_users(
+    db:AsyncSession=Depends(get_db),
+    _:None=Depends(require_permission("user:read"))
+):
+    return await user_service.get_users(db)
+
+@router.post("",response_model=UserWithRoleResponse,status_code=201)
+async def create_user(
+    data:UserCreate,
+    db:AsyncSession=Depends(get_db),
+    _:None=Depends(require_permission("user:create"))
+):
+    return await user_service.create_user(data,db)
+
+@router.get("/me",response_model=UserWithRoleResponse)
+async def get_me(db:AsyncSession=Depends(get_db),current_user:User=Depends(get_current_user)):
+    return await user_service.get_user(current_user.id,db)
+
+@router.get("/{user_id}",response_model=UserWithRoleResponse)
+async def get_user(
+    user_id:int,
+    db:AsyncSession=Depends(get_db),
+    _:None=Depends(require_permission("user:read"))
+):
+    return await user_service.get_user(user_id,db)
+
+@router.put("/{user_id}",response_model=UserWithRoleResponse)
+async def update_user(
+    user_id:int,
+    data:UserUpdate,
+    db:AsyncSession=Depends(get_db),
+    _:None=Depends(require_permission("user:update"))
+):
+    return await user_service.update_user(user_id,data,db)
+
+@router.delete("/{user_id}",status_code=204)
+async def deactivate_user(
+    user_id:int,
+    db:AsyncSession=Depends(get_db),
+    _:None=Depends(require_permission("user:delete"))
+):
+    await user_service.delete_user(user_id,db)
+</file>
+
+<file path="services/auth_service/app/schemas/auth.py">
+from pydantic import BaseModel,EmailStr
+
+class LoginRequest(BaseModel):
+    email:EmailStr
+    password:str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    refresh_token:str
+    token_type:str="bearer"
+
+class RefreshRequest(BaseModel):
+    refresh_token:str
+
+class ActivativateAccountRequest(BaseModel):
+    token:str
+    password:str
+
+    class Config:
+        min_anystr_length=8
+
+class AccessTokenResponse(BaseModel):
+    access_token: str
+    token_type: str="bearer"
+</file>
+
+<file path="services/auth_service/app/schemas/role_schema.py">
+from datetime import datetime
+from typing import List,Optional
+from pydantic import BaseModel
+
+class RoleCreate(BaseModel):
+    name:str
+    permissions:List[str]=[]
+    description:str|None=None
+
+class RoleUpdate(BaseModel):
+    name:str|None=None
+    permissions:List[str]|None=None
+    description:str|None=None
+
+class RoleResponse(BaseModel):
+    id:int
+    name:str
+    permissions: List[str]
+    description:str|None=None
+    created_at:datetime
+    updated_at:datetime
+
+    class Config:
+        from_attributes=True
+</file>
+
+<file path="services/auth_service/app/schemas/service_schema.py">
+from datetime import datetime
+from pydantic import BaseModel
+from app.models.service import ServiceType
+
+class ServiceCreate(BaseModel):
+    name:str
+    type:ServiceType
+    description:str|None=None
+
+class ServiceUpdate(BaseModel):
+    name:str|None=None
+    type:ServiceType |None=None
+    description:str|None=None
+
+class ServiceResponse(BaseModel):
+    id:int
+    name:str
+    type:ServiceType
+    description:str
+    created_at:datetime
+    class Config:
+        from_attributes=True
+</file>
+
+<file path="services/auth_service/app/schemas/user_schema.py">
+from datetime import datetime
+from pydantic import BaseModel,EmailStr
+
+class UserCreate(BaseModel):
+    email:EmailStr
+    full_name:str
+    role_id:int
+    service_id:int|None=None
+
+class UserUpdate(BaseModel):
+    full_name:str|None=None
+    role_id:int|None=None
+    is_active:bool|None=None
+    service_id:int | None=None
+
+class UserResponse(BaseModel):
+    id:int
+    email:str
+    full_name:str
+    role_id:int
+    service_id:int|None=None
+    is_active:bool
+    created_at:datetime
+
+    class Config:
+        from_attributes=True
+
+class RoleInUser(BaseModel):
+    id:int
+    name:str
+    permissions:list[str]
+
+    class Config:
+        from_attributes=True
+
+class UserWithRoleResponse(UserResponse):
+    role:RoleInUser
+    service_id:int|None=None
+</file>
+
+<file path="services/auth_service/app/services/auth_service.py">
+from datetime import datetime,timedelta,timezone
+import redis.asyncio as aioredis
+from fastapi import HTTPException,status
+from jose import JWTError
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.config import settings
+from app.models.user import User
+from app.utils.jwt import decode_token,create_access_token,create_refresh_token
+from app.utils.password import verify_password,hash_password
+
+REFRESH_TOKEN_PREFIX="refresh:"
+BLACKLIST_PREFIX="blacklist:"
+
+async def login(email:str,password:str,db:AsyncSession,redis:aioredis.Redis):
+    result=await db.execute(select(User).where(User.email==email))
+    user=result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Invalid Email")
+    if not user.is_active or not user.hashed_password:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Account not activated")
+    if not verify_password(password,user.hashed_password):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Invalid Password")
+    
+    permissions=user.role.permissions if user.role else []
+    access_token=create_access_token(user.id,user.role_id,permissions)
+    refresh_token=create_refresh_token(user.id)
+
+    await redis.setex(
+        f"{REFRESH_TOKEN_PREFIX}{refresh_token}",
+        timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+        str(user.id)
+    )
+
+    return access_token,refresh_token
+
+async def refresh(refresh_token:str,db:AsyncSession,redis:aioredis.Redis):
+    try:
+        payload=decode_token(refresh_token)
+        if payload.get("type")!="refresh":
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Invalid Token Type")
+        user_id=int(payload["sub"])
+    except(JWTError,ValueError):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Refresh Token")
+    
+    stored=await redis.get(f"{REFRESH_TOKEN_PREFIX}{refresh_token}")
+    if not stored or int(stored)!=user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Refresh Token Revoked")
+    
+    result=await db.execute(select(User).where(User.id==user_id))
+    user=result.scalar_one_or_none()
+    if not user or not user.is_active:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Account not activated")
+    
+    permissions=user.role.permissions if user.role else []
+    new_access_token=create_access_token(user.id,user.role_id,permissions)
+    return new_access_token
+
+async def logout(refresh_token:str,redis:aioredis.Redis):
+    await redis.delete(f"{REFRESH_TOKEN_PREFIX}{refresh_token}")
+
+async def activate_account(token:str,password:str,db:AsyncSession):
+    result=await db.execute(select(User).where(User.activation_token==token))
+    user=result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Invalid Activation Token")
+    if user.activation_token_expires and user.activation_token_expires<datetime.now(timezone.utc):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Activation Token Expired")
+    
+    user.hashed_password=hash_password(password)
+    user.is_active=True
+    user.activation_token=None
+    user.activation_token_expires=None
+    await db.commit()
+</file>
+
+<file path="services/auth_service/app/services/email_service.py">
+from fastapi_mail import FastMail,MessageSchema,ConnectionConfig,MessageType
+from app.config import settings
+import logging
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+conf=ConnectionConfig(
+    MAIL_USERNAME=settings.MAIL_USERNAME,
+    MAIL_PASSWORD=settings.MAIL_PASSWORD,
+    MAIL_FROM=settings.MAIL_FROM,
+    MAIL_PORT=settings.MAIL_PORT,
+    MAIL_SERVER=settings.MAIL_SERVER,
+    MAIL_STARTTLS=True,
+    MAIL_SSL_TLS=False,
+    USE_CREDENTIALS=True
+)
+mail=FastMail(conf)
+
+async def send_activation_email(to_email:str,full_name:str,activation_token:str)->None:
+    activation_url=f"http://localhost:3000/activate?token={activation_token}"
+    logger.info(f"FRONTEND_URL: {settings.FRONTEND_URL}")
+    logger.info(f"ACTIVATION URL: {activation_url}")
+
+    
+    html_body=f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2E7D32;">Bienvenue sur Ghabetna 🌲</h2>
+        <p>Bonjour <strong>{full_name}</strong>,</p>
+        <p>Votre compte a été créé sur la plateforme Ghabetna.</p>
+        <p>Cliquez sur le bouton ci-dessous pour activer votre compte et définir votre mot de passe :</p>
+        <a href="{activation_url}"
+           style="background-color: #2E7D32; color: white; padding: 12px 24px;
+                  text-decoration: none; border-radius: 4px; display: inline-block; margin: 16px 0;">
+            Activer mon compte
+        </a>
+        <p style="color: #666; font-size: 12px;">
+            Ce lien expire dans 48 heures.<br>
+            Si vous n'attendiez pas cet email, ignorez-le.
+        </p>
+    </div>
+    """
+    message=MessageSchema(
+        subject="Activation de votre compte Ghabetna",
+        recipients=[to_email],
+        body=html_body,
+        subtype=MessageType.html
+    )
+    await mail.send_message(message)
+</file>
+
+<file path="services/auth_service/app/services/user_service.py">
+from datetime import datetime,timedelta,timezone
+from fastapi import HTTPException,status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.models.user import User
+from app.models.role import Role
+from app.schemas.user_schema import UserCreate,UserUpdate
+from app.services.email_service import send_activation_email
+
+async def create_user(data: UserCreate,db:AsyncSession)->User:
+    existing=await db.execute(select(User).where(User.email==data.email))
+    existing_user=existing.scalar_one_or_none()
+    if existing_user:
+        # If user exists but was never activated (no password set), resend activation
+        if not existing_user.is_active and existing_user.hashed_password is None:
+            token=existing_user.generate_activation_token()
+            existing_user.activation_token_expires=datetime.now(timezone.utc)+timedelta(hours=48)
+            await db.commit()
+            await db.refresh(existing_user)
+            try:
+                await send_activation_email(existing_user.email,existing_user.full_name,token)
+            except Exception as e:
+                print(f"[WARN] Email sending failed: {e}")
+            return existing_user
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail="User Already Exists")
+
+    role_result=await db.execute(select(Role).where(Role.id==data.role_id))
+    if not role_result.scalar_one_or_none():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Role Not Found")
+
+    if data.service_id is not None:
+        from app.models.service import Service
+        svc_result=await db.execute(select(Service).where(Service.id==data.service_id))
+        if not svc_result.scalar_one_or_none():
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Service Not Found")
+
+    user=User(email=data.email,full_name=data.full_name,role_id=data.role_id,service_id=data.service_id)
+    token=user.generate_activation_token()
+    user.activation_token_expires=datetime.now(timezone.utc)+timedelta(hours=48)
+
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+
+    try:
+        await send_activation_email(user.email,user.full_name,token)
+    except Exception as e:
+        print(f"[WARN] Email sending failed: {e}")
+
+    return user
+
+async def get_users(db:AsyncSession)-> list[User]:
+    result=await db.execute(select(User))
+    return list(result.scalars().all())
+
+async def get_user(user_id:int,db:AsyncSession)->User:
+    result= await db.execute(select(User).where(User.id==user_id))
+    user=result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="User Not Found")
+    return user
+
+async def update_user(user_id:int,data:UserUpdate,db:AsyncSession)->User:
+    user=await get_user(user_id,db)
+    if data.full_name is not None:
+        user.full_name=data.full_name
+    if data.role_id is not None:
+        role_result=await db.execute(select(Role).where(Role.id==data.role_id))
+        if not role_result.scalar_one_or_none():
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Role Not Found")
+        user.role_id=data.role_id
+    if data.is_active is not None:
+        user.is_active=data.is_active
+    if data.service_id is not None:
+        from app.models.service import Service
+        svc_result=await db.execute(select(Service).where(Service.id==data.service_id))
+        if not svc_result.scalar_one_or_none():
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Service Not Found")
+        user.service_id=data.service_id
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+async def delete_user(user_id:int,db:AsyncSession):
+    user=await get_user(user_id,db)
+    #soft delete for now
+    user.is_active=False
+    await db.commit()
+</file>
+
+<file path="services/auth_service/app/utils/deps.py">
+from fastapi import Depends,HTTPException,status
+from fastapi.security import HTTPBearer,HTTPAuthorizationCredentials
+from jose import JWTError
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.database import get_db
+from app.models.user import User
+from app.utils.jwt import decode_token
+from sqlalchemy import select
+
+security=HTTPBearer()
+
+async def get_current_user(
+    credentials:HTTPAuthorizationCredentials=Depends(security),
+    db:AsyncSession=Depends(get_db)
+)->User:
+    token=credentials.credentials
+    try:
+        payload=decode_token(token)
+        if payload.get("type")!="access":
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Invalid token type")
+        user_id=int(payload["sub"])
+    except(JWTError,KeyError,ValueError):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Invalid or Expired Token")
+    
+    result=await db.execute(select(User).where(User.id==user_id))
+    user=result.scalar_one_or_none()
+    if not user or not user.is_active:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="User not found or Inactive")
+    return user
+
+def require_permission(permission:str):
+    """Dependency factory checks permission from JWT payload (decoded in gateway and forwarded as header)"""
+    async def checker(
+        credentials:HTTPAuthorizationCredentials=Depends(security)
+    ):
+        try:
+            payload=decode_token(credentials.credentials)
+            perms=payload.get("permissions",[])
+            if permission not in perms:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="Insufficient permissions")
+        except JWTError:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Invalid token")
+    return checker
+</file>
+
+<file path="services/auth_service/app/utils/jwt.py">
+from datetime import datetime,timedelta,timezone
+from typing import Any
+from jose import JWTError,jwt
+from app.config import settings
+
+def create_access_token(user_id:int,role_id:int,permissions: list[str])->str:
+    expire=datetime.now(timezone.utc)+timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    payload={
+        "sub":str(user_id),
+        "role_id":role_id,
+        "permissions":permissions,
+        "type":"access",
+        "exp":expire
+    }
+    return jwt.encode(payload,settings.JWT_SECRET,algorithm=settings.JWT_ALGORITHM)
+
+def create_refresh_token(user_id:int)->str:
+    expire=datetime.now(timezone.utc)+timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    payload={
+        "sub":str(user_id),
+        "type":"refresh",
+        "exp":expire
+    }
+    return jwt.encode(payload,settings.JWT_SECRET,algorithm=settings.JWT_ALGORITHM)
+
+def decode_token(token:str)->dict[str,Any]:
+    #this raises a JWTError if invalid or expired token
+    return jwt.decode(token,settings.JWT_SECRET,algorithms=[settings.JWT_ALGORITHM])
+</file>
+
+<file path="services/auth_service/app/utils/password.py">
+import bcrypt
+
+def hash_password(password:str)->str:
+    password_bytes=password.encode('utf-8')
+    salt=bcrypt.gensalt()
+    hashed=bcrypt.hashpw(password_bytes,salt)
+    return hashed.decode('utf-8')
+
+def verify_password(plain_password:str, hashed_password:str)->bool:
+    return bcrypt.checkpw(plain_password.encode('utf-8'),hashed_password.encode('utf-8'))
+</file>
+
+<file path="services/auth_service/Dockerfile">
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+</file>
+
+<file path="services/auth_service/requirements.txt">
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+sqlalchemy[asyncio]==2.0.30
+asyncpg==0.29.0
+psycopg2-binary==2.9.9
+alembic==1.13.1
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.9
+pydantic[email]==2.7.1
+pydantic-settings==2.3.0
+redis[asyncio]==5.0.4
+fastapi-mail==1.4.1
+httpx==0.27.0
+</file>
+
+<file path="services/auth_service/seed.py">
+import asyncio
+from sqlalchemy.ext.asyncio import AsyncSession,create_async_engine,async_sessionmaker
+from sqlalchemy import select
+from app.models.role import Role
+from app.models.user import User
+from app.models.service import Service
+from app.utils.password import hash_password
+from app.database import Base
+import os
+
+"""
+Run with: docker compose exec auth-service python seed.py
+creates default roles and admin User
+"""
+
+AUTH_DATABASE_URL=os.environ["AUTH_DATABASE_URL"]
+
+async def seed():
+    engine=create_async_engine(AUTH_DATABASE_URL)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    SessionLocal=async_sessionmaker(engine,class_=AsyncSession,expire_on_commit=False)
+    async with SessionLocal() as db:
+        roles_data=[
+            {
+                "name": "admin",
+                "description": "Administrateur système",
+                "permissions": [
+                    "user:create", "user:read", "user:update", "user:delete",
+                    "role:create", "role:read", "role:update", "role:delete",
+                    "forest:create", "forest:read", "forest:update", "forest:delete",
+                    "parcelle:create", "parcelle:read", "parcelle:update", "parcelle:delete",
+                    "service:create", "service:read", "service:update", "service:delete",
+                    "assignment:create", "assignment:read", "assignment:delete",
+                    "incident:read", "incident:update", "incident:validate",
+                    "score:read", "score:update",
+                    "analytics:read",
+                    "notification:send",
+                ],
+            },
+            {
+                "name": "supervisor",
+                "description": "Superviseur opérationnel",
+                "permissions": [
+                    "user:read",
+                    "forest:read",
+                    "service:read",
+                    "parcelle:read",
+                    "assignment:create", "assignment:read", "assignment:delete",
+                    "incident:read", "incident:update", "incident:validate",
+                    "score:read", "score:update",
+                    "analytics:read",
+                ],
+            },
+            {
+                "name": "agent",
+                "description": "Agent forestier de terrain",
+                "permissions": [
+                    "forest:read",
+                    "incident:create","incident:read",
+                    "score:read",
+                ],
+            },
+        ]
+        admin_role_id=None
+        for r in roles_data:
+            existing=await db.execute(select(Role).where(Role.name==r["name"]))
+            if not existing.scalar_one_or_none():
+                role=Role(**r)
+                db.add(role)
+                await db.flush()
+                if r["name"]=="admin":
+                    admin_role_id=role.id
+            else:
+                existing_role=(await db.execute(select(Role).where(Role.name=="admin"))).scalar_one_or_none()
+                if r["name"]=="admin" and existing_role:
+                    admin_role_id=existing_role.id
+        await db.commit()
+
+        admin_exists=await db.execute(select(User).where(User.email=="admin@gmail.com"))
+        if not admin_exists.scalar_one_or_none() and admin_role_id:
+            admin=User(
+                email="admin@gmail.com",
+                full_name="Adminstrateur Ghabetna",
+                role_id=admin_role_id,
+                hashed_password=hash_password("Admin123"),
+                is_active=True
+            )
+            db.add(admin)
+            await db.commit()
+            print("Admin Created: admin@gmail.com / Admin123")
+        else:
+            print("Admin already exists")
+        
+        print("Seed Complete")
+    await engine.dispose()
+asyncio.run(seed())
+</file>
+
+<file path="services/forest_service/app/config.py">
+from pathlib import Path
+from dotenv import load_dotenv
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+env_path = Path(__file__).parent.parent.parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=env_path,
+        extra="allow"
+    )
+    FOREST_DATABASE_URL: str           
+    FOREST_DATABASE_URL_SYNC: str     
+    REDIS_URL: str = "redis://localhost:6379/1"
+    
+    JWT_SECRET: str
+    JWT_ALGORITHM: str = "HS256"
+
+print(env_path.exists())
+settings = Settings()
+print(settings.FOREST_DATABASE_URL)
+</file>
+
+<file path="services/forest_service/app/database.py">
+from sqlalchemy.ext.asyncio import AsyncSession,create_async_engine,async_sessionmaker
+from sqlalchemy.orm import DeclarativeBase
+from app.config import settings
+from typing import AsyncGenerator
+
+engine=create_async_engine(settings.FOREST_DATABASE_URL,echo=False,pool_pre_ping=True)
+AsyncSessionLocal=async_sessionmaker(engine,class_=AsyncSession,expire_on_commit=False)
+
+class Base(DeclarativeBase):
+    pass
+
+async def get_db()->AsyncGenerator[AsyncSession, None]:
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()
+</file>
+
+<file path="services/forest_service/app/main.py">
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
+from app.database import engine,Base
+from app.models.forest import Forest
+from app.routers.forest_router import router as forest_router
+from app.routers.parcelle_router import router as parcelle_router
+
+@asynccontextmanager
+async def lifespan(app:FastAPI):
+    async with engine.begin() as conn:
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
+        await conn.run_sync(Base.metadata.create_all)
+    yield
+
+app=FastAPI(
+    title="Ghabetna - Forest Service",
+    version="1.0.0",
+    lifespan=lifespan
+)
+
+app.include_router(forest_router)
+app.include_router(parcelle_router)
+
+@app.get("/health")
+async def health():
+    return {"status":"ok","service":"forest-service"}
+</file>
+
+<file path="services/forest_service/app/models/forest.py">
+from datetime import datetime
+from typing import Any
+from geoalchemy2 import Geometry
+from sqlalchemy import String,Text,Float,func
+from sqlalchemy.orm import Mapped,mapped_column, relationship
+from app.database import Base
+from app.models.parcelle import Parcelle
+
+class Forest(Base):
+    __tablename__="forests"
+
+    id:Mapped[int]=mapped_column(primary_key=True)
+    name:Mapped[str]=mapped_column(String(200),unique=True,nullable=False)
+    region:Mapped[str|None]=mapped_column(String(200),nullable=True)
+    description:Mapped[str|None]=mapped_column(Text,nullable=True)
+
+    boundary:Mapped[Any]=mapped_column(
+        Geometry("MULTIPOLYGON",srid=4326,spatial_index=True),nullable=True
+    )
+    center_point:Mapped[Any]=mapped_column(
+        Geometry("POINT",srid=4326,spatial_index=True),nullable=True
+    )
+    area_hectars:Mapped[float|None]=mapped_column(Float,nullable=True)
+
+    parcelles:Mapped[list["Parcelle"]]=relationship("Parcelle",back_populates=None,cascade="all, delete-orphan")
+
+    created_at:Mapped[datetime]=mapped_column(default=func.now(),server_default=func.now())
+    updated_at:Mapped[datetime]=mapped_column(default=func.now(),server_default=func.now(),onupdate=func.now())
+</file>
+
+<file path="services/forest_service/app/models/parcelle.py">
+from datetime import datetime
+from typing import Any
+from geoalchemy2 import Geometry
+from sqlalchemy import String,Text,func,ForeignKey
+from sqlalchemy.orm import Mapped,mapped_column,relationship
+from app.database import Base
+
+class Parcelle(Base):
+    __tablename__="parcelles"
+
+    id:Mapped[int]=mapped_column(primary_key=True)
+    forest_id:Mapped[int]=mapped_column(ForeignKey("forests.id",ondelete="CASCADE"),nullable=False)
+    name:Mapped[str]=mapped_column(String(200),nullable=False)
+    description:Mapped[str | None]=mapped_column(Text,nullable=True)
+    boundary: Mapped[Any]=mapped_column(
+        Geometry("POLYGON",srid=4326,spatial_index=True),
+        nullable=True
+    )
+    area_hectars:Mapped[float|None]=mapped_column(nullable=True)
+
+    created_at:Mapped[datetime]=mapped_column(default=func.now(),server_default=func.now())
+    updated_at:Mapped[datetime]=mapped_column(default=func.now(),server_default=func.now(),onupdate=func.now())
+</file>
+
+<file path="services/forest_service/app/routers/forest_router.py">
+from fastapi import APIRouter,Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.database import get_db
+from app.schemas.forest_schema import ForestCreate,ForestReponse,ForestUpdate
+from app.services import forest_service
+from app.utils.deps import require_permission
+
+router=APIRouter(prefix="/forests",tags=["forests"])
+
+@router.get("",response_model=list[ForestReponse])
+async def list_forests(
+    db:AsyncSession=Depends(get_db),
+    _:None=Depends(require_permission("forest:read"))
+):
+    return await forest_service.get_forests(db)
+
+@router.post("",response_model=ForestReponse,status_code=201)
+async def create_forest(
+    data:ForestCreate,
+    db:AsyncSession=Depends(get_db),
+    _:None=Depends(require_permission("forest:create"))
+):
+    return await forest_service.create_forest(data,db)
+
+@router.get("/{forest_id}",response_model=ForestReponse)
+async def get_forest(
+    forest_id:int,
+    db:AsyncSession=Depends(get_db),
+    _:None=Depends(require_permission("forest:read"))
+):
+    return await forest_service.get_forest(forest_id,db)
+
+@router.put("/{forest_id}",response_model=ForestReponse)
+async def update_forest(
+    forest_id:int,
+    data:ForestUpdate,
+    db:AsyncSession=Depends(get_db),
+    _:None=Depends(require_permission("forest:update"))
+):
+    return await forest_service.update_forest(forest_id,data,db)
+
+@router.delete("/{forest_id}",status_code=204)
+async def delete_forest(
+    forest_id:int,
+    db:AsyncSession=Depends(get_db),
+    _:None=Depends(require_permission("forest:delete"))
+):
+    await forest_service.delete_forest(forest_id,db)
+</file>
+
+<file path="services/forest_service/app/routers/parcelle_router.py">
+from fastapi import APIRouter,Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.database import get_db
+from app.schemas.parcelle_schema import ParcelleUpdate,ParcelleCreate,ParcelleResponse
+from app.services import parcelle_service
+from app.utils.deps import require_permission
+
+router=APIRouter(prefix="/forests/{forest_id}/parcelles",tags=["parcelles"])
+
+@router.get("",response_model=list[ParcelleResponse])
+async def list_parcelles(forest_id:int,db:AsyncSession=Depends(get_db),_=Depends(require_permission("parcelle:read"))):
+    return await parcelle_service.get_parcelles(forest_id,db)
+
+@router.post("",response_model=ParcelleResponse,status_code=201)
+async def create_parcelle(forest_id:int,data:ParcelleCreate,db:AsyncSession=Depends(get_db),_=Depends(require_permission("parcelle:create"))):
+    return await parcelle_service.create_parcelle(forest_id,data,db)
+
+@router.get("/{parcelle_id}",response_model=ParcelleResponse)
+async def get_parcelle(parcelle_id:int,forest_id:int,db:AsyncSession=Depends(get_db),_=Depends(require_permission("parcelle:read"))):
+    return await parcelle_service.get_parcelle(parcelle_id,forest_id,db)
+
+@router.put("/{parcelle_id}",response_model=ParcelleResponse)
+async def update_parcelle(forest_id:int,parcelle_id:int,data:ParcelleUpdate,db:AsyncSession=Depends(get_db),_=Depends(require_permission("parcelle:update"))):
+    return await parcelle_service.update_parcelle(parcelle_id,data,db)
+
+@router.delete("/{parcelle_id}",status_code=204)
+async def delete_parcelle(forest_id:int,parcelle_id:int,db:AsyncSession=Depends(get_db),_=Depends(require_permission("parcelle:delete"))):
+    await parcelle_service.delete_parcelle(parcelle_id,db)
+</file>
+
+<file path="services/forest_service/app/schemas/forest_schema.py">
+from datetime import datetime
+from pydantic import BaseModel
+
+class ForestCreate(BaseModel):
+    name:str
+    region:str|None=None
+    description:str|None=None
+    boundary_geojson:dict|None=None
+    center_lat:float|None=None
+    center_lng:float|None=None
+
+class ForestUpdate(BaseModel):
+    name:str|None=None
+    region:str|None=None
+    description:str|None=None
+    boundary_geojson:dict|None=None
+    center_lat:float|None=None
+    center_lng:float|None=None
+
+class ForestReponse(BaseModel):
+    id:int
+    name:str
+    region:str|None
+    description:str|None
+    area_hectares:float|None
+    center_lat:float|None
+    center_lng:float|None
+    boundary_geojson:dict|None
+    parcelle_count: int
+    created_at:datetime
+    updated_at:datetime
+
+    class Config:
+        from_attributes=True
+</file>
+
+<file path="services/forest_service/app/schemas/parcelle_schema.py">
+from datetime import datetime
+from pydantic import BaseModel
+
+class ParcelleCreate(BaseModel):
+    name:str
+    description:str|None=None
+    boundary_geojson:dict
+
+class ParcelleUpdate(BaseModel):
+    name:str|None=None
+    description:str|None=None
+    boundary_geojson:dict|None=None
+
+class ParcelleResponse(BaseModel):
+    id:int
+    forest_id:int
+    name:str
+    description: str|None
+    area_hectares:float|None
+    boundary_geojson: dict
+    created_at: datetime
+    updated_at: datetime
+    class Config:
+        from_attributes=True
+</file>
+
+<file path="services/forest_service/app/services/forest_service.py">
+from fastapi import HTTPException,status
+from geoalchemy2.shape import from_shape,to_shape
+from shapely.geometry import mapping,Point
+from sqlalchemy import select,text,func,outerjoin
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.models.forest import Forest
+from app.models.parcelle import Parcelle
+from app.schemas.forest_schema import ForestCreate,ForestReponse,ForestUpdate
+import json,shapely
+
+
+def _geojson_to_wkb(geojson:dict):
+    #Convert GeoJSON geometry dict → PostGIS WKB. Auto-wraps Polygon in MultiPolygon
+    if geojson["type"]=="Polygon":
+        geojson = {"type": "MultiPolygon", "coordinates": [geojson["coordinates"]]}
+    elif geojson["type"] != "MultiPolygon":
+        raise ValueError(f"Expected Polygon or MultiPolygon, got {geojson['type']}")
+    geom=shapely.from_geojson(json.dumps(geojson))
+    return from_shape(geom,srid=4326)
+
+def _wkb_to_geojson(wkb)-> dict|None:
+    if wkb is None:
+        return None
+    return mapping(to_shape(wkb))
+
+def _to_response(forest: Forest,parcelle_count:int=0)-> ForestReponse:
+    center_lat,center_lng=None,None
+    if forest.center_point is not None:
+        point=to_shape(forest.center_point)
+        if isinstance(point,Point):
+            center_lng,center_lat= point.x ,point.y
+        else:
+            raise ValueError(f"Warning: Expected Point geometry, got {type(point).__name__}")
+    return ForestReponse(
+        id=forest.id,
+        name=forest.name,
+        region=forest.region,
+        description=forest.description,
+        area_hectares=forest.area_hectars,
+        center_lat=center_lat,
+        center_lng=center_lng,
+        boundary_geojson=_wkb_to_geojson(forest.boundary),
+        parcelle_count=parcelle_count,
+        created_at=forest.created_at,
+        updated_at=forest.updated_at
+    )
+
+async def create_forest(data:ForestCreate,db:AsyncSession)->ForestReponse:
+    existing=await db.execute(select(Forest).where(Forest.name==data.name))
+    if existing.scalar_one_or_none():
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail="Forest name already exists")
+    forest=Forest(name=data.name,region=data.region,description=data.description)
+
+    if data.boundary_geojson:
+        forest.boundary=_geojson_to_wkb(data.boundary_geojson)
+        db.add(forest)
+        await db.flush()
+        area_result=await db.execute(
+            text("SELECT ST_Area(boundary::geography) / 10000 FROM forests WHERE id = :id"),{"id":forest.id}
+        )
+        forest.area_hectars=area_result.scalar()
+
+    if data.center_lat is not None and data.center_lng is not None:
+        forest.center_point=from_shape(Point(data.center_lng,data.center_lat),srid=4326)
+
+    db.add(forest)
+    await db.commit()
+    await db.refresh(forest)
+    return _to_response(forest)
+
+async def get_forest(forest_id: int, db: AsyncSession) -> ForestReponse:
+    count_subq = (
+        select(Parcelle.forest_id, func.count(Parcelle.id).label("cnt"))
+        .where(Parcelle.forest_id == forest_id)
+        .group_by(Parcelle.forest_id)
+        .subquery()
+    )
+    stmt = (
+        select(Forest, func.coalesce(count_subq.c.cnt, 0).label("parcelle_count"))
+        .where(Forest.id == forest_id)
+        .outerjoin(count_subq, Forest.id == count_subq.c.forest_id)
+    )
+    row = (await db.execute(stmt)).one_or_none()
+    if not row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Forest Not Found")
+    forest, cnt = row
+    return _to_response(forest, int(cnt))
+
+async def update_forest(forest_id:int, data:ForestUpdate, db:AsyncSession)->ForestReponse:
+    result=await db.execute(select(Forest).where(Forest.id==forest_id))
+    forest=result.scalar_one_or_none()
+    if not forest:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Forest Not Found")
+    
+    if data.name is not None:
+        forest.name=data.name
+    if data.region is not None:
+        forest.region=data.region
+    if data.description is not None:
+        forest.description=data.description
+    if data.boundary_geojson is not None:
+        forest.boundary=_geojson_to_wkb(data.boundary_geojson)
+        await db.flush()
+        area_result=await db.execute(
+            text("SELECT ST_Area(boundary::geography) / 10000 FROM forests WHERE id = :id"),{"id":forest.id}
+        )
+        forest.area_hectars=area_result.scalar()
+    if data.center_lat is not None and data.center_lng is not None:
+        forest.center_point=from_shape(Point(data.center_lng,data.center_lat),srid=4326)
+
+    await db.commit()
+    await db.refresh(forest)
+    return _to_response(forest)
+
+async def delete_forest(forest_id:int, db:AsyncSession):
+    result=await db.execute(select(Forest).where(Forest.id==forest_id))
+    forest=result.scalar_one_or_none()
+    if not forest:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Forest Not Found")
+    await db.delete(forest)
+    await db.commit()
+
+async def get_forests(db: AsyncSession) -> list[ForestReponse]:
+    count_subq = (
+        select(Parcelle.forest_id, func.count(Parcelle.id).label("cnt"))
+        .group_by(Parcelle.forest_id)
+        .subquery()
+    )
+    stmt = (
+        select(Forest, func.coalesce(count_subq.c.cnt, 0).label("parcelle_count"))
+        .outerjoin(count_subq, Forest.id == count_subq.c.forest_id)
+    )
+    rows = (await db.execute(stmt)).all()
+    return [_to_response(forest, int(cnt)) for forest, cnt in rows]
+</file>
+
+<file path="services/forest_service/app/services/parcelle_service.py">
+import json,shapely
+from fastapi import HTTPException,status
+from geoalchemy2.shape import from_shape,to_shape
+from shapely.geometry import mapping
+from sqlalchemy import select,text
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.models.parcelle import Parcelle
+from app.models.forest import Forest
+from app.schemas.parcelle_schema import ParcelleCreate,ParcelleResponse,ParcelleUpdate
+
+def _geojson_to_wkb_polygon(geojson:dict):
+    if geojson["type"]!="Polygon":
+        raise ValueError(f"Expected Polygon, got {geojson['type']}")
+    geom=shapely.from_geojson(json.dumps(geojson))
+    return from_shape(geom,srid=4326)
+
+def _to_response(p:Parcelle)-> ParcelleResponse:
+    return ParcelleResponse(
+        id=p.id,
+        forest_id=p.forest_id,
+        name=p.name,
+        description=p.description,
+        area_hectares=p.area_hectars,
+        boundary_geojson=mapping(to_shape(p.boundary)),
+        created_at=p.created_at,
+        updated_at=p.updated_at
+    )
+
+async def create_parcelle(forest_id:int,data:ParcelleCreate,db:AsyncSession)->ParcelleResponse:
+    forest_cherck=await db.execute(select(Forest).where(Forest.id==forest_id))
+    if not forest_cherck.scalar_one_or_none():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Forest Not Found")
+
+    containement=await db.execute(
+        text("""
+            SELECT ST_Contains(
+                (SELECT boundary FROM forests WHERE id = :fid),
+                ST_GeomFromGeoJSON(:pgeojson)
+            )
+        """),{"fid":forest_id,"pgeojson":json.dumps(data.boundary_geojson)}
+    )
+    if not containement.scalar():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Parcelle Boundary must be contained within the forest boundaries"
+        )
+
+    p=Parcelle(forest_id=forest_id,name=data.name,description=data.description,boundary=_geojson_to_wkb_polygon(data.boundary_geojson))
+    db.add(p)
+    await db.flush()
+    area=await db.execute(
+        text("SELECT ST_Area(boundary::geography)/10000 FROM parcelles WHERE id=:id"), {"id": p.id}
+    )
+    p.area_hectars=area.scalar()
+    await db.commit()
+    await db.refresh(p)
+    return _to_response(p)
+
+async def get_parcelles(forest_id:int,db:AsyncSession)->list[ParcelleResponse]:
+    result=await db.execute(select(Parcelle).where(Parcelle.forest_id==forest_id))
+    return[_to_response(p) for p in result.scalars().all()]
+
+
+async def update_parcelle(parcelle_id:int,data:ParcelleUpdate,db:AsyncSession)->ParcelleResponse:
+    result=await db.execute(select(Parcelle).where(Parcelle.id==parcelle_id))
+    p=result.scalar_one_or_none()
+    if not p:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Parcelle Not Found")
+    if data.name:p.name=data.name
+    if data.description:p.description=data.description
+    if data.boundary_geojson:
+        p.boundary=_geojson_to_wkb_polygon(data.boundary_geojson)
+        containement=await db.execute(
+            text("""
+                SELECT ST_Contains(
+                    (SELECT boundary FROM forests WHERE id = :fid),
+                    ST_GeomFromGeoJSON(:pgeojson)
+                )
+            """),{"fid":p.forest_id,"pgeojson":json.dumps(data.boundary_geojson)}
+        )
+        if not containement.scalar():
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Parcelle Boundary must be contained within the forest boundaries"
+            )
+        await db.flush()
+        area=await db.execute(
+            text("SELECT ST_Area(boundary::geography)/10000 FROM parcelles WHERE id=:id"), {"id": p.id}
+        )
+        p.area_hectars=area.scalar()
+
+    await db.commit()
+    await db.refresh(p)
+    return _to_response(p)
+
+
+async def get_parcelle(parcelle_id:int, forest_id:int, db:AsyncSession)->ParcelleResponse:
+    result=await db.execute(select(Parcelle).where(Parcelle.id==parcelle_id)
+                                            .where(Parcelle.forest_id == forest_id))
+    p=result.scalar_one_or_none()
+    if not p:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Parcelle Not Found")
+    return _to_response(p)
+
+async def delete_parcelle(parcelle_id:int,db:AsyncSession):
+    result=await db.execute(select(Parcelle).where(Parcelle.id==parcelle_id))
+    p=result.scalar_one_or_none()
+    if not p:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Parcelle Not Found")
+    await db.delete(p)
+    await db.commit()
+</file>
+
+<file path="services/forest_service/app/utils/deps.py">
+from fastapi import Depends,HTTPException,status
+from fastapi.security import HTTPBearer,HTTPAuthorizationCredentials
+from jose import JWTError
+from app.utils.jwt import decode_token
+
+security=HTTPBearer()
+
+def require_permission(permission:str):
+    async def checker(
+            credentials:HTTPAuthorizationCredentials=Depends(security)
+    ):
+        try:
+            payload=decode_token(credentials.credentials)
+            perms=payload.get("permissions",[])
+            if permission not in perms:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Insufficient permissions"
+                )
+        except JWTError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid Token"
+            )
+    return checker
+</file>
+
+<file path="services/forest_service/app/utils/jwt.py">
+from typing import Any
+from jose import jwt
+from app.config import settings
+
+def decode_token(token:str)-> dict[str,Any]:
+    return jwt.decode(token,settings.JWT_SECRET,algorithms=[settings.JWT_ALGORITHM])
+</file>
+
+<file path="services/forest_service/Dockerfile">
+FROM python:3.11-slim
+RUN apt-get update && apt-get install -y libgdal-dev gcc && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+</file>
+
+<file path="services/forest_service/requirements.txt">
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+sqlalchemy[asyncio]==2.0.30
+asyncpg==0.29.0
+psycopg2-binary==2.9.9
+geoalchemy2==0.15.1
+shapely==2.0.4
+alembic==1.13.1
+pydantic[email]==2.7.1
+pydantic-settings==2.3.0
+redis[asyncio]==5.0.4
+httpx==0.27.0
+python-jose[cryptography]==3.3.0
+python-dotenv==1.0.1
+</file>
+
+</files>

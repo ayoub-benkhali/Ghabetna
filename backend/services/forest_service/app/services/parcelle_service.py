@@ -61,7 +61,7 @@ async def get_parcelles(forest_id:int,db:AsyncSession)->list[ParcelleResponse]:
     return[_to_response(p) for p in result.scalars().all()]
 
 
-async def update_parcelle(parcelle_id:int,data:ParcelleUpdate,db:AsyncSession)->ParcelleResponse:
+async def update_parcelle(forest_id:int,parcelle_id:int,data:ParcelleUpdate,db:AsyncSession)->ParcelleResponse:
     result=await db.execute(select(Parcelle).where(Parcelle.id==parcelle_id))
     p=result.scalar_one_or_none()
     if not p:
@@ -69,12 +69,6 @@ async def update_parcelle(parcelle_id:int,data:ParcelleUpdate,db:AsyncSession)->
     if data.name:p.name=data.name
     if data.description:p.description=data.description
     if data.boundary_geojson:
-        p.boundary=_geojson_to_wkb_polygon(data.boundary_geojson)
-        await db.flush()
-        area=await db.execute(
-            text("SELECT ST_Area(boundary::geography)/10000 FROM parcelles WHERE id=:id"), {"id": p.id}
-        )
-        p.area_hectars=area.scalar()
         containement=await db.execute(
             text("""
                 SELECT ST_Contains(
@@ -88,14 +82,20 @@ async def update_parcelle(parcelle_id:int,data:ParcelleUpdate,db:AsyncSession)->
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Parcelle Boundary must be contained within the forest boundaries"
             )
+        p.boundary=_geojson_to_wkb_polygon(data.boundary_geojson)
+        await db.flush()
+        area=await db.execute(
+            text("SELECT ST_Area(boundary::geography)/10000 FROM parcelles WHERE id=:id"), {"id": p.id}
+        )
+        p.area_hectars=area.scalar()
 
     await db.commit()
     await db.refresh(p)
     return _to_response(p)
 
 
-async def get_parcelle(parcelle_id:int,db:AsyncSession)->ParcelleResponse:
-    result=await db.execute(select(Parcelle).where(Parcelle.id==parcelle_id))
+async def get_parcelle(forest_id:int,parcelle_id:int, db:AsyncSession)->ParcelleResponse:
+    result=await db.execute(select(Parcelle).where(Parcelle.id==parcelle_id,Parcelle.forest_id == forest_id))
     p=result.scalar_one_or_none()
     if not p:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Parcelle Not Found")

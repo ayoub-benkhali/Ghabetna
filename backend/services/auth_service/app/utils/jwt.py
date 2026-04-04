@@ -3,12 +3,20 @@ from typing import Any
 from jose import JWTError,jwt
 from app.config import settings
 
-def create_access_token(user_id:int,role_id:int,permissions: list[str])->str:
+def create_access_token(
+        user_id:int,
+        role_id:int,
+        permissions: list[str],
+        service_id:int|None=None,
+        parcelle_id:int|None=None
+        )->str:
     expire=datetime.now(timezone.utc)+timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     payload={
         "sub":str(user_id),
         "role_id":role_id,
         "permissions":permissions,
+        "service_id":service_id,
+        "parcelle_id":parcelle_id,
         "type":"access",
         "exp":expire
     }

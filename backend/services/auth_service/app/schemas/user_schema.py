@@ -19,6 +19,7 @@ class UserResponse(BaseModel):
     full_name:str
     role_id:int
     service_id:int|None=None
+    parcelle_id:int|None=None
     is_active:bool
     created_at:datetime
 

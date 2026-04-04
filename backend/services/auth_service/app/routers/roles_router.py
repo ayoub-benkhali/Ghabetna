@@ -15,6 +15,7 @@ VALID_PERMISSONS={
     "forest:create", "forest:read", "forest:update", "forest:delete",
     "assignment:create", "assignment:read", "assignment:delete",
     "incident:create","incident:read", "incident:update", "incident:validate",
+    "service:create", "service:read", "service:update", "service:delete",
     "score:read", "score:update",
     "analytics:read",
     "notification:send",
