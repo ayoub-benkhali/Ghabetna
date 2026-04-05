@@ -28,3 +28,14 @@ async def _get_agent(user_id:int,db:AsyncSession)->User:
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="User Not Found")
     return user
+
+async def _validate_forest(forest_id:int)->None:
+    try:
+        async with httpx.AsyncClient(base_url=settings.FOREST_SERVICE_URL,timeout=5.0) as client:
+            resp=await client.get(f"/forests-internal/{forest_id}")
+        if resp.status_code==404:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail=f"Forest {forest_id} Not Found")
+        if resp.status_code!=200:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY,detail="Forest service returned an unexpected Error")
+    except httpx.RequestError:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE,detail="Forest Service is Unreachable")

@@ -47,12 +47,18 @@ ROUTE_PERMISSIONS: dict[tuple[str, str], str] = {
     ("PUT",    "/api/services/"): "service:update",
     ("DELETE", "/api/services/"): "service:delete",
 
-    # Assignments
+    # Assignments - agents
     ("GET",    "/api/assignments"):              "assignment:read",
     ("GET",    "/api/assignments/users/"):       "assignment:read",
     ("POST",   "/api/assignments/users/"):       "assignment:create",
     ("DELETE", "/api/assignments/users/"):       "assignment:delete",
     ("GET",    "/api/assignments/parcelles/"):   "assignment:read",
+
+    # Assignments — supervisors
+    ("GET",    "/api/assignments/supervisors/"):      "assignment:read",
+    ("POST",   "/api/assignments/supervisors/"):      "assignment:create",
+    ("DELETE", "/api/assignments/supervisors/"):      "assignment:delete",
+    ("GET",    "/api/assignments/forests/"):          "assignment:read",
 }
 
 PARCELLE_PERMISSIONS = {

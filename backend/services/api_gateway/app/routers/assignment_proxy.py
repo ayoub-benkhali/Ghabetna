@@ -38,3 +38,13 @@ async def assignment_by_user(user_id:int,request:Request):
 async def agents_for_parcelle(parcelle_id:int,request:Request):
     payload=await verify_and_inject(request)
     return await _proxy(f"/parcelles/{parcelle_id}/agents",request,payload)
+
+@router.api_route("/supervisors/{user_id}",methods=["GET", "POST", "DELETE"])
+async def assignment_by_supervisor(user_id:int,request:Request):
+    payload=await verify_and_inject(request)
+    return await _proxy(f"/supervisors/{user_id}",request,payload)
+
+@router.api_route("/forests/{forest_id}/supervisors",methods=["GET"])
+async def supervisors_for_forest(forest_id:int,request:Request):
+    payload=await verify_and_inject(request)
+    return await _proxy(f"/forests/{forest_id}/supervisors", request, payload)

@@ -1,9 +1,12 @@
-from fastapi import APIRouter,Depends
+from fastapi import APIRouter,Depends,HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.schemas.forest_schema import ForestCreate,ForestReponse,ForestUpdate
 from app.services import forest_service
 from app.utils.deps import require_permission
+from app.services.forest_service import _to_response
+from app.models.forest import Forest
 
 router=APIRouter(prefix="/forests",tags=["forests"])
 
@@ -46,3 +49,13 @@ async def delete_forest(
     _:None=Depends(require_permission("forest:delete"))
 ):
     await forest_service.delete_forest(forest_id,db)
+
+flat_router=APIRouter(prefix="/forests-internal",include_in_schema=False)
+
+@flat_router.get("/{forest_id}")
+async def get_forest_flat(forest_id:int,db:AsyncSession=Depends(get_db)):
+    result=await db.execute(select(Forest).where(Forest.id==forest_id))
+    f=result.scalar_one_or_none()
+    if not f:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Forest Not Found")
+    return {"id":f.id} # auth_service only needs to know it exists

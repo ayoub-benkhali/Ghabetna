@@ -29,7 +29,8 @@ async def login(email:str,password:str,db:AsyncSession,redis:aioredis.Redis):
         user.role_id,
         permissions,
         service_id=user.service_id,
-        parcelle_id=user.parcelle_id
+        parcelle_id=user.parcelle_id,
+        forest_id=user.forest_id
         )
     refresh_token=create_refresh_token(user.id)
 
@@ -65,7 +66,8 @@ async def refresh(refresh_token:str,db:AsyncSession,redis:aioredis.Redis):
         user.role_id,
         permissions,
         service_id=user.service_id,
-        parcelle_id=user.parcelle_id
+        parcelle_id=user.parcelle_id,
+        forest_id=user.forest_id
         )
     return new_access_token
 
