@@ -1,11 +1,15 @@
-from fastapi import APIRouter,Depends
+from fastapi import APIRouter,Depends,HTTPException,status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.schemas.parcelle_schema import ParcelleUpdate,ParcelleCreate,ParcelleResponse
 from app.services import parcelle_service
 from app.utils.deps import require_permission
+from app.models.parcelle import Parcelle
+from app.services.parcelle_service import _to_response
 
 router=APIRouter(prefix="/forests/{forest_id}/parcelles",tags=["parcelles"])
+
 
 @router.get("",response_model=list[ParcelleResponse])
 async def list_parcelles(forest_id:int,db:AsyncSession=Depends(get_db),_=Depends(require_permission("parcelle:read"))):
@@ -26,3 +30,14 @@ async def update_parcelle(forest_id:int,parcelle_id:int,data:ParcelleUpdate,db:A
 @router.delete("/{parcelle_id}",status_code=204)
 async def delete_parcelle(forest_id:int,parcelle_id:int,db:AsyncSession=Depends(get_db),_=Depends(require_permission("parcelle:delete"))):
     await parcelle_service.delete_parcelle(parcelle_id,db)
+
+flat_router = APIRouter(prefix="/parcelles", tags=["parcelles-internal"], include_in_schema=False)
+
+# Flat lookup used internally by auth_service for assignment validation
+@flat_router.get("/{parcelle_id}",response_model=ParcelleResponse)
+async def get_parcelle_flat(parcelle_id:int,db:AsyncSession=Depends(get_db)):
+    result=await db.execute(select(Parcelle).where(Parcelle.id==parcelle_id))
+    p=result.scalar_one_or_none()
+    if not p:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Parcelle Not Found")
+    return _to_response(p)

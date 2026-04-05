@@ -17,4 +17,4 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
 
 print(env_path.exists())
-settings = Settings()
+settings = Settings() # type: ignore

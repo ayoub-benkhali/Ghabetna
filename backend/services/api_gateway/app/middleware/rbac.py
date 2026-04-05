@@ -22,25 +22,37 @@ PUBLIC_ROUTES={
 
 #(METHOD, path_prefix)-> req perm
 ROUTE_PERMISSIONS: dict[tuple[str, str], str] = {
+    
+    #Users
     ("GET",    "/api/users"):     "user:read",
     ("POST",   "/api/users"):     "user:create",
     ("PUT",    "/api/users/"):    "user:update",
     ("DELETE", "/api/users/"):    "user:delete",
 
+    # Roles
     ("GET",    "/api/roles"):     "role:read",
     ("POST",   "/api/roles"):     "role:create",
     ("PUT",    "/api/roles/"):    "role:update",
     ("DELETE", "/api/roles/"):    "role:delete",
 
+    # Forests
     ("GET",    "/api/forests"):   "forest:read",
     ("POST",   "/api/forests"):   "forest:create",
     ("PUT",    "/api/forests/"):  "forest:update",
     ("DELETE", "/api/forests/"):  "forest:delete",
 
+    # Services
     ("GET",    "/api/services"):  "service:read",
     ("POST",   "/api/services"):  "service:create",
     ("PUT",    "/api/services/"): "service:update",
     ("DELETE", "/api/services/"): "service:delete",
+
+    # Assignments
+    ("GET",    "/api/assignments"):              "assignment:read",
+    ("GET",    "/api/assignments/users/"):       "assignment:read",
+    ("POST",   "/api/assignments/users/"):       "assignment:create",
+    ("DELETE", "/api/assignments/users/"):       "assignment:delete",
+    ("GET",    "/api/assignments/parcelles/"):   "assignment:read",
 }
 
 PARCELLE_PERMISSIONS = {

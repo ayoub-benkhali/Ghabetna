@@ -5,7 +5,7 @@ from sqlalchemy import text
 from app.database import engine,Base
 from app.models.forest import Forest
 from app.routers.forest_router import router as forest_router
-from app.routers.parcelle_router import router as parcelle_router
+from app.routers.parcelle_router import router as parcelle_router, flat_router as parcelle_flat_router
 
 @asynccontextmanager
 async def lifespan(app:FastAPI):
@@ -22,6 +22,7 @@ app=FastAPI(
 
 app.include_router(forest_router)
 app.include_router(parcelle_router)
+app.include_router(parcelle_flat_router)
 
 @app.get("/health")
 async def health():

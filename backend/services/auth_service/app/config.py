@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     MAIL_SERVER: str = "smtp.gmail.com"
     MAIL_PORT: int = 587
     FRONTEND_URL: str = "http://localhost:3000"
-    
+    FOREST_SERVICE_URL:str="http://forest-service:8000"
 
 settings = Settings()  # type: ignore
 logger.info(f"the path variable exists: {env_path.exists()}")
