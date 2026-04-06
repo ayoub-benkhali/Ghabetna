@@ -59,6 +59,7 @@ services:
       AUTH_DATABASE_URL_SYNC: postgresql+psycopg2://${AUTH_DB_USER}:${AUTH_DB_PASSWORD}@auth-db:5432/${AUTH_DB_NAME}
       FOREST_SERVICE_URL: http://forest-service:8000
       REDIS_URL: redis://redis:6379/0
+      FRONTEND_URL: "http://localhost:3000"
     depends_on:
       auth-db:
         condition: service_healthy
