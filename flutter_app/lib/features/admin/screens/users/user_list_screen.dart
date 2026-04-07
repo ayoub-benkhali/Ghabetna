@@ -3,6 +3,7 @@ import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/core/widgets/async_value_widget.dart';
 import 'package:flutter_app/features/admin/models/user_model.dart';
 import 'package:flutter_app/features/admin/providers/user_provider.dart';
+import 'package:flutter_app/features/admin/screens/users/assignment_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class UserListScreen extends ConsumerWidget {
@@ -250,11 +251,36 @@ class _UserTable extends StatelessWidget {
           ),
         ),
         // Actions
+        // Actions
         DataCell(
           Consumer(
             builder: (ctx, ref, _) => Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // ── NEW: Assignment button (only for agent/supervisor) ──────
+                if (u.roleName == 'agent' || u.roleName == 'supervisor')
+                  IconButton(
+                    icon: Icon(
+                      Icons.assignment_outlined,
+                      size: 18,
+                      // Show green if already assigned, grey if not
+                      color:
+                          (u.roleName == 'supervisor'
+                              ? u.forestId != null
+                              : u.parcelleId != null)
+                          ? AppColors.primaryGreen
+                          : Theme.of(ctx).hintColor,
+                    ),
+                    tooltip: 'Gérer l\'affectation',
+                    onPressed: () async {
+                      final refreshNeeded = await showDialog<bool>(
+                        context: ctx,
+                        builder: (_) => AssignmentDialog(user: u),
+                      );
+                      if (refreshNeeded == true) onRefresh();
+                    },
+                  ),
+                // ── Existing buttons ────────────────────────────────────────
                 IconButton(
                   icon: const Icon(Icons.edit_outlined, size: 18),
                   tooltip: 'Modifier',
