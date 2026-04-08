@@ -13,6 +13,7 @@ class Settings(BaseSettings):
 
     AUTH_SERVICE_URL:str="http://auth-service:8000"
     FOREST_SERVICE_URL:str="http://forest-service:8000"
+    INCIDENT_SERVICE_URL:str="http://incident-service:8000"
     JWT_SECRET: str
     JWT_ALGORITHM: str = "HS256"
 

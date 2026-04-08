@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+sqlalchemy[asyncio]
+asyncpg
+psycopg2-binary
+geoalchemy2
+alembic
+python-multipart
+python-jose[cryptography]
+pydantic-settings
+aiofiles

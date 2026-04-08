@@ -7,6 +7,7 @@ from app.routers.users_proxy import router as users_router
 from app.routers.parcelle_proxy import router as parcelles_router
 from app.routers.service_proxy import router as services_router
 from app.routers.assignment_proxy import router as assignments_router
+from app.routers.incident_proxy import router as incidents_router
 
 app=FastAPI(title="Ghabetna - API Gateway",version="1.0.0")
 
@@ -25,6 +26,7 @@ app.include_router(roles_router)
 app.include_router(users_router)
 app.include_router(services_router)
 app.include_router(assignments_router)
+app.include_router(incidents_router)
 
 @app.get("/health")
 async def health():

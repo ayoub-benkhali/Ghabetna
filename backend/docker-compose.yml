@@ -14,7 +14,7 @@ services:
     volumes:
       - auth_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${AUTH_DB_USER} -d ${AUTH_DB_NAME}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${AUTH_DB_USER} -d ${AUTH_DB_NAME}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -31,7 +31,24 @@ services:
     volumes:
       - forest_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${FOREST_DB_USER} -d ${FOREST_DB_NAME}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${FOREST_DB_USER} -d ${FOREST_DB_NAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  incident-db:
+    image: postgis/postgis:16-3.4-alpine
+    container_name: ghabetna_incident_db
+    environment:
+      POSTGRES_USER: ${INCIDENT_DB_USER}
+      POSTGRES_PASSWORD: ${INCIDENT_DB_PASSWORD}
+      POSTGRES_DB: ${INCIDENT_DB_NAME}
+    ports:
+      - "${INCIDENT_DB_PORT}:5432"
+    volumes:
+      - incident_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${INCIDENT_DB_USER} -d ${INCIDENT_DB_NAME}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -44,12 +61,12 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli","ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 5s
       retries: 5
 
-#========= Services =========
+  #========= Services =========
   auth-service:
     build: ./services/auth_service
     container_name: ghabetna_auth_service
@@ -70,7 +87,7 @@ services:
     volumes:
       - ./services/auth_service:/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-  
+
   forest-service:
     build: ./services/forest_service
     container_name: ghabetna_forest_service
@@ -97,6 +114,7 @@ services:
     environment:
       AUTH_SERVICE_URL: http://auth-service:8000
       FOREST_SERVICE_URL: http://forest-service:8000
+      INCIDENT_SERVICE_URL: http://incident-service:8000
     depends_on:
       - auth-service
       - forest-service
@@ -106,7 +124,27 @@ services:
       - ./services/api_gateway:/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
+  incident-service:
+    build: ./services/incident_service
+    container_name: ghabetna_incident_service
+    env_file: .env
+    environment:
+      INCIDENT_DATABASE_URL: postgresql+asyncpg://${INCIDENT_DB_USER}:${INCIDENT_DB_PASSWORD}@incident-db:5432/${INCIDENT_DB_NAME}
+      INCIDENT_DATABASE_URL_SYNC: postgresql+psycopg2://${INCIDENT_DB_USER}:${INCIDENT_DB_PASSWORD}@incident-db:5432/${INCIDENT_DB_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      incident-db:
+        condition: service_healthy
+    ports:
+      - "8003:8000"
+    volumes:
+      - ./services/incident_service:/app
+      - incident_uploads:/app/uploads
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
 volumes:
   auth_db_data:
   forest_db_data:
+  incident_db_data:
   redis_data:
+  incident_uploads:
