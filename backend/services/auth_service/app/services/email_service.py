@@ -19,7 +19,7 @@ conf=ConnectionConfig(
 mail=FastMail(conf)
 
 async def send_activation_email(to_email:str,full_name:str,activation_token:str)->None:
-    activation_url=f"http://localhost:3000/activate?token={activation_token}"
+    activation_url=f"{settings.FRONTEND_URL}/activate?token={activation_token}"
     logger.info(f"FRONTEND_URL: {settings.FRONTEND_URL}")
     logger.info(f"ACTIVATION URL: {activation_url}")
 

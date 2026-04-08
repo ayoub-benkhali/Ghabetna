@@ -21,10 +21,11 @@ build/
 *.log
 
 # IDE
-.vscode/settings.json
+.vscode/
 .idea/
 *.swp
-DEEP_LINK_SETUP.md
+repomix-output.xml
+
 
 # OS
 .DS_Store

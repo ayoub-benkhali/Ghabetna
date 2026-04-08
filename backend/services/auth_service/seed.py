@@ -1,5 +1,5 @@
 import asyncio
-from sqlalchemy.ext.asyncio import AsyncSession,create_async_engine,async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy import select
 from app.models.role import Role
 from app.models.user import User
@@ -10,89 +10,112 @@ import os
 
 """
 Run with: docker compose exec auth-service python seed.py
-creates default roles and admin User
+Creates default roles + admin, supervisor and agent test users.
 """
 
-AUTH_DATABASE_URL=os.environ["AUTH_DATABASE_URL"]
+AUTH_DATABASE_URL = os.environ["AUTH_DATABASE_URL"]
+
+ROLES_DATA = [
+    {
+        "name": "admin",
+        "description": "Administrateur système",
+        "permissions": [
+            "user:create", "user:read", "user:update", "user:delete",
+            "role:create", "role:read", "role:update", "role:delete",
+            "forest:create", "forest:read", "forest:update", "forest:delete",
+            "parcelle:create", "parcelle:read", "parcelle:update", "parcelle:delete",
+            "service:create", "service:read", "service:update", "service:delete",
+            "assignment:create", "assignment:read", "assignment:delete",
+            "incident:read", "incident:update", "incident:validate",
+            "score:read", "score:update",
+            "analytics:read",
+            "notification:send",
+        ],
+    },
+    {
+        "name": "supervisor",
+        "description": "Superviseur opérationnel",
+        "permissions": [
+            "user:read",
+            "forest:read",
+            "service:read",
+            "parcelle:read",
+            "assignment:create", "assignment:read", "assignment:delete",
+            "incident:read", "incident:update", "incident:validate",
+            "score:read", "score:update",
+            "analytics:read",
+        ],
+    },
+    {
+        "name": "agent",
+        "description": "Agent forestier de terrain",
+        "permissions": [
+            "forest:read",
+            "incident:create", "incident:read",
+            "score:read",
+        ],
+    },
+]
+
+# email / full_name / password / role_name
+TEST_USERS = [
+    ("admin@ghabetna.tn",      "Administrateur Ghabetna", "Admin123",      "admin"),
+    ("supervisor@ghabetna.tn", "Superviseur Test",        "Supervisor123", "supervisor"),
+    ("agent@ghabetna.tn",      "Agent Test",              "Agent123",      "agent"),
+]
+
 
 async def seed():
-    engine=create_async_engine(AUTH_DATABASE_URL)
+    engine = create_async_engine(AUTH_DATABASE_URL)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    SessionLocal=async_sessionmaker(engine,class_=AsyncSession,expire_on_commit=False)
+    SessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
     async with SessionLocal() as db:
-        roles_data=[
-            {
-                "name": "admin",
-                "description": "Administrateur système",
-                "permissions": [
-                    "user:create", "user:read", "user:update", "user:delete",
-                    "role:create", "role:read", "role:update", "role:delete",
-                    "forest:create", "forest:read", "forest:update", "forest:delete",
-                    "parcelle:create", "parcelle:read", "parcelle:update", "parcelle:delete",
-                    "service:create", "service:read", "service:update", "service:delete",
-                    "assignment:create", "assignment:read", "assignment:delete",
-                    "incident:read", "incident:update", "incident:validate",
-                    "score:read", "score:update",
-                    "analytics:read",
-                    "notification:send",
-                ],
-            },
-            {
-                "name": "supervisor",
-                "description": "Superviseur opérationnel",
-                "permissions": [
-                    "user:read",
-                    "forest:read",
-                    "service:read",
-                    "parcelle:read",
-                    "assignment:create", "assignment:read", "assignment:delete",
-                    "incident:read", "incident:update", "incident:validate",
-                    "score:read", "score:update",
-                    "analytics:read",
-                ],
-            },
-            {
-                "name": "agent",
-                "description": "Agent forestier de terrain",
-                "permissions": [
-                    "forest:read",
-                    "incident:create","incident:read",
-                    "score:read",
-                ],
-            },
-        ]
-        admin_role_id=None
-        for r in roles_data:
-            existing=await db.execute(select(Role).where(Role.name==r["name"]))
-            if not existing.scalar_one_or_none():
-                role=Role(**r)
+
+        # ── 1. Upsert roles ───────────────────────────────────────────────────
+        role_ids: dict[str, int] = {}
+
+        for r in ROLES_DATA:
+            result = await db.execute(select(Role).where(Role.name == r["name"]))
+            role = result.scalar_one_or_none()
+            if not role:
+                role = Role(**r)
                 db.add(role)
                 await db.flush()
-                if r["name"]=="admin":
-                    admin_role_id=role.id
+                print(f"  [role]  created  → {r['name']}")
             else:
-                existing_role=(await db.execute(select(Role).where(Role.name=="admin"))).scalar_one_or_none()
-                if r["name"]=="admin" and existing_role:
-                    admin_role_id=existing_role.id
+                print(f"  [role]  exists   → {r['name']}")
+            role_ids[r["name"]] = role.id
+
         await db.commit()
 
-        admin_exists=await db.execute(select(User).where(User.email=="admin@gmail.com"))
-        if not admin_exists.scalar_one_or_none() and admin_role_id:
-            admin=User(
-                email="admin@gmail.com",
-                full_name="Adminstrateur Ghabetna",
-                role_id=admin_role_id,
-                hashed_password=hash_password("Admin123"),
-                is_active=True
+        # ── 2. Create test users ──────────────────────────────────────────────
+        for email, full_name, password, role_name in TEST_USERS:
+            result = await db.execute(select(User).where(User.email == email))
+            if result.scalar_one_or_none():
+                print(f"  [user]  exists   → {email}")
+                continue
+
+            user = User(
+                email=email,
+                full_name=full_name,
+                role_id=role_ids[role_name],
+                hashed_password=hash_password(password),
+                is_active=True,
+                activation_token=None,
             )
-            db.add(admin)
-            await db.commit()
-            print("Admin Created: admin@gmail.com / Admin123")
-        else:
-            print("Admin already exists")
-        
-        print("Seed Complete")
+            db.add(user)
+            await db.flush()
+            print("──────────────────────────────────────────────")
+            print(f"  [user]  created  → {email}  /  {password}  (role: {role_name})")
+            print("──────────────────────────────────────────────")
+
+        await db.commit()
+
     await engine.dispose()
+    print("\nSeed complete.")
+
+
 asyncio.run(seed())

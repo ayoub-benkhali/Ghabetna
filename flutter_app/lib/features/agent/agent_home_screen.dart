@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/features/auth/providers/auth_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-/// Stub screen for Sprint 2.
-/// Will be replaced by the full incident reporting UI.
 class AgentHomeScreen extends ConsumerWidget {
   const AgentHomeScreen({super.key});
 
@@ -59,35 +58,21 @@ class AgentHomeScreen extends ConsumerWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
-              // Coming soon card
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryGreen.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: AppColors.primaryGreen.withValues(alpha: 0.2),
-                  ),
+              FilledButton.icon(
+                onPressed: () => context.push('/agent/report'),
+                icon: const Icon(Icons.add_alert),
+                label: const Text('Signaler un incident'),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 52),
                 ),
-                child: Column(
-                  children: [
-                    const Icon(
-                      Icons.construction_outlined,
-                      size: 40,
-                      color: AppColors.primaryGreen,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Module de signalement',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Le module de signalement d\'incidents sera disponible dans le Sprint 2.',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () => context.push('/agent/incidents'),
+                icon: const Icon(Icons.list_alt),
+                label: const Text('Mes signalements'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 52),
                 ),
               ),
             ],

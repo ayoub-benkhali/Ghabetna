@@ -12,6 +12,8 @@ import 'package:flutter_app/features/auth/providers/auth_provider.dart';
 import 'package:flutter_app/features/auth/screens/activation_screen.dart';
 import 'package:flutter_app/features/auth/screens/login_screen.dart';
 import 'package:flutter_app/features/auth/screens/splash_screen.dart';
+import 'package:flutter_app/features/incidents/screens/my_incidents_screen.dart';
+import 'package:flutter_app/features/incidents/screens/report_incident_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -48,6 +50,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       //Agent routes
       GoRoute(path: '/agent/home', builder: (_, __) => const AgentHomeScreen()),
+      GoRoute(
+        path: '/agent/report',
+        builder: (_, __) => const ReportIncidentScreen(),
+      ),
+      GoRoute(
+        path: '/agent/incidents',
+        builder: (_, __) => const MyIncidentsScreen(),
+      ),
       //Admin routes wrapped in AdminShell
       ShellRoute(
         builder: (context, state, child) => AdminShell(child: child),
@@ -86,7 +96,9 @@ final routerProvider = Provider<GoRouter>((ref) {
                     path: ':parcelleId/edit',
                     builder: (_, state) => ParcelleDrawScreen(
                       forestId: int.parse(state.pathParameters['forestId']!),
-                      parcelleId: int.parse(state.pathParameters['parcelleId']!),
+                      parcelleId: int.parse(
+                        state.pathParameters['parcelleId']!,
+                      ),
                     ),
                   ),
                 ],

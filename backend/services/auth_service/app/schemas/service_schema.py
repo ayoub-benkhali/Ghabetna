@@ -16,7 +16,7 @@ class ServiceResponse(BaseModel):
     id:int
     name:str
     type:ServiceType
-    description:str
+    description:str|None=None
     created_at:datetime
     class Config:
         from_attributes=True
