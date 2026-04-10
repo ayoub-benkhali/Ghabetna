@@ -1,12 +1,12 @@
 import os,shutil,uuid
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select,and_
 from typing import Optional
 from geoalchemy2.functions import ST_SetSRID,ST_MakePoint
 from app.database import get_db
 from app.models.incident import Incident, IncidentCategory, IncidentStatus
-from app.schemas.incident_schema import IncidentResponse
+from app.schemas.incident_schema import IncidentResponse, IncidentStatusUpdate
 from app.utils.deps import require_permission, get_current_user_payload
 from app.config import settings
 
@@ -23,6 +23,8 @@ def _save_image(file:UploadFile,agent_id:int)->str:
         shutil.copyfileobj(file.file,buffer)
     return f"/uploads/{filename}"
 
+
+# Agent endpoints
 @router.post("",response_model=IncidentResponse,status_code=201,dependencies=[Depends(require_permission("incident:create"))])
 async def create_incident(
     category: IncidentCategory = Form(...),
@@ -81,4 +83,51 @@ async def get_incident(incident_id: int, db: AsyncSession = Depends(get_db)):
     incident = result.scalar_one_or_none()
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")
+    return incident
+
+# Admin/supervisor endpoints
+@router.get("", response_model=list[IncidentResponse],
+            dependencies=[Depends(require_permission("incident:read"))])
+async def list_all_incidents(
+    status: Optional[IncidentStatus] = None,
+    category: Optional[IncidentCategory] = None,
+    forest_id: Optional[int] = None,
+    parcelle_id: Optional[int] = None,
+    db: AsyncSession = Depends(get_db),
+):
+    filters = []
+    if status:
+        filters.append(Incident.status == status)
+    if category:
+        filters.append(Incident.category == category)
+    if forest_id:
+        filters.append(Incident.forest_id == forest_id)
+    if parcelle_id:
+        filters.append(Incident.parcelle_id == parcelle_id)
+
+    q = select(Incident).order_by(Incident.created_at.desc())
+    if filters:
+        q = q.where(and_(*filters))
+    result = await db.execute(q)
+    return result.scalars().all()
+
+# PATCH status (supervisor)
+@router.patch("/{incident_id}", response_model=IncidentResponse,
+              dependencies=[Depends(require_permission("incident:update"))])
+async def update_incident_status(
+    incident_id: int,
+    body: IncidentStatusUpdate,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(select(Incident).where(Incident.id == incident_id))
+    incident = result.scalar_one_or_none()
+    if not incident:
+        raise HTTPException(status_code=404, detail="Incident not found")
+    incident.status = body.status
+    if body.supervisor_comment:
+        incident.supervisor_comment = body.supervisor_comment
+    incident.supervisor_id = int(payload["sub"])
+    await db.commit()
+    await db.refresh(incident)
     return incident

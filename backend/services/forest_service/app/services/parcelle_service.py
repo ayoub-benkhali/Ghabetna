@@ -20,7 +20,7 @@ def _to_response(p:Parcelle)-> ParcelleResponse:
         forest_id=p.forest_id,
         name=p.name,
         description=p.description,
-        area_hectares=p.area_hectars,
+        area_hectars=p.area_hectars,
         boundary_geojson=mapping(to_shape(p.boundary)),
         created_at=p.created_at,
         updated_at=p.updated_at

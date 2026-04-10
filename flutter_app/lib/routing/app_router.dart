@@ -14,6 +14,10 @@ import 'package:flutter_app/features/auth/screens/login_screen.dart';
 import 'package:flutter_app/features/auth/screens/splash_screen.dart';
 import 'package:flutter_app/features/incidents/screens/my_incidents_screen.dart';
 import 'package:flutter_app/features/incidents/screens/report_incident_screen.dart';
+import 'package:flutter_app/features/supervisor/screens/incident_detail_screen.dart';
+import 'package:flutter_app/features/supervisor/screens/supervisor_incident_screen.dart';
+import 'package:flutter_app/features/supervisor/screens/supervisor_map_screen.dart';
+import 'package:flutter_app/features/supervisor/screens/supervisor_shell.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -34,6 +38,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (isAuthed && (onPublicPath || onSplash)) {
         final user = authState.user!;
         if (user.isAgent) return '/agent/home';
+        if (user.isSupervisor) return '/supervisor/map';
         return '/admin/dashboard';
       }
       return null;
@@ -117,6 +122,26 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/admin/services',
             builder: (_, __) => const ServiceListScreen(),
           ),
+        ],
+      ),
+      ShellRoute(
+        builder: (context, state, child) => SupervisorShell(child: child),
+        routes: [
+          GoRoute(
+            path: '/supervisor/incidents',
+            builder: (_, __) => const SupervisorIncidentScreen(),
+          ),
+          GoRoute(
+            path: '/supervisor/incidents/:id',
+            builder: (_, state) => IncidentDetailScreen(
+              incidentId: int.parse(state.pathParameters['id']!),
+            ),
+          ),
+          GoRoute(
+            path: '/supervisor/map',
+            builder: (_, __) => const SupervisorMapScreen(),
+          ),
+          // we'll add /supervisor/agents and /supervisor/analytics later
         ],
       ),
     ],

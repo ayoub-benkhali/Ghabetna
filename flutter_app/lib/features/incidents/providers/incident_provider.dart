@@ -62,7 +62,7 @@ class ReportFormNotifier extends StateNotifier<ReportFormState> {
       _ref.invalidate(myIncidentsProvider);
       state = state.copyWith(isLoading: false, success: true);
     } catch (e) {
-      state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 

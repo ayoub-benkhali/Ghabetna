@@ -7,9 +7,13 @@ class IncidentModel {
   final double? longitude;
   final int? parcelleId;
   final int? forestId;
+  final String? supervisorComment;
+  final int? supervisorId;
+  final String? agentName;
   final String status;
   final bool isCritical;
   final DateTime createdAt;
+  final DateTime updatedAt;
 
   const IncidentModel({
     required this.id,
@@ -23,6 +27,10 @@ class IncidentModel {
     required this.status,
     required this.isCritical,
     required this.createdAt,
+    this.supervisorComment,
+    this.supervisorId,
+    this.agentName,
+    required this.updatedAt,
   });
 
   factory IncidentModel.fromJson(Map<String, dynamic> json) => IncidentModel(
@@ -37,5 +45,9 @@ class IncidentModel {
     status: json['status'] as String,
     isCritical: json['is_critical'] as bool? ?? false,
     createdAt: DateTime.parse(json['created_at'] as String),
+    updatedAt: DateTime.parse(json['updated_at'] as String),
+    supervisorComment: json['supervisor_comment'] as String?,
+    supervisorId: json['supervisor_id'] as int?,
+    agentName: json['agent_name'] as String?,
   );
 }

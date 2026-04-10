@@ -27,17 +27,27 @@ async def _proxy(path: str, request: Request) -> Response:
         media_type=resp.headers.get("content-type"),
     )
 
-@router.api_route("", methods=["POST"])
+@router.api_route("", methods=["GET","POST"])
 async def incidents_root(request: Request):
     await verify_and_inject(request)
-    return await _proxy("", request)
+    qs = str(request.url.query)
+    suffix = f"?{qs}" if qs and request.method == "GET" else ""
+    return await _proxy(suffix, request)
 
 @router.api_route("/mine", methods=["GET"])
 async def my_incidents(request: Request):
     await verify_and_inject(request)
     return await _proxy("/mine", request)
 
-@router.api_route("/{incident_id}", methods=["GET"])
+@router.api_route("/{incident_id}", methods=["GET","PATCH"])
 async def incident_by_id(incident_id: int, request: Request):
     await verify_and_inject(request)
     return await _proxy(f"/{incident_id}", request)
+
+@router.api_route("", methods=["GET"])          # list all (supervisor)
+async def list_incidents(request: Request):
+    await verify_and_inject(request)
+    # forward query params too
+    qs = str(request.url.query)
+    path = f"?{qs}" if qs else ""
+    return await _proxy(path, request)

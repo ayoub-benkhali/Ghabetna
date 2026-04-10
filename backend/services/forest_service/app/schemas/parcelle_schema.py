@@ -16,7 +16,7 @@ class ParcelleResponse(BaseModel):
     forest_id:int
     name:str
     description: str|None
-    area_hectares:float|None
+    area_hectars:float|None
     boundary_geojson: dict
     created_at: datetime
     updated_at: datetime

@@ -22,9 +22,16 @@ class IncidentResponse(BaseModel):
     longitude: Optional[float] = None
     parcelle_id: Optional[int] = None
     forest_id: Optional[int] = None
+    supervisor_comment: Optional[str] = None
+    supervisor_id: Optional[int] = None
     status: IncidentStatus
     is_critical: bool
     created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True
+
+class IncidentStatusUpdate(BaseModel):
+    status:IncidentStatus
+    supervisor_comment:Optional[str]=None

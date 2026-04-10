@@ -58,6 +58,10 @@ class Incident(Base):
     )
     is_critical: Mapped[bool] = mapped_column(default=False)
 
+    # Supervisor add-on's
+    supervisor_comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+    supervisor_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(
         default=func.now(), server_default=func.now()
     )

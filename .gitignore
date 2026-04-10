@@ -25,6 +25,8 @@ build/
 .idea/
 *.swp
 repomix-output.xml
+.repomixignore
+repomix.config.json
 
 
 # OS
