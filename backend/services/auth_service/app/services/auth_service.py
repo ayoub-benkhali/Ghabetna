@@ -28,6 +28,7 @@ async def login(email:str,password:str,db:AsyncSession,redis:aioredis.Redis):
         user.id,
         user.role_id,
         permissions,
+        full_name=user.full_name,
         service_id=user.service_id,
         parcelle_id=user.parcelle_id,
         forest_id=user.forest_id
@@ -65,6 +66,7 @@ async def refresh(refresh_token:str,db:AsyncSession,redis:aioredis.Redis):
         user.id,
         user.role_id,
         permissions,
+        full_name=user.full_name,
         service_id=user.service_id,
         parcelle_id=user.parcelle_id,
         forest_id=user.forest_id

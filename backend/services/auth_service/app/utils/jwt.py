@@ -7,6 +7,7 @@ def create_access_token(
         user_id:int,
         role_id:int,
         permissions: list[str],
+        full_name: str = "",
         service_id:int|None=None,
         parcelle_id:int|None=None,
         forest_id:int|None=None
@@ -17,6 +18,7 @@ def create_access_token(
         "sub":str(user_id),
         "role_id":role_id,
         "permissions":permissions,
+        "full_name":full_name,
         "service_id":service_id,
         "parcelle_id":parcelle_id,
         "forest_id": forest_id,

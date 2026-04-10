@@ -9,9 +9,9 @@ import 'package:image_picker/image_picker.dart';
 
 const _categories = [
   ('feu', 'Incendie', Icons.local_fire_department),
-  ('coupe_illegale', 'Coupe illégale', Icons.content_cut),
+  ('coupe_illegale', 'Coupe illégale', Icons.carpenter_outlined),
   ('refuge_suspect', 'Refuge suspect', Icons.warning_amber),
-  ('trafic', 'Trafic', Icons.no_encryption),
+  ('trafic', 'Trafic', Icons.car_crash_outlined),
   ('dechet', 'Déchets', Icons.delete_outline),
   ('maladie', 'Maladie végétale', Icons.coronavirus_outlined),
   ('autre', 'Autre', Icons.help_outline),
