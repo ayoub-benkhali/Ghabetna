@@ -161,13 +161,23 @@ class _WideLayout extends ConsumerWidget {
   }
 }
 
-class _NarrowLayout extends StatelessWidget {
+class _NarrowLayout extends ConsumerWidget {
   final Widget child;
   const _NarrowLayout({required this.child});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Ghabetna'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout_outlined),
+            tooltip: 'Déconnexion',
+            onPressed: () => ref.read(authProvider.notifier).logout(),
+          ),
+        ],
+      ),
       body: child,
       bottomNavigationBar: NavigationBar(
         backgroundColor: AppColors.sidebarBg,

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_app/core/api/api_client.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/features/incidents/models/incident_model.dart';
 import 'package:flutter_app/features/supervisor/providers/supervisor_provider.dart';
@@ -256,13 +255,6 @@ class _ImageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Build full URL from the relative path returned by the backend
-    final base = ApiClient.instance.dio.options.baseUrl.replaceFirst(
-      RegExp(r'/api.*'),
-      '',
-    );
-    final fullUrl = '$base$imageUrl';
-
     return Card(
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -278,20 +270,25 @@ class _ImageCard extends StatelessWidget {
             ),
           ),
           Image.network(
-            fullUrl,
+            imageUrl,
             height: 220,
             width: double.infinity,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => const SizedBox(
-              height: 80,
-              child: Center(
-                child: Icon(
-                  Icons.broken_image_outlined,
-                  size: 40,
-                  color: Colors.grey,
+            errorBuilder: (_, error, __) {
+              debugPrint(
+                'Image load error for $imageUrl: $error',
+              ); // helpful for debugging
+              return const SizedBox(
+                height: 80,
+                child: Center(
+                  child: Icon(
+                    Icons.broken_image_outlined,
+                    size: 40,
+                    color: Colors.grey,
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ],
       ),

@@ -43,11 +43,3 @@ async def my_incidents(request: Request):
 async def incident_by_id(incident_id: int, request: Request):
     await verify_and_inject(request)
     return await _proxy(f"/{incident_id}", request)
-
-@router.api_route("", methods=["GET"])          # list all (supervisor)
-async def list_incidents(request: Request):
-    await verify_and_inject(request)
-    # forward query params too
-    qs = str(request.url.query)
-    path = f"?{qs}" if qs else ""
-    return await _proxy(path, request)

@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     INCIDENT_DATABASE_URL_SYNC: str
     JWT_SECRET: str
     JWT_ALGORITHM: str = "HS256"
-    UPLOAD_DIR: str = "/app/uploads"
+    UPLOAD_DIR: str = "/uploads"
     MAX_IMAGE_SIZE_MB: int = 10
 
     class Config:

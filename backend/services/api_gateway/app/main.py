@@ -8,6 +8,13 @@ from app.routers.parcelle_proxy import router as parcelles_router
 from app.routers.service_proxy import router as services_router
 from app.routers.assignment_proxy import router as assignments_router
 from app.routers.incident_proxy import router as incidents_router
+import os
+from contextlib import asynccontextmanager
+from fastapi.staticfiles import StaticFiles
+
+UPLOADS_DIR = os.getenv("UPLOAD_DIR", "/uploads")
+
+os.makedirs(UPLOADS_DIR, exist_ok=True)
 
 app=FastAPI(title="Ghabetna - API Gateway",version="1.0.0")
 
@@ -18,6 +25,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.mount("/uploads",StaticFiles(directory=UPLOADS_DIR),name="uploads")
 
 app.include_router(auth_router)
 app.include_router(forests_router)

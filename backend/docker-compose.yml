@@ -115,13 +115,16 @@ services:
       AUTH_SERVICE_URL: http://auth-service:8000
       FOREST_SERVICE_URL: http://forest-service:8000
       INCIDENT_SERVICE_URL: http://incident-service:8000
+      UPLOAD_DIR: /uploads
     depends_on:
       - auth-service
       - forest-service
+      - incident-service
     ports:
       - "8000:8000"
     volumes:
       - ./services/api_gateway:/app
+      - incident_uploads:/uploads:ro
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   incident-service:
@@ -132,6 +135,7 @@ services:
       INCIDENT_DATABASE_URL: postgresql+asyncpg://${INCIDENT_DB_USER}:${INCIDENT_DB_PASSWORD}@incident-db:5432/${INCIDENT_DB_NAME}
       INCIDENT_DATABASE_URL_SYNC: postgresql+psycopg2://${INCIDENT_DB_USER}:${INCIDENT_DB_PASSWORD}@incident-db:5432/${INCIDENT_DB_NAME}
       JWT_SECRET: ${JWT_SECRET}
+      UPLOAD_DIR: /uploads
     depends_on:
       incident-db:
         condition: service_healthy
@@ -139,7 +143,7 @@ services:
       - "8003:8000"
     volumes:
       - ./services/incident_service:/app
-      - incident_uploads:/app/uploads
+      - incident_uploads:/uploads
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 volumes:
