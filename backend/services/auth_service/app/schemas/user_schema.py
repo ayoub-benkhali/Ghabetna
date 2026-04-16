@@ -37,4 +37,3 @@ class RoleInUser(BaseModel):
 
 class UserWithRoleResponse(UserResponse):
     role:RoleInUser
-    service_id:int|None=None

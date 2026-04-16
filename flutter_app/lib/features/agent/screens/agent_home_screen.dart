@@ -16,6 +16,11 @@ class AgentHomeScreen extends ConsumerWidget {
         title: const Text('Ghabetna'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.person_outline),
+            tooltip: 'Mon profil',
+            onPressed: () => context.push('/agent/profile'),
+          ),
+          IconButton(
             icon: const Icon(Icons.logout_outlined),
             tooltip: 'Déconnexion',
             onPressed: () => ref.read(authProvider.notifier).logout(),

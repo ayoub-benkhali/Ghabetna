@@ -27,6 +27,14 @@ async def create_user(
 async def get_me(db:AsyncSession=Depends(get_db),current_user:User=Depends(get_current_user)):
     return await user_service.get_user(current_user.id,db)
 
+@router.put("/me", response_model=UserWithRoleResponse)
+async def update_me(
+    data: UserUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return await user_service.update_user(current_user.id, data, db)
+
 @router.get("/{user_id}",response_model=UserWithRoleResponse)
 async def get_user(
     user_id:int,

@@ -1,3 +1,4 @@
+import 'package:flutter_app/features/admin/screens/admin_profile_screen.dart';
 import 'package:flutter_app/features/admin/screens/admin_shell.dart';
 import 'package:flutter_app/features/admin/screens/dashboard_screen.dart';
 import 'package:flutter_app/features/admin/screens/forests/forest_form_screen.dart';
@@ -7,16 +8,18 @@ import 'package:flutter_app/features/admin/screens/forests/parcelle_list_screen.
 import 'package:flutter_app/features/admin/screens/roles/role_list_screen.dart';
 import 'package:flutter_app/features/admin/screens/services/service_list_screen.dart';
 import 'package:flutter_app/features/admin/screens/users/user_list_screen.dart';
-import 'package:flutter_app/features/agent/agent_home_screen.dart';
+import 'package:flutter_app/features/agent/screens/agent_home_screen.dart';
+import 'package:flutter_app/features/agent/screens/agent_profile_screen.dart';
 import 'package:flutter_app/features/auth/providers/auth_provider.dart';
 import 'package:flutter_app/features/auth/screens/activation_screen.dart';
 import 'package:flutter_app/features/auth/screens/login_screen.dart';
 import 'package:flutter_app/features/auth/screens/splash_screen.dart';
-import 'package:flutter_app/features/incidents/screens/my_incidents_screen.dart';
-import 'package:flutter_app/features/incidents/screens/report_incident_screen.dart';
+import 'package:flutter_app/features/agent/screens/my_incidents_screen.dart';
+import 'package:flutter_app/features/agent/screens/report_incident_screen.dart';
 import 'package:flutter_app/features/supervisor/screens/incident_detail_screen.dart';
 import 'package:flutter_app/features/supervisor/screens/supervisor_incident_screen.dart';
 import 'package:flutter_app/features/supervisor/screens/supervisor_map_screen.dart';
+import 'package:flutter_app/features/supervisor/screens/supervisor_profile_screen.dart';
 import 'package:flutter_app/features/supervisor/screens/supervisor_shell.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -62,6 +65,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/agent/incidents',
         builder: (_, __) => const MyIncidentsScreen(),
+      ),
+      GoRoute(
+        path: '/agent/profile',
+        builder: (_, __) => const AgentProfileScreen(),
       ),
       //Admin routes wrapped in AdminShell
       ShellRoute(
@@ -122,6 +129,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/admin/services',
             builder: (_, __) => const ServiceListScreen(),
           ),
+          GoRoute(
+            path: '/admin/profile',
+            builder: (_, __) => const AdminProfileScreen(),
+          ),
         ],
       ),
       ShellRoute(
@@ -140,6 +151,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/supervisor/map',
             builder: (_, __) => const SupervisorMapScreen(),
+          ),
+          GoRoute(
+            path: '/supervisor/profile',
+            builder: (_, __) => const SupervisorProfileScreen(),
           ),
           // we'll add /supervisor/agents and /supervisor/analytics later
         ],

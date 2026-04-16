@@ -25,6 +25,7 @@ class _NavItem {
 const _navItems = [
   _NavItem('Incidents', Icons.list_alt_outlined, '/supervisor/incidents'),
   _NavItem('Carte', Icons.map_outlined, '/supervisor/map'),
+  _NavItem('Profil', Icons.person_outline, '/supervisor/profile'),
   // will uncomment when building these screens:
   // _NavItem('Agents', Icons.people_outline, '/supervisor/agents'),
   // _NavItem('Statistiques', Icons.bar_chart_outlined, '/supervisor/analytics'),

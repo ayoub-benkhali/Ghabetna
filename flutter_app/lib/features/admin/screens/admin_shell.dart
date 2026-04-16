@@ -28,6 +28,7 @@ const _navItems = [
   _NavItem('Utilisateurs', Icons.people_outline, '/admin/users'),
   _NavItem('Rôles', Icons.shield_outlined, '/admin/roles'),
   _NavItem('Services', Icons.account_tree_outlined, '/admin/services'),
+  _NavItem('Profil', Icons.person_outline, '/admin/profile'),
 ];
 
 class _WideLayout extends ConsumerWidget {
