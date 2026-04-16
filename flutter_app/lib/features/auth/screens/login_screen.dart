@@ -106,12 +106,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           children: [
                             // Header
                             if (MediaQuery.of(context).size.width <= 900) ...[
-                              const Icon(
-                                Icons.forest,
-                                size: 48,
-                                color: AppColors.primaryGreen,
+                              Image.asset(
+                                'assets/images/logo-ghabetna.jpeg',
+                                height: 160,
                               ),
-                              const SizedBox(height: 16),
                             ],
                             Center(
                               // Wrap text in Center widget
