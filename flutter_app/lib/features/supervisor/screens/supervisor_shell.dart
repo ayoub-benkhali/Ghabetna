@@ -59,27 +59,36 @@ class _WideLayout extends ConsumerWidget {
                   // Brand header
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.fromLTRB(20, 32, 20, 24),
+                    padding: const EdgeInsets.fromLTRB(20, 15, 20, 15),
                     decoration: const BoxDecoration(
                       gradient: AppColors.primaryGradient,
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        const Icon(Icons.forest, color: Colors.white, size: 32),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Ghabetna',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                              ),
+                        Image.asset(
+                          'assets/images/logo-ghabetna.jpeg',
+                          height: 75,
                         ),
-                        Text(
-                          'Supervision',
-                          style: Theme.of(context).textTheme.labelMedium
-                              ?.copyWith(color: Colors.white70),
+                        const SizedBox(width: 15),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Ghabetna',
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                            ),
+                            Text(
+                              'Administration',
+                              style: Theme.of(context).textTheme.labelMedium
+                                  ?.copyWith(color: Colors.white70),
+                            ),
+                          ],
                         ),
                       ],
                     ),

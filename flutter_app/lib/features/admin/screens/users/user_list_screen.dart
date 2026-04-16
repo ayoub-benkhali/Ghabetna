@@ -251,13 +251,41 @@ class _UserTable extends StatelessWidget {
           ),
         ),
         // Actions
-        // Actions
         DataCell(
           Consumer(
             builder: (ctx, ref, _) => Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // ── NEW: Assignment button (only for agent/supervisor) ──────
+                // ── Edit button (first) ─────────────────────────────────
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined, size: 18),
+                  tooltip: 'Modifier',
+                  onPressed: () async {
+                    await showDialog(
+                      context: ctx,
+                      builder: (_) => UserFormDialog(user: u),
+                    );
+                    onRefresh();
+                  },
+                ),
+                // ── Activate/Deactivate button ─────────────────
+                IconButton(
+                  icon: Icon(
+                    u.isActive
+                        ? Icons.block_outlined
+                        : Icons.check_circle_outline,
+                    size: 18,
+                    color: u.isActive ? AppColors.danger : AppColors.success,
+                  ),
+                  tooltip: u.isActive ? 'Désactiver' : 'Activer',
+                  onPressed: () async {
+                    await ref.read(userRepositoryProvider).updateUser(u.id, {
+                      'is_active': !u.isActive,
+                    });
+                    onRefresh();
+                  },
+                ),
+                // ── Assignment button  ─────────────
                 if (u.roleName == 'agent' || u.roleName == 'supervisor')
                   IconButton(
                     icon: Icon(
@@ -280,34 +308,6 @@ class _UserTable extends StatelessWidget {
                       if (refreshNeeded == true) onRefresh();
                     },
                   ),
-                // ── Existing buttons ────────────────────────────────────────
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined, size: 18),
-                  tooltip: 'Modifier',
-                  onPressed: () async {
-                    await showDialog(
-                      context: ctx,
-                      builder: (_) => UserFormDialog(user: u),
-                    );
-                    onRefresh();
-                  },
-                ),
-                IconButton(
-                  icon: Icon(
-                    u.isActive
-                        ? Icons.block_outlined
-                        : Icons.check_circle_outline,
-                    size: 18,
-                    color: u.isActive ? AppColors.danger : AppColors.success,
-                  ),
-                  tooltip: u.isActive ? 'Désactiver' : 'Activer',
-                  onPressed: () async {
-                    await ref.read(userRepositoryProvider).updateUser(u.id, {
-                      'is_active': !u.isActive,
-                    });
-                    onRefresh();
-                  },
-                ),
               ],
             ),
           ),
