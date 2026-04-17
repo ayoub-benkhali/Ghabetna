@@ -27,6 +27,7 @@ build/
 repomix-output.xml
 .repomixignore
 repomix.config.json
+Makefile
 
 
 # OS
