@@ -13,7 +13,7 @@ class SplashScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset('assets/images/logo-ghabetna.jpeg',height: 150,),
-            const SizedBox(height: 24,),
+            const SizedBox(height: 20,),
             Text(
               'Ghabetna',
               style: Theme.of(context).textTheme.displayLarge?.copyWith(
@@ -28,7 +28,7 @@ class SplashScreen extends StatelessWidget {
               color: Colors.white60
               ),
             ),
-            const SizedBox(height: 48,),
+            const SizedBox(height: 20,),
             const CircularProgressIndicator(
               color: AppColors.primaryGreen,
               strokeWidth: 2,

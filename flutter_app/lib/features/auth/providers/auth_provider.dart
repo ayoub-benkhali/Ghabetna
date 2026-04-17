@@ -1,7 +1,7 @@
 import 'package:flutter_app/core/api/api_client.dart';
 import 'package:flutter_app/core/models/auth_user.dart';
+import 'package:flutter_app/core/providers/user_session_provider.dart';
 import 'package:flutter_app/features/auth/data/auth_repository.dart';
-import 'package:flutter_app/features/shared/providers/profile_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>(
@@ -36,9 +36,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     _restore();
   }
 
+  void _clearUserCache() {
+    _ref.read(userSessionProvider.notifier).update((s) => s + 1);
+  }
+
   void _forceLogout() {
     if (!mounted) return;
-    _ref.invalidate(myProfileProvider);
+    _clearUserCache();
     state = const AuthState.unauthenticated();
   }
 
@@ -63,7 +67,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> logout() async {
     await _repo.logout();
-    _ref.invalidate(myProfileProvider);
+    _clearUserCache();
     state = const AuthState.unauthenticated();
   }
 }

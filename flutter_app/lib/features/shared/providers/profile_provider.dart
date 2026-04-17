@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_app/core/api/api_client.dart';
+import 'package:flutter_app/core/providers/user_session_provider.dart';
 import 'package:flutter_app/features/admin/models/user_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -25,6 +26,7 @@ final profileRepositoryProvider = Provider<ProfileReposiroty>(
 
 /// Fetches the current user's full profile from /api/users/me.
 final myProfileProvider = FutureProvider<UserModel>((ref) async {
+  ref.watch(userSessionProvider);
   return ref.watch(profileRepositoryProvider).fetchMe();
 });
 

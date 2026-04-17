@@ -1,3 +1,4 @@
+import 'package:flutter_app/core/providers/user_session_provider.dart';
 import 'package:flutter_app/features/incidents/models/incident_model.dart';
 import 'package:flutter_app/features/supervisor/data/supervisor_incident_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,10 +22,16 @@ class IncidentFilter {
   );
 }
 
-final incidentFilterProvider = StateProvider((_) => const IncidentFilter());
+final incidentFilterProvider = StateProvider<IncidentFilter>((ref) {
+  ref.watch(
+    userSessionProvider,
+  ); // ADD — resets filter to default on session change
+  return const IncidentFilter();
+});
 
 final allIncidentsProvider = FutureProvider<List<IncidentModel>>((ref) {
   final filter = ref.watch(incidentFilterProvider);
+  ref.watch(userSessionProvider);
   return ref
       .watch(supervisorRepoProvider)
       .getAllIncidents(status: filter.status, category: filter.category);

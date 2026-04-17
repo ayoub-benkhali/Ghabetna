@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter_app/core/providers/user_session_provider.dart';
 import 'package:flutter_app/features/incidents/data/incident_repository.dart';
 import 'package:flutter_app/features/incidents/models/incident_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +11,7 @@ final incidentRepositoryProvider = Provider<IncidentRepository>(
 
 //My incidents list is (auto-refreshable)
 final myIncidentsProvider = FutureProvider<List<IncidentModel>>((ref) async {
+  ref.watch(userSessionProvider);
   return ref.watch(incidentRepositoryProvider).getMyIncidents();
 });
 
