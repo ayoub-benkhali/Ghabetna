@@ -6,6 +6,7 @@ class ProfileInfoTile extends StatelessWidget {
   final String label;
   final String value;
   final Color? iconColor;
+  final Widget? trailing;
 
   const ProfileInfoTile({
     super.key,
@@ -13,6 +14,7 @@ class ProfileInfoTile extends StatelessWidget {
     required this.label,
     required this.value,
     this.iconColor,
+    this.trailing,
   });
 
   @override
@@ -40,6 +42,7 @@ class ProfileInfoTile extends StatelessWidget {
               ],
             ),
           ),
+          ?trailing,
         ],
       ),
     );

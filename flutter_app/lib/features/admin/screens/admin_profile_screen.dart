@@ -78,6 +78,27 @@ class AdminProfileScreen extends ConsumerWidget {
                             'fr',
                           ).format(user.createdAt),
                         ),
+                        if (user.cin != null)
+                          ProfileInfoTile(
+                            icon: Icons.credit_card_outlined,
+                            label: 'CIN',
+                            value: user.cin!,
+                          ),
+                        if (user.phoneNumber != null)
+                          ProfileInfoTile(
+                            icon: Icons.phone_outlined,
+                            label: 'Téléphone',
+                            value: user.phoneNumber!,
+                            trailing: IconButton(
+                              icon: const Icon(Icons.edit_outlined, size: 16),
+                              tooltip: 'Modifier le téléphone',
+                              onPressed: () => _showEditPhoneDialog(
+                                context,
+                                ref,
+                                user.phoneNumber!,
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -160,6 +181,45 @@ class AdminProfileScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+void _showEditPhoneDialog(
+  BuildContext context,
+  WidgetRef ref,
+  String currentPhone,
+) {
+  final ctrl = TextEditingController(text: currentPhone);
+  showDialog(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: const Text('Modifier le téléphone'),
+      content: TextField(
+        controller: ctrl,
+        keyboardType: TextInputType.phone,
+        decoration: const InputDecoration(
+          labelText: 'Numéro de téléphone',
+          prefixIcon: Icon(Icons.phone_outlined),
+        ),
+        autofocus: true,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext),
+          child: const Text('Annuler'),
+        ),
+        FilledButton(
+          onPressed: () async {
+            final phone = ctrl.text.trim();
+            if (phone.isNotEmpty) {
+              await ref.read(profileUpdateProvider.notifier).updatePhone(phone);
+            }
+            if (context.mounted) Navigator.pop(dialogContext);
+          },
+          child: const Text('Enregistrer'),
+        ),
+      ],
+    ),
+  );
 }
 
 // ── Admin system stats ────────────────────────────────────────────────────────

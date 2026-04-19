@@ -4,12 +4,16 @@ from pydantic import BaseModel,EmailStr
 class UserCreate(BaseModel):
     email:EmailStr
     full_name:str
+    cin: str | None = None          
+    phone_number: str | None = None  
     role_id:int
     service_id:int|None=None
 
 class UserUpdate(BaseModel):
     full_name:str|None=None
     role_id:int|None=None
+    cin: str | None = None          
+    phone_number: str | None = None  
     is_active:bool|None=None
     service_id:int | None=None
 
@@ -17,6 +21,8 @@ class UserResponse(BaseModel):
     id:int
     email:str
     full_name:str
+    cin: str | None = None          
+    phone_number: str | None = None  
     role_id:int
     service_id:int|None=None
     parcelle_id:int|None=None

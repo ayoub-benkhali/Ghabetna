@@ -34,7 +34,7 @@ async def create_user(data: UserCreate,db:AsyncSession)->User:
         if not svc_result.scalar_one_or_none():
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Service Not Found")
 
-    user=User(email=data.email,full_name=data.full_name,role_id=data.role_id,service_id=data.service_id)
+    user=User(email=data.email,full_name=data.full_name,cin=data.cin,phone_number=data.phone_number,role_id=data.role_id,service_id=data.service_id)
     token=user.generate_activation_token()
     user.activation_token_expires=datetime.now(timezone.utc)+timedelta(hours=48)
 
@@ -69,6 +69,10 @@ async def update_user(user_id:int,data:UserUpdate,db:AsyncSession)->User:
         if not role_result.scalar_one_or_none():
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Role Not Found")
         user.role_id=data.role_id
+    if data.cin is not None:
+        user.cin = data.cin
+    if data.phone_number is not None:
+        user.phone_number = data.phone_number
     if data.is_active is not None:
         user.is_active=data.is_active
     if data.service_id is not None:

@@ -331,6 +331,8 @@ class _UserFormState extends ConsumerState<UserFormDialog> {
   final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _fullName = TextEditingController();
+  final _cin = TextEditingController();
+  final _phoneNumber = TextEditingController();
   int? _roleId;
   int? _serviceId;
   bool _loading = false;
@@ -343,6 +345,8 @@ class _UserFormState extends ConsumerState<UserFormDialog> {
       _fullName.text = widget.user!.fullName;
       _roleId = widget.user!.roleId;
       _serviceId = widget.user!.serviceId;
+      _cin.text = widget.user?.cin ?? '';
+      _phoneNumber.text = widget.user?.phoneNumber ?? '';
     }
   }
 
@@ -350,6 +354,8 @@ class _UserFormState extends ConsumerState<UserFormDialog> {
   void dispose() {
     _email.dispose();
     _fullName.dispose();
+    _cin.dispose();
+    _phoneNumber.dispose();
     super.dispose();
   }
 
@@ -357,6 +363,8 @@ class _UserFormState extends ConsumerState<UserFormDialog> {
   Widget build(BuildContext context) {
     final rolesAsync = ref.watch(rolesProvider);
     final servicesAsync = ref.watch(servicesProvider);
+    _cin.dispose();
+    _phoneNumber.dispose();
     final isEdit = widget.user != null;
 
     return AlertDialog(
@@ -419,6 +427,36 @@ class _UserFormState extends ConsumerState<UserFormDialog> {
                   prefixIcon: Icon(Icons.person_outline),
                 ),
                 validator: (v) => (v == null || v.isEmpty) ? 'Requis' : null,
+              ),
+              const SizedBox(height: 12),
+              // CIN
+              TextFormField(
+                controller: _cin,
+                keyboardType: TextInputType.number,
+                maxLength: 8,
+                decoration: const InputDecoration(
+                  labelText: 'CIN (optionnel)',
+                  prefixIcon: Icon(Icons.credit_card_outlined),
+                  counterText: '',
+                ),
+                validator: (v) {
+                  if (v != null &&
+                      v.isNotEmpty &&
+                      !RegExp(r'^\d{8}$').hasMatch(v)) {
+                    return 'Le CIN doit contenir exactement 8 chiffres';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              // Phone number
+              TextFormField(
+                controller: _phoneNumber,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'Téléphone (optionnel)',
+                  prefixIcon: Icon(Icons.phone_outlined),
+                ),
               ),
               const SizedBox(height: 12),
               // Role dropdown
@@ -556,6 +594,8 @@ class _UserFormState extends ConsumerState<UserFormDialog> {
         await repo.createUser({
           'email': _email.text.trim(),
           'full_name': _fullName.text.trim(),
+          'cin': _cin.text.trim(),
+          'phone_number': _phoneNumber.text.trim(),
           'role_id': _roleId,
           'service_id': _serviceId,
         });

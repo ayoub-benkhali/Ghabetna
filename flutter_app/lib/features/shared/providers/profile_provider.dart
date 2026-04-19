@@ -13,8 +13,11 @@ class ProfileReposiroty {
     return UserModel.fromJson(resp.data as Map<String, dynamic>);
   }
 
-  Future<UserModel> updateMe({required String fullName}) async {
-    final resp = await _dio.put('/api/users/me', data: {'full_name': fullName});
+  Future<UserModel> updateMe({String? fullName, String? phoneNumber}) async {
+    final body = <String, dynamic>{};
+    if (fullName != null) body['full_name'] = fullName;
+    if (phoneNumber != null) body['phone_number'] = phoneNumber;
+    final resp = await _dio.put('/api/users/me', data: body);
     return UserModel.fromJson(resp.data as Map<String, dynamic>);
   }
 }
@@ -43,6 +46,19 @@ class ProfileUpdateNotifier extends StateNotifier<AsyncValue<void>> {
       await _repo.updateMe(fullName: fullName);
       if (!mounted) return;
       //Invalidate so the profile card refreshes automatically
+      _ref.invalidate(myProfileProvider);
+      state = const AsyncValue.data(null);
+    } catch (e, st) {
+      if (!mounted) return;
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> updatePhone(String phoneNumber) async {
+    state = const AsyncValue.loading();
+    try {
+      await _repo.updateMe(phoneNumber: phoneNumber);
+      if (!mounted) return;
       _ref.invalidate(myProfileProvider);
       state = const AsyncValue.data(null);
     } catch (e, st) {

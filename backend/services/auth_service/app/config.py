@@ -1,12 +1,10 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
 import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(extra="allow")
-
     AUTH_DATABASE_URL: str
     AUTH_DATABASE_URL_SYNC: str
     REDIS_URL: str = "redis://localhost:6379/0"
@@ -21,6 +19,11 @@ class Settings(BaseSettings):
     MAIL_PORT: int = 587
     FRONTEND_URL: str = "http://localhost:3000"
     FOREST_SERVICE_URL: str = "http://forest-service:8000"
+
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+        extra = "ignore"
 
 settings = Settings() # type: ignore
 logger.info(f"FRONTEND_URL: {settings.FRONTEND_URL}")
