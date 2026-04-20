@@ -363,8 +363,6 @@ class _UserFormState extends ConsumerState<UserFormDialog> {
   Widget build(BuildContext context) {
     final rolesAsync = ref.watch(rolesProvider);
     final servicesAsync = ref.watch(servicesProvider);
-    _cin.dispose();
-    _phoneNumber.dispose();
     final isEdit = widget.user != null;
 
     return AlertDialog(

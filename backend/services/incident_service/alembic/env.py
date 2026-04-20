@@ -6,6 +6,11 @@ from geoalchemy2 import Geometry
 from alembic.autogenerate import renderers
 from alembic.autogenerate import comparators
 
+from dotenv import load_dotenv
+import os
+
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', '..', '..', '.env'))
+
 # Tell Alembic to recognize Geometry columns and not touch them unless they actually changed
 import geoalchemy2.alembic_helpers  # noqa: F401 — registers the hooks automatically
 

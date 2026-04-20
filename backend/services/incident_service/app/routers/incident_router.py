@@ -127,6 +127,7 @@ async def update_incident_status(
     if body.supervisor_comment:
         incident.supervisor_comment = body.supervisor_comment
     incident.supervisor_id = int(payload["sub"])
+    incident.supervisor_name = payload.get("full_name", "")
     await db.commit()
     await db.refresh(incident)
     return incident

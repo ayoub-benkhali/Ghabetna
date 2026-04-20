@@ -452,7 +452,7 @@ class _DescriptionCard extends StatelessWidget {
             if (incident.supervisorComment != null) ...[
               const Divider(height: 24),
               Text(
-                'Commentaire superviseur',
+                'Commentaire de ${incident.supervisorName ?? 'superviseur'}',
                 style: Theme.of(
                   context,
                 ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),

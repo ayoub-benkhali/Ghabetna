@@ -11,6 +11,7 @@ class IncidentModel {
   final int? forestId;
   final String? supervisorComment;
   final int? supervisorId;
+  final String? supervisorName;
   final String? agentName;
   final String status;
   final bool isCritical;
@@ -31,6 +32,7 @@ class IncidentModel {
     required this.createdAt,
     this.supervisorComment,
     this.supervisorId,
+    this.supervisorName,
     this.agentName,
     required this.updatedAt,
   });
@@ -54,6 +56,7 @@ class IncidentModel {
       updatedAt: DateTime.parse(json['updated_at'] as String),
       supervisorComment: json['supervisor_comment'] as String?,
       supervisorId: json['supervisor_id'] as int?,
+      supervisorName: json['supervisor_name'] as String?,
       agentName: json['agent_name'] as String?,
     );
   }

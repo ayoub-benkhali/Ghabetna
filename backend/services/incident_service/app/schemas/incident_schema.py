@@ -25,6 +25,7 @@ class IncidentResponse(BaseModel):
     forest_id: Optional[int] = None
     supervisor_comment: Optional[str] = None
     supervisor_id: Optional[int] = None
+    supervisor_name: Optional[str] = None
     status: IncidentStatus
     is_critical: bool
     created_at: datetime
