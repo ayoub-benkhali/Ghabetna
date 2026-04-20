@@ -36,7 +36,7 @@ class IncidentDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Incident #$incidentId'),
+        title: const Text('Détail de l\'incident'),
         leading: const BackButton(),
       ),
       body: async.when(
@@ -253,42 +253,108 @@ class _ImageCard extends StatelessWidget {
   final String imageUrl;
   const _ImageCard({required this.imageUrl});
 
+  void _openFullscreen(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (dialogContext) => Dialog.fullscreen(
+        backgroundColor: Colors.black,
+        child: Stack(
+          children: [
+            Center(
+              child: InteractiveViewer(
+                minScale: 0.5,
+                maxScale: 4.0,
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const Icon(
+                    Icons.broken_image_outlined,
+                    size: 64,
+                    color: Colors.white38,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 16,
+              right: 16,
+              child: SafeArea(
+                child: IconButton(
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.black45,
+                    foregroundColor: Colors.white,
+                  ),
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: Text(
-              'Photo',
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+            child: Row(
+              children: [
+                Text(
+                  'Photo',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const Spacer(),
+                const Icon(Icons.open_in_full, size: 14, color: Colors.grey),
+                const SizedBox(width: 4),
+                const Text(
+                  'Appuyer pour agrandir',
+                  style: TextStyle(fontSize: 11, color: Colors.grey),
+                ),
+              ],
             ),
           ),
-          Image.network(
-            imageUrl,
-            height: 220,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            errorBuilder: (_, error, __) {
-              debugPrint(
-                'Image load error for $imageUrl: $error',
-              ); // helpful for debugging
-              return const SizedBox(
-                height: 80,
-                child: Center(
-                  child: Icon(
-                    Icons.broken_image_outlined,
-                    size: 40,
-                    color: Colors.grey,
-                  ),
-                ),
-              );
-            },
+          GestureDetector(
+            onTap: () => _openFullscreen(context),
+            child: SizedBox(
+              height: 220,
+              width: double.infinity,
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                frameBuilder: (context, child, frame, _) {
+                  if (frame == null) {
+                    return const SizedBox(
+                      height: 220,
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+                  return child;
+                },
+                errorBuilder: (_, error, __) {
+                  debugPrint('Image load error for $imageUrl: $error');
+                  return const SizedBox(
+                    height: 80,
+                    child: Center(
+                      child: Icon(
+                        Icons.broken_image_outlined,
+                        size: 40,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
           ),
         ],
       ),

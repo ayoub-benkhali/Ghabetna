@@ -18,7 +18,6 @@ const _categoryIcons = {
 };
 
 Color _markerColor(IncidentModel i) {
-  if (i.isCritical) return AppColors.danger;
   return switch (i.status) {
     'pending' => AppColors.warning,
     'in_progress' => AppColors.info,
@@ -86,26 +85,69 @@ class SupervisorMapScreen extends ConsumerWidget {
                           _categoryIcons[incident.category] ?? Icons.report;
                       return Marker(
                         point: LatLng(incident.latitude!, incident.longitude!),
-                        width: 40,
-                        height: 40,
+                        width: 44,
+                        height: 44,
                         child: GestureDetector(
                           onTap: () => context.push(
                             '/supervisor/incidents/${incident.id}',
                           ),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: color,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 2),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: color.withValues(alpha: .4),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            alignment: Alignment.center,
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: color,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: color.withValues(alpha: .4),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            child: Icon(icon, color: Colors.white, size: 18),
+                                child: Icon(
+                                  icon,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                              ),
+                              if (incident.isCritical)
+                                Positioned(
+                                  top: 0,
+                                  right: 0,
+                                  child: Container(
+                                    width: 16,
+                                    height: 16,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.danger,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    child: const Center(
+                                      child: Text(
+                                        '!',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w900,
+                                          height: 1,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                       );
@@ -167,10 +209,12 @@ class _MapLegend extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
           ),
           const SizedBox(height: 6),
-          _LegendItem(color: AppColors.danger, label: 'Critique'),
           _LegendItem(color: AppColors.warning, label: 'En attente'),
           _LegendItem(color: AppColors.info, label: 'En cours'),
           _LegendItem(color: AppColors.success, label: 'Résolu'),
+          _LegendItem(color: AppColors.danger, label: 'Rejeté'),
+          const SizedBox(height: 4),
+          const _CriticalLegendItem(),
         ],
       ),
     );
@@ -193,6 +237,33 @@ class _LegendItem extends StatelessWidget {
           CircleAvatar(radius: 5, backgroundColor: color),
           const SizedBox(width: 6),
           Text(label, style: const TextStyle(fontSize: 11)),
+        ],
+      ),
+    );
+  }
+}
+
+class _CriticalLegendItem extends StatelessWidget {
+  const _CriticalLegendItem();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircleAvatar(
+            radius: 5,
+            backgroundColor: AppColors.danger,
+            child: const Icon(
+              Icons.priority_high,
+              size: 7,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(width: 6),
+          const Text('Critique', style: TextStyle(fontSize: 11)),
         ],
       ),
     );
