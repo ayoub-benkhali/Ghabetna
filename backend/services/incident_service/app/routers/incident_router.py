@@ -9,6 +9,7 @@ from app.models.incident import Incident, IncidentCategory, IncidentStatus
 from app.schemas.incident_schema import IncidentResponse, IncidentStatusUpdate
 from app.utils.deps import require_permission, get_current_user_payload
 from app.config import settings
+from datetime import datetime
 
 router=APIRouter(prefix="/incidents", tags=["Incidents"])
 
@@ -123,6 +124,11 @@ async def update_incident_status(
     incident = result.scalar_one_or_none()
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")
+    
+    if (body.status == IncidentStatus.RESOLVED
+            and incident.status != IncidentStatus.RESOLVED):
+        incident.resolved_at = datetime.now()
+    
     incident.status = body.status
     if body.supervisor_comment:
         incident.supervisor_comment = body.supervisor_comment

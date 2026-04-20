@@ -1,8 +1,23 @@
+import 'dart:async';
+
 import 'package:flutter_app/core/providers/user_session_provider.dart';
 import 'package:flutter_app/features/incidents/models/incident_model.dart';
 import 'package:flutter_app/features/supervisor/data/supervisor_incident_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+/// Returns true if the incident should still be visible on the supervisor screen.
+/// - "resolved" incidents disappear after 1 hour from their last update.
+/// - All other statuses (pending, in_progress, rejected, etc.) disappear after 24 hours from creation.
+bool _isIncidentVisible(IncidentModel incident) {
+  final now = DateTime.now();
+
+  if (incident.status == 'resolved') {
+    final resolvedTime = incident.resolvedAt ?? incident.updatedAt;
+    return now.difference(resolvedTime) < const Duration(hours: 1);
+  }
+
+  return now.difference(incident.createdAt) < const Duration(hours: 24);
+}
 
 final supervisorRepoProvider = Provider((_) => SupervisorIncidentRepository());
 
@@ -29,12 +44,21 @@ final incidentFilterProvider = StateProvider<IncidentFilter>((ref) {
   return const IncidentFilter();
 });
 
-final allIncidentsProvider = FutureProvider<List<IncidentModel>>((ref) {
+final allIncidentsProvider = FutureProvider<List<IncidentModel>>((ref) async {
   final filter = ref.watch(incidentFilterProvider);
   ref.watch(userSessionProvider);
-  return ref
+
+  // Auto-refresh every 5 minutes so time-based hiding kicks in without manual pull.
+  final timer = Timer(const Duration(minutes: 5), () {
+    ref.invalidateSelf();
+  });
+  ref.onDispose(timer.cancel);
+
+  final incidents = await ref
       .watch(supervisorRepoProvider)
       .getAllIncidents(status: filter.status, category: filter.category);
+
+  return incidents.where(_isIncidentVisible).toList();
 });
 
 // Update status notifier

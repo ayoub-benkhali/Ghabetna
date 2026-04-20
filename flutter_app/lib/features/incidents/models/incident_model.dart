@@ -17,6 +17,7 @@ class IncidentModel {
   final bool isCritical;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final DateTime? resolvedAt;
 
   const IncidentModel({
     required this.id,
@@ -35,6 +36,7 @@ class IncidentModel {
     this.supervisorName,
     this.agentName,
     required this.updatedAt,
+    this.resolvedAt,
   });
 
   factory IncidentModel.fromJson(Map<String, dynamic> json) {
@@ -52,8 +54,17 @@ class IncidentModel {
       forestId: json['forest_id'] as int?,
       status: json['status'] as String,
       isCritical: json['is_critical'] as bool? ?? false,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: DateTime.parse(
+        _toUtcString(json['created_at'] as String),
+      ).toLocal(),
+      updatedAt: DateTime.parse(
+        _toUtcString(json['updated_at'] as String),
+      ).toLocal(),
+      resolvedAt: json['resolved_at'] != null
+          ? DateTime.parse(
+              _toUtcString(json['resolved_at'] as String),
+            ).toLocal()
+          : null,
       supervisorComment: json['supervisor_comment'] as String?,
       supervisorId: json['supervisor_id'] as int?,
       supervisorName: json['supervisor_name'] as String?,
@@ -73,5 +84,15 @@ class IncidentModel {
     final base = AppConstants.apiBaseUrl.replaceAll(RegExp(r'/$'), '');
     final path = raw.startsWith('/') ? raw : '/$raw';
     return '$base$path';
+  }
+
+  /// Ensures the ISO string is treated as UTC by appending 'Z' if no
+  /// timezone designator is present. Postgres returns naive timestamps
+  /// (no Z / no offset) even when the server runs in UTC.
+  static String _toUtcString(String iso) {
+    if (iso.endsWith('Z') || iso.contains('+') || iso.contains('-', 10)) {
+      return iso; // already has timezone info
+    }
+    return '${iso}Z';
   }
 }

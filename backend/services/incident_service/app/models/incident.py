@@ -69,3 +69,7 @@ class Incident(Base):
     updated_at: Mapped[datetime] = mapped_column(
         default=func.now(), server_default=func.now(), onupdate=func.now()
     )
+    resolved_at: Mapped[datetime | None] = mapped_column(
+        nullable=True,
+        default=None
+    )
