@@ -14,11 +14,13 @@ class IncidentRepository {
     double? longitude,
     int? parcelleId,
     int? forestId,
+    bool isCritical = false,
     File? imageFile,
   }) async {
     final formData = FormData.fromMap({
       'category': category,
       'description': description,
+      'is_critical': isCritical.toString(),
       if (latitude != null) 'latitude': latitude.toString(),
       if (longitude != null) 'longitude': longitude.toString(),
       if (parcelleId != null) 'parcelle_id': parcelleId.toString(),

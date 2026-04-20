@@ -12,8 +12,6 @@ from app.config import settings
 
 router=APIRouter(prefix="/incidents", tags=["Incidents"])
 
-CRITICAL_CATEGORIES={IncidentCategory.REFUGE_SUSPECT,IncidentCategory.TRAFIC}
-
 def _save_image(file:UploadFile,agent_id:int)->str:
     os.makedirs(settings.UPLOAD_DIR,exist_ok=True)
     ext=os.path.splitext(file.filename or "img.jpg")[1]
@@ -33,6 +31,7 @@ async def create_incident(
     longitude: Optional[float] = Form(None),
     parcelle_id: Optional[int] = Form(None),
     forest_id: Optional[int] = Form(None),
+    is_critical: bool = Form(False),
     image: Optional[UploadFile] = File(None),
     payload: dict = Depends(get_current_user_payload),
     db: AsyncSession = Depends(get_db),
@@ -56,7 +55,7 @@ async def create_incident(
         longitude=longitude,
         parcelle_id=parcelle_id,
         forest_id=forest_id,
-        is_critical=category in CRITICAL_CATEGORIES,
+        is_critical=is_critical
     )
     db.add(incident)
     await db.commit()

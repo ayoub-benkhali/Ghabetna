@@ -47,6 +47,7 @@ class ReportFormNotifier extends StateNotifier<ReportFormState> {
     double? longitude,
     int? parcelleId,
     int? forestId,
+    bool isCritical = false,
     File? imageFile,
   }) async {
     state = state.copyWith(isLoading: true, error: null, success: false);
@@ -58,6 +59,7 @@ class ReportFormNotifier extends StateNotifier<ReportFormState> {
         longitude: longitude,
         parcelleId: parcelleId,
         forestId: forestId,
+        isCritical: isCritical,
         imageFile: imageFile,
       );
       //Invalidate the list so it refreshes automatically

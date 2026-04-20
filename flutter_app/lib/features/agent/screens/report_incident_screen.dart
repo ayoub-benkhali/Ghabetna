@@ -30,7 +30,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
   File? _imageFile;
   double? _lat, _lng;
   bool _locating = false;
-
+  bool _isCritical = false;
   @override
   void initState() {
     super.initState();
@@ -82,6 +82,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
           description: _descController.text.trim(),
           latitude: _lat,
           longitude: _lng,
+          isCritical: _isCritical,
           imageFile: _imageFile,
         );
   }
@@ -197,6 +198,21 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
             ),
             const SizedBox(height: 16),
 
+            // Is_critical
+            SwitchListTile(
+              value: _isCritical,
+              onChanged: (v) => setState(() => _isCritical = v),
+              title: const Text('Incident critique'),
+              subtitle: const Text(
+                'Cochez si la situation nécessite une intervention urgente',
+              ),
+              activeThumbColor: AppColors.danger,
+              secondary: Icon(
+                Icons.warning_amber_rounded,
+                color: _isCritical ? AppColors.danger : Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 8),
             // Description
             TextField(
               controller: _descController,

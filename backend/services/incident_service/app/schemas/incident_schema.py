@@ -10,6 +10,7 @@ class IncidentCreate(BaseModel):
     longitude: Optional[float] = None
     parcelle_id: Optional[int] = None
     forest_id: Optional[int] = None
+    is_critical: bool = False
 
 class IncidentResponse(BaseModel):
     id: int
