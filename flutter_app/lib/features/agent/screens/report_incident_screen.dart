@@ -2,10 +2,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
+import 'package:flutter_app/features/agent/models/coord_source.dart';
 import 'package:flutter_app/features/incidents/providers/incident_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:native_exif/native_exif.dart';
 
 const _categories = [
   ('feu', 'Incendie', Icons.local_fire_department),
@@ -25,6 +27,7 @@ class ReportIncidentScreen extends ConsumerStatefulWidget {
 }
 
 class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
+  CoordSource _coordSource = CoordSource.none;
   final _descController = TextEditingController();
   String _selectedCategory = 'autre';
   File? _imageFile;
@@ -41,21 +44,42 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
     setState(() => _locating = true);
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) return;
+      if (!serviceEnabled) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Service de localisation désactivé')),
+          );
+        }
+        return;
+      }
+
       LocationPermission perm = await Geolocator.checkPermission();
       if (perm == LocationPermission.denied) {
         perm = await Geolocator.requestPermission();
       }
       if (perm == LocationPermission.deniedForever) return;
+
       final pos = await Geolocator.getCurrentPosition(
-        locationSettings: LocationSettings(accuracy: LocationAccuracy.high),
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 15),
+        ),
       );
-      setState(() {
-        _lat = pos.latitude;
-        _lng = pos.longitude;
-      });
+
+      // Only override coords from EXIF if EXIF hasn't already set them.
+      // If the image was already picked and EXIF coords are set, don't overwrite.
+      if (_coordSource != CoordSource.exif) {
+        setState(() {
+          _lat = pos.latitude;
+          _lng = pos.longitude;
+          _coordSource = CoordSource.gps;
+        });
+      }
+    } catch (e) {
+      // Log but don't crash — location is optional
+      debugPrint('Location error: $e');
     } finally {
-      setState(() => _locating = false);
+      if (mounted) setState(() => _locating = false);
     }
   }
 
@@ -65,7 +89,43 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
       maxWidth: 1920,
       imageQuality: 85,
     );
-    if (picked != null) setState(() => _imageFile = File(picked.path));
+    if (picked == null) return;
+
+    final file = File(picked.path);
+    setState(() => _imageFile = file);
+
+    // Always attempt EXIF first — GPS from the image is more accurate
+    // than current phone position when the agent has moved away.
+    final extracted = await _extractGpsFromExif(file.path);
+    if (extracted != null) {
+      setState(() {
+        _lat = extracted.$1;
+        _lng = extracted.$2;
+        _coordSource = CoordSource.exif;
+      });
+    }
+    // If EXIF had no GPS, keep whatever _getLocation() already set.
+    // (initState already called _getLocation, so _lat/_lng may already be set)
+  }
+
+  /// Returns (latitude, longitude) extracted from image EXIF, or null if unavailable.
+  Future<(double, double)?> _extractGpsFromExif(String imagePath) async {
+    try {
+      final exif = await Exif.fromPath(imagePath);
+      final lat = await exif.getLatLong();
+      await exif.close();
+
+      if (lat == null) return null;
+      // native_exif returns a LatLong object with .latitude / .longitude
+      if (!lat.latitude.isFinite || !lat.longitude.isFinite) return null;
+      if (lat.latitude < -90 || lat.latitude > 90) return null;
+      if (lat.longitude < -180 || lat.longitude > 180) return null;
+
+      return (lat.latitude, lat.longitude);
+    } catch (_) {
+      // EXIF read failure is non-fatal — fall back silently to GPS
+      return null;
+    }
   }
 
   void _submit() {
@@ -121,17 +181,25 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
                 Icon(
                   _locating
                       ? Icons.gps_not_fixed
-                      : (_lat != null ? Icons.gps_fixed : Icons.gps_off),
+                      : (_coordSource == CoordSource.exif
+                            ? Icons.photo_camera_outlined
+                            : _coordSource == CoordSource.gps
+                            ? Icons.gps_fixed
+                            : Icons.gps_off),
                   size: 16,
-                  color: _lat != null ? Colors.green : Colors.orange,
+                  color: _coordSource != CoordSource.none
+                      ? Colors.green
+                      : Colors.orange,
                 ),
                 const SizedBox(width: 6),
                 Text(
                   _locating
-                      ? 'Localisation...'
-                      : (_lat != null
-                            ? 'Position: ${_lat!.toStringAsFixed(4)}, ${_lng!.toStringAsFixed(4)}'
-                            : 'Position non disponible'),
+                      ? 'Localisation en cours...'
+                      : (_coordSource == CoordSource.exif
+                            ? 'Position extraite de la photo: ${_lat!.toStringAsFixed(4)}, ${_lng!.toStringAsFixed(4)}'
+                            : _coordSource == CoordSource.gps
+                            ? 'Position GPS: ${_lat!.toStringAsFixed(4)}, ${_lng!.toStringAsFixed(4)}'
+                            : 'Position non disponible — prenez une photo ou activez le GPS'),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],

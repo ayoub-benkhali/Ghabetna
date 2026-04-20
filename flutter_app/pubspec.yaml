@@ -46,6 +46,7 @@ dependencies:
   flutter_map: ^8.2.2
   latlong2: ^0.9.1
   geolocator: ^14.0.2
+  native_exif: ^0.6.0
 
   # UI & Utilities
   fl_chart: ^1.1.1

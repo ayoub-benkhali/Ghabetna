@@ -1,0 +1,1 @@
+enum CoordSource {exif,gps,none}
