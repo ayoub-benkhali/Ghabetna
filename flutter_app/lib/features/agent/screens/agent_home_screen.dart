@@ -67,6 +67,11 @@ class AgentHomeScreen extends ConsumerWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
+              Image.asset(
+                'assets/images/agent_home_screen.png',
+                height: 280,
+              ),
+              const SizedBox(height: 32),
               FilledButton.icon(
                 onPressed: () => context.push('/agent/report'),
                 icon: const Icon(Icons.add_alert),
