@@ -649,4 +649,19 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get authErrorNetwork => 'خطأ في الاتصال. تحقق من شبكتك.';
+
+  @override
+  String get forestContext => 'السياق الغابوي';
+
+  @override
+  String get geoContextUnavailable => 'البيانات الجغرافية غير متاحة';
+
+  @override
+  String get geoContextPending => 'جارٍ تحديد المنطقة الغابوية…';
+
+  @override
+  String get area => 'المساحة';
+
+  @override
+  String get geoContextNotFound => 'خارج نطاق الغابات المسجلة';
 }

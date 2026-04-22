@@ -139,6 +139,10 @@ services:
     depends_on:
       incident-db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+      forest-service:
+        condition: service_started
     ports:
       - "8003:8000"
     volumes:

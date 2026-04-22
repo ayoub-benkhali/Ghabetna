@@ -231,5 +231,11 @@
   "authError401":     "Email ou mot de passe incorrect",
   "authError403":     "Accès refusé",
   "authError404":     "Utilisateur introuvable",
-  "authErrorNetwork": "Erreur de connexion. Vérifiez votre réseau."
+  "authErrorNetwork": "Erreur de connexion. Vérifiez votre réseau.",
+
+  "forestContext": "Contexte forestier",
+  "geoContextUnavailable": "Contexte géographique indisponible",
+  "geoContextPending": "Localisation forestière en cours d'enrichissement…",
+  "area": "Superficie",
+  "geoContextNotFound": "Hors zone forestière enregistrée"
 }

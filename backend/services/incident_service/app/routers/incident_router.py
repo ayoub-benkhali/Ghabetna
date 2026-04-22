@@ -10,6 +10,8 @@ from app.schemas.incident_schema import IncidentResponse, IncidentStatusUpdate
 from app.utils.deps import require_permission, get_current_user_payload
 from app.config import settings
 from datetime import datetime
+import json
+from app.redis_client import get_redis
 
 router=APIRouter(prefix="/incidents", tags=["Incidents"])
 
@@ -61,6 +63,17 @@ async def create_incident(
     db.add(incident)
     await db.commit()
     await db.refresh(incident)
+
+    # ── Publish geo-enrichment task to Redis ─────────────────────────────────
+    if incident.latitude is not None and incident.longitude is not None:
+        redis_client= await get_redis()
+        redis_payload = json.dumps({
+            "incident_id": incident.id,
+            "lat": incident.latitude,
+            "lng": incident.longitude,
+        })
+        await redis_client.lpush("geo_enrich_queue", redis_payload)
+
     return incident
 
 @router.get("/mine", response_model=list[IncidentResponse],

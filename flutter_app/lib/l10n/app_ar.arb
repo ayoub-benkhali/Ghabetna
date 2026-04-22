@@ -231,5 +231,11 @@
   "authError401":     "البريد الإلكتروني أو كلمة المرور غير صحيحة",
   "authError403":     "الوصول مرفوض",
   "authError404":     "المستخدم غير موجود",
-  "authErrorNetwork": "خطأ في الاتصال. تحقق من شبكتك."
+  "authErrorNetwork": "خطأ في الاتصال. تحقق من شبكتك.",
+
+  "forestContext": "السياق الغابوي",
+  "geoContextUnavailable": "البيانات الجغرافية غير متاحة",
+  "geoContextPending": "جارٍ تحديد المنطقة الغابوية…",
+  "area": "المساحة",
+  "geoContextNotFound": "خارج نطاق الغابات المسجلة"
 }

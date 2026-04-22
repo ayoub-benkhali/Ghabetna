@@ -22,3 +22,11 @@ class ParcelleResponse(BaseModel):
     updated_at: datetime
     class Config:
         from_attributes=True
+
+
+class ParcelleLocationResponse(BaseModel):
+    """Returned by the internal point-in-polygon lookup."""
+    parcelle_id: int
+    parcelle_name: str
+    forest_id: int
+    forest_name: str

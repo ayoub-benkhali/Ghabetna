@@ -1351,6 +1351,36 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Erreur de connexion. Vérifiez votre réseau.'**
   String get authErrorNetwork;
+
+  /// No description provided for @forestContext.
+  ///
+  /// In fr, this message translates to:
+  /// **'Contexte forestier'**
+  String get forestContext;
+
+  /// No description provided for @geoContextUnavailable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Contexte géographique indisponible'**
+  String get geoContextUnavailable;
+
+  /// No description provided for @geoContextPending.
+  ///
+  /// In fr, this message translates to:
+  /// **'Localisation forestière en cours d\'enrichissement…'**
+  String get geoContextPending;
+
+  /// No description provided for @area.
+  ///
+  /// In fr, this message translates to:
+  /// **'Superficie'**
+  String get area;
+
+  /// No description provided for @geoContextNotFound.
+  ///
+  /// In fr, this message translates to:
+  /// **'Hors zone forestière enregistrée'**
+  String get geoContextNotFound;
 }
 
 class _AppLocalizationsDelegate

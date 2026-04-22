@@ -6,6 +6,11 @@ from sqlalchemy import String,Text,Enum as SAEnum,Integer,func,Float
 from sqlalchemy.orm import Mapped,mapped_column
 from app.database import Base
 
+class GeoEnrichmentStatus(str, enum.Enum):
+    PENDING   = "pending"
+    ENRICHED  = "enriched"
+    NOT_FOUND = "not_found"
+
 class IncidentCategory(str,enum.Enum):
     FEU = "feu"
     COUPE_ILLEGALE = "coupe_illegale"
@@ -49,6 +54,13 @@ class Incident(Base):
     # Organisational context (plain ints — no cross-service FK)
     parcelle_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
     forest_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    geo_enrichment_status: Mapped[GeoEnrichmentStatus] = mapped_column(
+        SAEnum(GeoEnrichmentStatus, name="geoenrichmentstatus",
+               values_callable=lambda x: [e.value for e in x]),
+        default=GeoEnrichmentStatus.PENDING,
+        server_default="pending",
+        nullable=False,
+    )
 
     # Lifecycle
     status: Mapped[IncidentStatus] = mapped_column(

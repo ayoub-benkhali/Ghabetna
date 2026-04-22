@@ -1,7 +1,7 @@
 from datetime import datetime
 from pydantic import BaseModel
 from typing import Optional
-from app.models.incident import IncidentCategory, IncidentStatus
+from app.models.incident import GeoEnrichmentStatus, IncidentCategory, IncidentStatus
 
 class IncidentCreate(BaseModel):
     category: IncidentCategory
@@ -23,6 +23,7 @@ class IncidentResponse(BaseModel):
     longitude: Optional[float] = None
     parcelle_id: Optional[int] = None
     forest_id: Optional[int] = None
+    geo_enrichment_status: GeoEnrichmentStatus
     supervisor_comment: Optional[str] = None
     supervisor_id: Optional[int] = None
     supervisor_name: Optional[str] = None

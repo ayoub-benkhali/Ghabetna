@@ -659,4 +659,20 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authErrorNetwork => 'Erreur de connexion. Vérifiez votre réseau.';
+
+  @override
+  String get forestContext => 'Contexte forestier';
+
+  @override
+  String get geoContextUnavailable => 'Contexte géographique indisponible';
+
+  @override
+  String get geoContextPending =>
+      'Localisation forestière en cours d\'enrichissement…';
+
+  @override
+  String get area => 'Superficie';
+
+  @override
+  String get geoContextNotFound => 'Hors zone forestière enregistrée';
 }

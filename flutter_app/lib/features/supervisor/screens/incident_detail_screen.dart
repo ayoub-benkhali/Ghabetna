@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/features/incidents/models/incident_model.dart';
+import 'package:flutter_app/features/incidents/providers/geo_context_provider.dart';
 import 'package:flutter_app/features/supervisor/providers/supervisor_provider.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -120,6 +121,10 @@ class _IncidentDetail extends ConsumerWidget {
             _MapCard(lat: incident.latitude!, lng: incident.longitude!),
             const SizedBox(height: 16),
           ],
+
+          _GeoContextCard(incident: incident),
+          const SizedBox(height: 16),
+
           _DescriptionCard(incident: incident),
           const SizedBox(height: 16),
           _SupervisorActionCard(
@@ -207,18 +212,6 @@ class _HeaderCard extends StatelessWidget {
                 'dd MMM yyyy à HH:mm',
               ).format(incident.createdAt),
             ),
-            if (incident.parcelleId != null)
-              _InfoRow(
-                icon: Icons.grid_view,
-                label: l.parcelles,
-                value: '#${incident.parcelleId}',
-              ),
-            if (incident.forestId != null)
-              _InfoRow(
-                icon: Icons.forest,
-                label: l.forests,
-                value: '#${incident.forestId}',
-              ),
             const SizedBox(height: 12),
             _StatusChip(status: incident.status),
           ],
@@ -625,6 +618,179 @@ class _InfoRow extends StatelessWidget {
     required this.label,
     required this.value,
   });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: Colors.grey),
+          const SizedBox(width: 8),
+          Text(
+            '$label : ',
+            style: const TextStyle(
+              fontSize: 13,
+              color: Colors.grey,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 13),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Geo context card ──────────────────────────────────────────────────────────
+class _GeoContextCard extends ConsumerWidget {
+  final IncidentModel incident;
+  const _GeoContextCard({required this.incident});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
+    final asyncGeo = ref.watch(geoContextProvider(incident));
+
+    // If we know there's nothing to show yet (worker hasn't enriched),
+    // show a subtle "pending enrichment" card instead of nothing.
+    if (incident.geoEnrichmentStatus == 'not_found') {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.location_off_outlined,
+                size: 16,
+                color: Colors.grey,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l.geoContextNotFound,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (incident.geoEnrichmentStatus == 'pending') {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.hourglass_top_outlined,
+                size: 16,
+                color: AppColors.warning,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l.geoContextPending,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.warning),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Card header ──
+            Row(
+              children: [
+                const Icon(Icons.park_outlined, color: AppColors.primaryGreen),
+                const SizedBox(width: 8),
+                Text(
+                  l.forestContext,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+            const Divider(height: 24),
+            // ── Async content ──
+            asyncGeo.when(
+              loading: () => const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+              error: (_, __) => Text(
+                l.geoContextUnavailable,
+                style: const TextStyle(color: AppColors.danger),
+              ),
+              data: (ctx) => Column(
+                children: [
+                  // Forest row
+                  _GeoRow(
+                    icon: Icons.forest,
+                    label: l.forests,
+                    value: ctx.forest?.name ?? '#${incident.forestId}',
+                  ),
+                  if (ctx.forest?.region != null)
+                    _GeoRow(
+                      icon: Icons.location_on_outlined,
+                      label: l.region,
+                      value: ctx.forest!.region!,
+                    ),
+                  const Divider(height: 16),
+                  // Parcelle row
+                  _GeoRow(
+                    icon: Icons.grid_view_outlined,
+                    label: l.parcelles,
+                    value:
+                        ctx.parcelle?.name ??
+                        (incident.parcelleId != null
+                            ? '#${incident.parcelleId}'
+                            : '—'),
+                  ),
+                  if (ctx.parcelle?.areaHectares != null)
+                    _GeoRow(
+                      icon: Icons.straighten_outlined,
+                      label: l.area,
+                      value:
+                          '${ctx.parcelle!.areaHectares!.toStringAsFixed(2)} ha',
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GeoRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  const _GeoRow({required this.icon, required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {

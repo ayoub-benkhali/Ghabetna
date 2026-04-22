@@ -9,6 +9,7 @@ class IncidentModel {
   final double? longitude;
   final int? parcelleId;
   final int? forestId;
+  final String geoEnrichmentStatus;
   final String? supervisorComment;
   final int? supervisorId;
   final String? supervisorName;
@@ -28,6 +29,7 @@ class IncidentModel {
     this.longitude,
     this.parcelleId,
     this.forestId,
+    required this.geoEnrichmentStatus,
     required this.status,
     required this.isCritical,
     required this.createdAt,
@@ -52,6 +54,8 @@ class IncidentModel {
       longitude: (json['longitude'] as num?)?.toDouble(),
       parcelleId: json['parcelle_id'] as int?,
       forestId: json['forest_id'] as int?,
+      geoEnrichmentStatus:
+          json['geo_enrichment_status'] as String? ?? 'pending',
       status: json['status'] as String,
       isCritical: json['is_critical'] as bool? ?? false,
       createdAt: DateTime.parse(
