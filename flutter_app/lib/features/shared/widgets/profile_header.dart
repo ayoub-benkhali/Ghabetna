@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/features/admin/models/user_model.dart';
 
@@ -12,6 +13,7 @@ class ProfileHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final initials = _initials(user.fullName);
+    final l = context.l10n;
 
     return Container(
       width: double.infinity,
@@ -53,7 +55,7 @@ class ProfileHeader extends StatelessWidget {
               _Badge(label: user.roleName, icon: Icons.shield_outlined),
               if (user.serviceId != null)
                 _Badge(
-                  label: 'Service #${user.serviceId}',
+                  label: '${l.services} #${user.serviceId}',
                   icon: Icons.business_outlined,
                 ),
             ],

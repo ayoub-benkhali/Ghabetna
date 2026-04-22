@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/features/admin/models/forest_model.dart';
 import 'package:flutter_app/features/admin/models/user_model.dart';
@@ -44,9 +45,8 @@ class _AssignmentDialogState extends ConsumerState<AssignmentDialog> {
     final repo = ref.read(assignmentRepositoryProvider);
     try {
       if (widget.user.roleName == 'supervisor') {
-        //Unassign first if already assigned to a different forest
         if (_selectedForestId != null) {
-            await repo.unassignSupervisor(widget.user.id);
+          await repo.unassignSupervisor(widget.user.id);
           await repo.assignSupervisorToForest(
             widget.user.id,
             _selectedForestId!,
@@ -62,7 +62,7 @@ class _AssignmentDialogState extends ConsumerState<AssignmentDialog> {
           );
         }
       }
-      if (mounted) Navigator.of(context).pop(true); //true=refresh
+      if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -101,6 +101,7 @@ class _AssignmentDialogState extends ConsumerState<AssignmentDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final isSupervisor = widget.user.roleName == 'supervisor';
     final hasCurrentAssignment = isSupervisor
         ? widget.user.forestId != null
@@ -117,7 +118,7 @@ class _AssignmentDialogState extends ConsumerState<AssignmentDialog> {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Affectation de ${widget.user.fullName}',
+              l.assignmentOf(widget.user.fullName),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -129,11 +130,9 @@ class _AssignmentDialogState extends ConsumerState<AssignmentDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            //Role chip
             _RoleChip(roleName: widget.user.roleName),
             const SizedBox(height: 16),
 
-            //current assignment banner
             if (hasCurrentAssignment)
               _CurrentAssignmentBanner(
                 isSupervisor: isSupervisor,
@@ -142,7 +141,6 @@ class _AssignmentDialogState extends ConsumerState<AssignmentDialog> {
               ),
             if (hasCurrentAssignment) const SizedBox(height: 16),
 
-            //Assignment selectors
             if (isSupervisor)
               _ForestSelector(
                 selectedForestId: _selectedForestId,
@@ -154,13 +152,12 @@ class _AssignmentDialogState extends ConsumerState<AssignmentDialog> {
                 selectedParcelleId: _selectedParcelleId,
                 onForestChanged: (v) => setState(() {
                   _selectedForestFilterId = v;
-                  _selectedParcelleId = null; //reset parcelle on forest change
+                  _selectedParcelleId = null;
                 }),
                 onParcelleChanged: (v) =>
                     setState(() => _selectedParcelleId = v),
               ),
 
-            //Error
             if (_error != null) ...[
               const SizedBox(height: 12),
               Text(
@@ -176,9 +173,9 @@ class _AssignmentDialogState extends ConsumerState<AssignmentDialog> {
         if (hasCurrentAssignment)
           TextButton.icon(
             icon: const Icon(Icons.link_off, size: 16, color: AppColors.danger),
-            label: const Text(
-              'Retirer',
-              style: TextStyle(color: AppColors.danger),
+            label: Text(
+              l.cancel,
+              style: const TextStyle(color: AppColors.danger),
             ),
             onPressed: _loading ? null : _removeAssignment,
           ),
@@ -189,7 +186,7 @@ class _AssignmentDialogState extends ConsumerState<AssignmentDialog> {
               onPressed: _loading
                   ? null
                   : () => Navigator.of(context).pop(false),
-              child: const Text('Annuler'),
+              child: Text(l.cancel),
             ),
             const SizedBox(width: 8),
             FilledButton(
@@ -203,7 +200,7 @@ class _AssignmentDialogState extends ConsumerState<AssignmentDialog> {
                         color: Colors.white,
                       ),
                     )
-                  : const Text('Enregistrer'),
+                  : Text(l.save),
             ),
           ],
         ),
@@ -220,12 +217,13 @@ class _RoleChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final color = roleName == 'supervisor'
         ? AppColors.warning
         : AppColors.primaryGreen;
     final label = roleName == 'supervisor'
-        ? 'Superviseur → Forêt'
-        : 'Agent → Parcelle';
+        ? l.supervisorToForest
+        : l.agentToParcelle;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -258,6 +256,7 @@ class _CurrentAssignmentBanner extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     final forests = ref.watch(forestsProvider);
     String label = '—';
 
@@ -268,16 +267,17 @@ class _CurrentAssignmentBanner extends ConsumerWidget {
               (f) => f.id == forestId,
               orElse: () => ForestModel(
                 id: forestId!,
-                name: 'Forêt #$forestId',
+                name: '${l.forests} #$forestId',
                 createdAt: DateTime.now(),
               ),
             )
             .name,
-        orElse: () => 'Forêt #$forestId',
+        orElse: () => '${l.forests} #$forestId',
       );
     } else if (!isSupervisor && parcelleId != null) {
-      label = 'Parcelle #$parcelleId';
+      label = '${l.parcelles} #$parcelleId';
     }
+
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -295,7 +295,7 @@ class _CurrentAssignmentBanner extends ConsumerWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Affectation actuelle : $label',
+              l.currentAssignment(label),
               style: const TextStyle(fontSize: 13, color: AppColors.info),
             ),
           ),
@@ -305,7 +305,7 @@ class _CurrentAssignmentBanner extends ConsumerWidget {
   }
 }
 
-//Supervisor: single forest dropdown
+// Supervisor: single forest dropdown
 
 class _ForestSelector extends ConsumerWidget {
   final int? selectedForestId;
@@ -318,21 +318,22 @@ class _ForestSelector extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     final forestsAsync = ref.watch(forestsProvider);
     return forestsAsync.when(
       loading: () => const LinearProgressIndicator(),
       error: (e, _) => Text(
-        'Erreur forêts: $e',
+        '${l.errorPrefix} $e',
         style: const TextStyle(color: AppColors.danger),
       ),
       data: (forests) => DropdownButtonFormField<int?>(
         initialValue: selectedForestId,
-        decoration: const InputDecoration(
-          labelText: 'Forêt assignée',
-          prefixIcon: Icon(Icons.forest_outlined),
+        decoration: InputDecoration(
+          labelText: l.assignedForest,
+          prefixIcon: const Icon(Icons.forest_outlined),
         ),
         items: [
-          const DropdownMenuItem<int?>(value: null, child: Text('— Aucune —')),
+          DropdownMenuItem<int?>(value: null, child: Text(l.noNoneF)),
           ...forests.map(
             (f) => DropdownMenuItem<int?>(value: f.id, child: Text(f.name)),
           ),
@@ -343,7 +344,7 @@ class _ForestSelector extends ConsumerWidget {
   }
 }
 
-//Agent: forest filter to parcelle dropdown (two-step)
+// Agent: forest filter → parcelle dropdown (two-step)
 
 class _ParcelleSelector extends ConsumerWidget {
   final int? selectedForestId;
@@ -360,6 +361,7 @@ class _ParcelleSelector extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     final forestsAsync = ref.watch(forestsProvider);
     final parcellesAsync = selectedForestId != null
         ? ref.watch(parcellesProvider(selectedForestId!))
@@ -368,24 +370,21 @@ class _ParcelleSelector extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        //step 1: pick forest
+        // Step 1: pick forest
         forestsAsync.when(
           loading: () => const LinearProgressIndicator(),
           error: (e, _) => Text(
-            'Erreur forêts: $e',
+            '${l.errorPrefix} $e',
             style: const TextStyle(color: AppColors.danger),
           ),
           data: (forests) => DropdownButtonFormField<int?>(
             initialValue: selectedForestId,
-            decoration: const InputDecoration(
-              labelText: '1. Choisir la forêt',
-              prefixIcon: Icon(Icons.forest_outlined),
+            decoration: InputDecoration(
+              labelText: l.chooseForest,
+              prefixIcon: const Icon(Icons.forest_outlined),
             ),
             items: [
-              const DropdownMenuItem<int?>(
-                value: null,
-                child: Text('— Sélectionner —'),
-              ),
+              DropdownMenuItem<int?>(value: null, child: Text(l.selectOption)),
               ...forests.map(
                 (f) => DropdownMenuItem<int?>(value: f.id, child: Text(f.name)),
               ),
@@ -399,24 +398,27 @@ class _ParcelleSelector extends ConsumerWidget {
           parcellesAsync!.when(
             loading: () => const LinearProgressIndicator(),
             error: (e, _) => Text(
-              'Erreur parcelles: $e',
+              '${l.errorPrefix} $e',
               style: const TextStyle(color: AppColors.danger),
             ),
             data: (parcelles) => parcelles.isEmpty
-                ? const Text(
-                    'Aucune parcelle dans cette forêt.',
-                    style: TextStyle(fontStyle: FontStyle.italic, fontSize: 13),
+                ? Text(
+                    l.noParcellInForest,
+                    style: const TextStyle(
+                      fontStyle: FontStyle.italic,
+                      fontSize: 13,
+                    ),
                   )
                 : DropdownButtonFormField<int?>(
                     initialValue: selectedParcelleId,
-                    decoration: const InputDecoration(
-                      labelText: '2. Choisir la parcelle',
-                      prefixIcon: Icon(Icons.crop_square_outlined),
+                    decoration: InputDecoration(
+                      labelText: l.chooseParcelle,
+                      prefixIcon: const Icon(Icons.crop_square_outlined),
                     ),
                     items: [
-                      const DropdownMenuItem<int?>(
+                      DropdownMenuItem<int?>(
                         value: null,
-                        child: Text('— Aucune —'),
+                        child: Text(l.noNoneF),
                       ),
                       ...parcelles.map(
                         (p) => DropdownMenuItem<int?>(
@@ -431,14 +433,14 @@ class _ParcelleSelector extends ConsumerWidget {
         else
           DropdownButtonFormField<int?>(
             initialValue: null,
-            decoration: const InputDecoration(
-              labelText: '2. Choisir la parcelle',
-              prefixIcon: Icon(Icons.crop_square_outlined),
+            decoration: InputDecoration(
+              labelText: l.chooseParcelle,
+              prefixIcon: const Icon(Icons.crop_square_outlined),
               enabled: false,
             ),
             items: const [],
             onChanged: null,
-            hint: const Text('Sélectionnez d\'abord une forêt'),
+            hint: Text(l.selectForestFirst),
           ),
       ],
     );

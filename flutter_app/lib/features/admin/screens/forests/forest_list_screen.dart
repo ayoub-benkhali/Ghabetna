@@ -1,23 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/core/widgets/async_value_widget.dart';
 import 'package:flutter_app/features/admin/models/forest_model.dart';
 import 'package:flutter_app/features/admin/providers/forest_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_app/core/widgets/app_bar_actions.dart';
 
 class ForestListScreen extends ConsumerWidget {
   const ForestListScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     final forestsAsync = ref.watch(forestsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Gestion des Forêts')),
+      appBar: AppBar(title: Text(l.forestManagement), actions: kAppBarActions),
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.forest_outlined),
-        label: const Text('Nouvelle forêt'),
+        label: Text(l.newForest),
         onPressed: () => context.go('/admin/forests/new'),
       ),
       body: AsyncValueWidget(
@@ -42,6 +45,7 @@ class _ForestGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -50,7 +54,7 @@ class _ForestGrid extends StatelessWidget {
           Row(
             children: [
               Text(
-                '${forests.length} forêt${forests.length > 1 ? 's' : ''} enregistrée${forests.length > 1 ? 's' : ''}',
+                '${forests.length} ${l.forests}',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const Spacer(),
@@ -71,6 +75,7 @@ class _ForestGrid extends StatelessWidget {
   }
 
   Widget _totalAreaBadge(BuildContext context, List<ForestModel> forests) {
+    final l = context.l10n;
     final total = forests
         .where((f) => f.areaHectares != null)
         .fold<double>(0, (sum, f) => sum + f.areaHectares!);
@@ -94,7 +99,7 @@ class _ForestGrid extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            'Total : ${total.toStringAsFixed(0)} ha',
+            '${l.total} : ${total.toStringAsFixed(0)} ha',
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
               color: AppColors.primaryGreen,
               fontWeight: FontWeight.w600,
@@ -115,6 +120,7 @@ class _ForestCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     final hasBoundary = forest.boundaryGeojson != null;
 
     return SizedBox(
@@ -195,7 +201,7 @@ class _ForestCard extends ConsumerWidget {
                         icon: Icons.straighten_outlined,
                         label: forest.areaHectares != null
                             ? '${forest.areaHectares!.toStringAsFixed(1)} ha'
-                            : 'Surface ?',
+                            : l.unknownArea,
                         color: AppColors.primaryGreen,
                       ),
                       const SizedBox(width: 8),
@@ -203,7 +209,7 @@ class _ForestCard extends ConsumerWidget {
                         icon: hasBoundary
                             ? Icons.check_circle_outline
                             : Icons.radio_button_unchecked,
-                        label: hasBoundary ? 'Délimitée' : 'Sans limite',
+                        label: hasBoundary ? l.delimited : l.noLimit,
                         color: hasBoundary
                             ? AppColors.success
                             : AppColors.warning,
@@ -233,9 +239,9 @@ class _ForestCard extends ConsumerWidget {
                             padding: const EdgeInsets.symmetric(vertical: 8),
                           ),
                           icon: const Icon(Icons.map_outlined, size: 16),
-                          label: const Text(
-                            'Parcelles',
-                            style: TextStyle(fontSize: 13),
+                          label: Text(
+                            l.parcelles,
+                            style: const TextStyle(fontSize: 13),
                           ),
                           onPressed: () => context.go(
                             '/admin/forests/${forest.id}/parcelles',
@@ -245,7 +251,7 @@ class _ForestCard extends ConsumerWidget {
                       const SizedBox(width: 8),
                       IconButton(
                         icon: const Icon(Icons.edit_outlined, size: 18),
-                        tooltip: 'Modifier',
+                        tooltip: l.edit,
                         style: IconButton.styleFrom(
                           foregroundColor: AppColors.primaryGreen,
                           backgroundColor: AppColors.primaryGreen.withValues(
@@ -258,7 +264,7 @@ class _ForestCard extends ConsumerWidget {
                       const SizedBox(width: 4),
                       IconButton(
                         icon: const Icon(Icons.delete_outline, size: 18),
-                        tooltip: 'Supprimer',
+                        tooltip: l.delete,
                         style: IconButton.styleFrom(
                           foregroundColor: AppColors.danger,
                           backgroundColor: AppColors.danger.withValues(
@@ -279,24 +285,21 @@ class _ForestCard extends ConsumerWidget {
   }
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
-    // FIX: use dialogCtx so Navigator.pop targets the dialog, not the router stack
+    final l = context.l10n;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        title: Text('Supprimer "${forest.name}" ?'),
-        content: const Text(
-          'Cette action supprimera définitivement la forêt '
-          'et tous ses parcelles associés.',
-        ),
+        title: Text('${l.delete} "${forest.name}" ?'),
+        content: Text(l.deleteForestWarning),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx, false),
-            child: const Text('Annuler'),
+            child: Text(l.cancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
             onPressed: () => Navigator.pop(dialogCtx, true),
-            child: const Text('Supprimer'),
+            child: Text(l.delete),
           ),
         ],
       ),
@@ -351,6 +354,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -362,19 +366,19 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            'Aucune forêt enregistrée',
+            l.noForestsRegistered,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 8),
           Text(
-            'Créez votre première forêt et délimitez\nses zones géographiques sur la carte.',
+            l.noForestsHint,
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 28),
           FilledButton.icon(
             icon: const Icon(Icons.forest_outlined),
-            label: const Text('Créer une forêt'),
+            label: Text(l.createForest),
             onPressed: () => context.go('/admin/forests/new'),
           ),
         ],

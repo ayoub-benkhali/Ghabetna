@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/features/agent/models/coord_source.dart';
 import 'package:flutter_app/features/incidents/providers/incident_provider.dart';
@@ -9,15 +10,18 @@ import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:native_exif/native_exif.dart';
 
-const _categories = [
-  ('feu', 'Incendie', Icons.local_fire_department),
-  ('coupe_illegale', 'Coupe illégale', Icons.carpenter_outlined),
-  ('refuge_suspect', 'Refuge suspect', Icons.warning_amber),
-  ('trafic', 'Trafic', Icons.car_crash_outlined),
-  ('dechet', 'Déchets', Icons.delete_outline),
-  ('maladie', 'Maladie végétale', Icons.coronavirus_outlined),
-  ('autre', 'Autre', Icons.help_outline),
-];
+List<(String, String, IconData)> _buildCategories(BuildContext context) {
+  final l = context.l10n;
+  return [
+    ('feu', l.typeIncendie, Icons.local_fire_department),
+    ('coupe_illegale', l.typeCoupeIllegale, Icons.carpenter_outlined),
+    ('refuge_suspect', l.typeRefugeSuspect, Icons.warning_amber),
+    ('trafic', l.typeTrafic, Icons.car_crash_outlined),
+    ('dechet', l.typeDechet, Icons.delete_outline),
+    ('maladie', l.typeMaladie, Icons.coronavirus_outlined),
+    ('autre', l.typeAutre, Icons.help_outline),
+  ];
+}
 
 class ReportIncidentScreen extends ConsumerStatefulWidget {
   const ReportIncidentScreen({super.key});
@@ -34,6 +38,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
   double? _lat, _lng;
   bool _locating = false;
   bool _isCritical = false;
+
   @override
   void initState() {
     super.initState();
@@ -47,7 +52,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
       if (!serviceEnabled) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Service de localisation désactivé')),
+            SnackBar(content: Text(context.l10n.locationDisabled)),
           );
         }
         return;
@@ -66,8 +71,6 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
         ),
       );
 
-      // Only override coords from EXIF if EXIF hasn't already set them.
-      // If the image was already picked and EXIF coords are set, don't overwrite.
       if (_coordSource != CoordSource.exif) {
         setState(() {
           _lat = pos.latitude;
@@ -76,7 +79,6 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
         });
       }
     } catch (e) {
-      // Log but don't crash — location is optional
       debugPrint('Location error: $e');
     } finally {
       if (mounted) setState(() => _locating = false);
@@ -94,8 +96,6 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
     final file = File(picked.path);
     setState(() => _imageFile = file);
 
-    // Always attempt EXIF first — GPS from the image is more accurate
-    // than current phone position when the agent has moved away.
     final extracted = await _extractGpsFromExif(file.path);
     if (extracted != null) {
       setState(() {
@@ -104,11 +104,8 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
         _coordSource = CoordSource.exif;
       });
     }
-    // If EXIF had no GPS, keep whatever _getLocation() already set.
-    // (initState already called _getLocation, so _lat/_lng may already be set)
   }
 
-  /// Returns (latitude, longitude) extracted from image EXIF, or null if unavailable.
   Future<(double, double)?> _extractGpsFromExif(String imagePath) async {
     try {
       final exif = await Exif.fromPath(imagePath);
@@ -116,23 +113,22 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
       await exif.close();
 
       if (lat == null) return null;
-      // native_exif returns a LatLong object with .latitude / .longitude
       if (!lat.latitude.isFinite || !lat.longitude.isFinite) return null;
       if (lat.latitude < -90 || lat.latitude > 90) return null;
       if (lat.longitude < -180 || lat.longitude > 180) return null;
 
       return (lat.latitude, lat.longitude);
     } catch (_) {
-      // EXIF read failure is non-fatal — fall back silently to GPS
       return null;
     }
   }
 
   void _submit() {
+    final l = context.l10n;
     if (_descController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Veuillez ajouter une description')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l.addDescription)));
       return;
     }
     ref
@@ -149,14 +145,15 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final formState = ref.watch(reportFormProvider);
+    final categories = _buildCategories(context);
 
-    // Navigate back on success
     ref.listen(reportFormProvider, (_, next) {
       if (next.success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Incident signalé avec succès')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l.incidentReported)));
         Navigator.of(context).pop();
       }
       if (next.error != null) {
@@ -170,7 +167,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
     });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Signaler un incident')),
+      appBar: AppBar(title: Text(l.reportIncident)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -194,12 +191,12 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
                 const SizedBox(width: 6),
                 Text(
                   _locating
-                      ? 'Localisation en cours...'
+                      ? l.locating
                       : (_coordSource == CoordSource.exif
-                            ? 'Position extraite de la photo: ${_lat!.toStringAsFixed(4)}, ${_lng!.toStringAsFixed(4)}'
+                            ? '${l.photo}: ${_lat!.toStringAsFixed(4)}, ${_lng!.toStringAsFixed(4)}'
                             : _coordSource == CoordSource.gps
-                            ? 'Position GPS: ${_lat!.toStringAsFixed(4)}, ${_lng!.toStringAsFixed(4)}'
-                            : 'Position non disponible — prenez une photo ou activez le GPS'),
+                            ? 'GPS: ${_lat!.toStringAsFixed(4)}, ${_lng!.toStringAsFixed(4)}'
+                            : l.locationUnavailable),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
@@ -216,9 +213,9 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
                 crossAxisSpacing: 8,
                 childAspectRatio: 1.2,
               ),
-              itemCount: _categories.length,
+              itemCount: categories.length,
               itemBuilder: (_, i) {
-                final (value, label, icon) = _categories[i];
+                final (value, label, icon) = categories[i];
                 final selected = _selectedCategory == value;
                 return InkWell(
                   onTap: () => setState(() => _selectedCategory = value),
@@ -266,14 +263,12 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Is_critical
+            // Is critical
             SwitchListTile(
               value: _isCritical,
               onChanged: (v) => setState(() => _isCritical = v),
-              title: const Text('Incident critique'),
-              subtitle: const Text(
-                'Cochez si la situation nécessite une intervention urgente',
-              ),
+              title: Text(l.criticalIncident),
+              subtitle: Text(l.criticalIncidentHint),
               activeThumbColor: AppColors.danger,
               secondary: Icon(
                 Icons.warning_amber_rounded,
@@ -281,13 +276,14 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
               ),
             ),
             const SizedBox(height: 8),
+
             // Description
             TextField(
               controller: _descController,
-              decoration: const InputDecoration(
-                labelText: 'Description',
-                hintText: 'Décrivez l\'incident...',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l.description,
+                hintText: l.describeIncident,
+                border: const OutlineInputBorder(),
               ),
               maxLines: 6,
             ),
@@ -311,7 +307,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
                   child: OutlinedButton.icon(
                     onPressed: () => _pickImage(ImageSource.camera),
                     icon: const Icon(Icons.camera_alt),
-                    label: const Text('Caméra'),
+                    label: Text(l.camera),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -319,7 +315,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
                   child: OutlinedButton.icon(
                     onPressed: () => _pickImage(ImageSource.gallery),
                     icon: const Icon(Icons.photo_library),
-                    label: const Text('Galerie'),
+                    label: Text(l.gallery),
                   ),
                 ),
               ],
@@ -339,7 +335,7 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
                           color: Colors.white,
                         ),
                       )
-                    : const Text('Envoyer le signalement'),
+                    : Text(l.sendReport),
               ),
             ),
           ],

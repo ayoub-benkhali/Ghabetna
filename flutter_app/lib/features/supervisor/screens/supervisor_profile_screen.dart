@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
+import 'package:flutter_app/core/widgets/app_bar_actions.dart';
 import 'package:flutter_app/core/widgets/async_value_widget.dart';
 import 'package:flutter_app/features/admin/providers/forest_provider.dart';
 import 'package:flutter_app/features/auth/providers/auth_provider.dart';
@@ -15,16 +17,18 @@ class SupervisorProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     final profileAsync = ref.watch(myProfileProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mon Profil'),
+        title: Text(l.myProfile),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_outlined),
             onPressed: () => ref.invalidate(myProfileProvider),
           ),
+          ...kAppBarActions,
         ],
       ),
       body: AsyncValueWidget(
@@ -33,7 +37,6 @@ class SupervisorProfileScreen extends ConsumerWidget {
           onRefresh: () async => ref.invalidate(myProfileProvider),
           child: ListView(
             children: [
-              // ── Header ──────────────────────────────────────────────
               ProfileHeader(user: user),
               const SizedBox(height: 20),
 
@@ -47,51 +50,51 @@ class SupervisorProfileScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Informations du compte',
+                          l.accountInfo,
                           style: Theme.of(context).textTheme.titleSmall
                               ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                         const Divider(height: 20),
                         ProfileInfoTile(
                           icon: Icons.badge_outlined,
-                          label: 'Identifiant',
+                          label: l.identifier,
                           value: '#${user.id}',
                         ),
                         ProfileInfoTile(
                           icon: Icons.email_outlined,
-                          label: 'Email',
+                          label: l.emailAddress,
                           value: user.email,
                         ),
                         ProfileInfoTile(
                           icon: Icons.verified_outlined,
-                          label: 'Statut',
-                          value: user.isActive ? 'Actif' : 'Inactif',
+                          label: l.status,
+                          value: user.isActive ? l.active : l.inactive,
                           iconColor: user.isActive
                               ? AppColors.success
                               : AppColors.danger,
                         ),
                         ProfileInfoTile(
                           icon: Icons.calendar_month_outlined,
-                          label: 'Membre depuis',
+                          label: l.memberSince,
                           value: DateFormat(
                             'dd MMMM yyyy',
-                            'fr',
+                            l.localeName,
                           ).format(user.createdAt),
                         ),
                         if (user.cin != null)
                           ProfileInfoTile(
                             icon: Icons.credit_card_outlined,
-                            label: 'CIN',
+                            label: l.cin,
                             value: user.cin!,
                           ),
                         if (user.phoneNumber != null)
                           ProfileInfoTile(
                             icon: Icons.phone_outlined,
-                            label: 'Téléphone',
+                            label: l.phone,
                             value: user.phoneNumber!,
                             trailing: IconButton(
                               icon: const Icon(Icons.edit_outlined, size: 16),
-                              tooltip: 'Modifier le téléphone',
+                              tooltip: l.editPhone,
                               onPressed: () => _showEditPhoneDialog(
                                 context,
                                 ref,
@@ -107,7 +110,7 @@ class SupervisorProfileScreen extends ConsumerWidget {
               const SizedBox(height: 12),
 
               // ── Incident overview ────────────────────────────────────
-              _SupervisorIncidentOverview(),
+              const _SupervisorIncidentOverview(),
               const SizedBox(height: 12),
 
               // ── Assigned forest ──────────────────────────────────────
@@ -122,10 +125,10 @@ class SupervisorProfileScreen extends ConsumerWidget {
                         Icons.forest_outlined,
                         color: Colors.grey,
                       ),
-                      title: const Text('Aucune forêt assignée'),
-                      subtitle: const Text(
-                        'Contactez l\'administrateur.',
-                        style: TextStyle(fontSize: 12),
+                      title: Text(l.noForestAssigned),
+                      subtitle: Text(
+                        l.contactAdmin,
+                        style: const TextStyle(fontSize: 12),
                       ),
                     ),
                   ),
@@ -137,7 +140,7 @@ class SupervisorProfileScreen extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.edit_outlined),
-                  label: const Text('Modifier mon nom'),
+                  label: Text(l.editName),
                   onPressed: () =>
                       _showEditNameDialog(context, ref, user.fullName),
                 ),
@@ -153,7 +156,7 @@ class SupervisorProfileScreen extends ConsumerWidget {
                     side: const BorderSide(color: AppColors.danger),
                   ),
                   icon: const Icon(Icons.logout_outlined),
-                  label: const Text('Se déconnecter'),
+                  label: Text(l.disconnect),
                   onPressed: () => ref.read(authProvider.notifier).logout(),
                 ),
               ),
@@ -170,16 +173,17 @@ class SupervisorProfileScreen extends ConsumerWidget {
     WidgetRef ref,
     String currentName,
   ) {
+    final l = context.l10n;
     final ctrl = TextEditingController(text: currentName);
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Modifier le nom'),
+        title: Text(l.editNameTitle),
         content: TextField(
           controller: ctrl,
-          decoration: const InputDecoration(
-            labelText: 'Nom complet',
-            prefixIcon: Icon(Icons.person_outline),
+          decoration: InputDecoration(
+            labelText: l.fullNameRequired,
+            prefixIcon: const Icon(Icons.person_outline),
           ),
           autofocus: true,
           textCapitalization: TextCapitalization.words,
@@ -187,7 +191,7 @@ class SupervisorProfileScreen extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Annuler'),
+            child: Text(l.cancel),
           ),
           FilledButton(
             onPressed: () async {
@@ -197,7 +201,7 @@ class SupervisorProfileScreen extends ConsumerWidget {
               }
               if (context.mounted) Navigator.pop(dialogContext);
             },
-            child: const Text('Enregistrer'),
+            child: Text(l.save),
           ),
         ],
       ),
@@ -210,24 +214,25 @@ void _showEditPhoneDialog(
   WidgetRef ref,
   String currentPhone,
 ) {
+  final l = context.l10n;
   final ctrl = TextEditingController(text: currentPhone);
   showDialog(
     context: context,
     builder: (dialogContext) => AlertDialog(
-      title: const Text('Modifier le téléphone'),
+      title: Text(l.editPhone),
       content: TextField(
         controller: ctrl,
         keyboardType: TextInputType.phone,
-        decoration: const InputDecoration(
-          labelText: 'Numéro de téléphone',
-          prefixIcon: Icon(Icons.phone_outlined),
+        decoration: InputDecoration(
+          labelText: l.phoneOptional,
+          prefixIcon: const Icon(Icons.phone_outlined),
         ),
         autofocus: true,
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(dialogContext),
-          child: const Text('Annuler'),
+          child: Text(l.cancel),
         ),
         FilledButton(
           onPressed: () async {
@@ -237,7 +242,7 @@ void _showEditPhoneDialog(
             }
             if (context.mounted) Navigator.pop(dialogContext);
           },
-          child: const Text('Enregistrer'),
+          child: Text(l.save),
         ),
       ],
     ),
@@ -247,8 +252,11 @@ void _showEditPhoneDialog(
 // ── Incident overview widget ──────────────────────────────────────────────────
 
 class _SupervisorIncidentOverview extends ConsumerWidget {
+  const _SupervisorIncidentOverview();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     final incidentsAsync = ref.watch(allIncidentsProvider);
 
     return Padding(
@@ -268,7 +276,7 @@ class _SupervisorIncidentOverview extends ConsumerWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Vue d\'ensemble des incidents',
+                    l.incidentOverview,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -278,8 +286,10 @@ class _SupervisorIncidentOverview extends ConsumerWidget {
               const SizedBox(height: 16),
               incidentsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) =>
-                    Text('Erreur: $e', style: const TextStyle(fontSize: 12)),
+                error: (e, _) => Text(
+                  '${l.errorPrefix} $e',
+                  style: const TextStyle(fontSize: 12),
+                ),
                 data: (incidents) {
                   final total = incidents.length;
                   final critical = incidents.where((i) => i.isCritical).length;
@@ -296,13 +306,13 @@ class _SupervisorIncidentOverview extends ConsumerWidget {
                         children: [
                           _StatBox(
                             value: total,
-                            label: 'Total',
+                            label: l.total,
                             color: AppColors.primaryGreen,
                           ),
                           const SizedBox(width: 8),
                           _StatBox(
                             value: critical,
-                            label: 'Critiques',
+                            label: l.critical,
                             color: AppColors.danger,
                           ),
                         ],
@@ -312,13 +322,13 @@ class _SupervisorIncidentOverview extends ConsumerWidget {
                         children: [
                           _StatBox(
                             value: pending,
-                            label: 'En attente',
+                            label: l.pending,
                             color: AppColors.warning,
                           ),
                           const SizedBox(width: 8),
                           _StatBox(
                             value: resolved,
-                            label: 'Résolus',
+                            label: l.resolved,
                             color: AppColors.success,
                           ),
                         ],
@@ -335,27 +345,30 @@ class _SupervisorIncidentOverview extends ConsumerWidget {
   }
 }
 
+// ── Assigned forest card ──────────────────────────────────────────────────────
+
 class _AssignedForestCard extends ConsumerWidget {
   final int forestId;
   const _AssignedForestCard({required this.forestId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     final forestsAsync = ref.watch(forestsProvider);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: forestsAsync.when(
-        loading: () => const Card(
+        loading: () => Card(
           child: ListTile(
-            leading: CircularProgressIndicator(),
-            title: Text('Chargement de la forêt...'),
+            leading: const CircularProgressIndicator(),
+            title: Text(l.loading),
           ),
         ),
         error: (e, _) => Card(
           child: ListTile(
             leading: const Icon(Icons.error_outline, color: AppColors.danger),
-            title: Text('Erreur: $e'),
+            title: Text('${l.errorPrefix} $e'),
           ),
         ),
         data: (forests) {
@@ -367,7 +380,7 @@ class _AssignedForestCard extends ConsumerWidget {
                   Icons.forest_outlined,
                   color: AppColors.primaryGreen,
                 ),
-                title: Text('Forêt #$forestId'),
+                title: Text('${l.forests} #$forestId'),
               ),
             );
           }
@@ -380,8 +393,8 @@ class _AssignedForestCard extends ConsumerWidget {
               title: Text(forest.name),
               subtitle: Text(
                 forest.region != null
-                    ? 'Région : ${forest.region}'
-                    : '${forest.parcelleCount} parcelle(s)',
+                    ? '${l.region} : ${forest.region}'
+                    : '${forest.parcelleCount} ${l.parcelles}',
               ),
               trailing: forest.areaHectares != null
                   ? Text(
@@ -399,6 +412,8 @@ class _AssignedForestCard extends ConsumerWidget {
     );
   }
 }
+
+// ── Stat box ──────────────────────────────────────────────────────────────────
 
 class _StatBox extends StatelessWidget {
   final int value;

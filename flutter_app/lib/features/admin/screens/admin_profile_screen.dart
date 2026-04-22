@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
+import 'package:flutter_app/core/widgets/app_bar_actions.dart';
 import 'package:flutter_app/core/widgets/async_value_widget.dart';
 import 'package:flutter_app/features/auth/providers/auth_provider.dart';
 import 'package:flutter_app/features/admin/providers/user_provider.dart';
@@ -15,16 +17,18 @@ class AdminProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     final profileAsync = ref.watch(myProfileProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mon Profil'),
+        title: Text(l.myProfile),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_outlined),
             onPressed: () => ref.invalidate(myProfileProvider),
           ),
+          ...kAppBarActions,
         ],
       ),
       body: AsyncValueWidget(
@@ -33,7 +37,6 @@ class AdminProfileScreen extends ConsumerWidget {
           onRefresh: () async => ref.invalidate(myProfileProvider),
           child: ListView(
             children: [
-              // ── Header ──────────────────────────────────────────────
               ProfileHeader(user: user),
               const SizedBox(height: 20),
 
@@ -47,51 +50,51 @@ class AdminProfileScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Informations du compte',
+                          l.accountInfo,
                           style: Theme.of(context).textTheme.titleSmall
                               ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                         const Divider(height: 20),
                         ProfileInfoTile(
                           icon: Icons.badge_outlined,
-                          label: 'Identifiant',
+                          label: l.identifier,
                           value: '#${user.id}',
                         ),
                         ProfileInfoTile(
                           icon: Icons.email_outlined,
-                          label: 'Email',
+                          label: l.emailAddress,
                           value: user.email,
                         ),
                         ProfileInfoTile(
                           icon: Icons.verified_outlined,
-                          label: 'Statut',
-                          value: user.isActive ? 'Actif' : 'Inactif',
+                          label: l.status,
+                          value: user.isActive ? l.active : l.inactive,
                           iconColor: user.isActive
                               ? AppColors.success
                               : AppColors.danger,
                         ),
                         ProfileInfoTile(
                           icon: Icons.calendar_month_outlined,
-                          label: 'Membre depuis',
+                          label: l.memberSince,
                           value: DateFormat(
                             'dd MMMM yyyy',
-                            'fr',
+                            l.localeName,
                           ).format(user.createdAt),
                         ),
                         if (user.cin != null)
                           ProfileInfoTile(
                             icon: Icons.credit_card_outlined,
-                            label: 'CIN',
+                            label: l.cin,
                             value: user.cin!,
                           ),
                         if (user.phoneNumber != null)
                           ProfileInfoTile(
                             icon: Icons.phone_outlined,
-                            label: 'Téléphone',
+                            label: l.phone,
                             value: user.phoneNumber!,
                             trailing: IconButton(
                               icon: const Icon(Icons.edit_outlined, size: 16),
-                              tooltip: 'Modifier le téléphone',
+                              tooltip: l.editPhone,
                               onPressed: () => _showEditPhoneDialog(
                                 context,
                                 ref,
@@ -115,7 +118,7 @@ class AdminProfileScreen extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.edit_outlined),
-                  label: const Text('Modifier mon nom'),
+                  label: Text(l.editName),
                   onPressed: () =>
                       _showEditNameDialog(context, ref, user.fullName),
                 ),
@@ -131,7 +134,7 @@ class AdminProfileScreen extends ConsumerWidget {
                     side: const BorderSide(color: AppColors.danger),
                   ),
                   icon: const Icon(Icons.logout_outlined),
-                  label: const Text('Se déconnecter'),
+                  label: Text(l.disconnect),
                   onPressed: () => ref.read(authProvider.notifier).logout(),
                 ),
               ),
@@ -148,16 +151,17 @@ class AdminProfileScreen extends ConsumerWidget {
     WidgetRef ref,
     String currentName,
   ) {
+    final l = context.l10n;
     final ctrl = TextEditingController(text: currentName);
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Modifier le nom'),
+        title: Text(l.editNameTitle),
         content: TextField(
           controller: ctrl,
-          decoration: const InputDecoration(
-            labelText: 'Nom complet',
-            prefixIcon: Icon(Icons.person_outline),
+          decoration: InputDecoration(
+            labelText: l.fullNameRequired,
+            prefixIcon: const Icon(Icons.person_outline),
           ),
           autofocus: true,
           textCapitalization: TextCapitalization.words,
@@ -165,7 +169,7 @@ class AdminProfileScreen extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Annuler'),
+            child: Text(l.cancel),
           ),
           FilledButton(
             onPressed: () async {
@@ -175,7 +179,7 @@ class AdminProfileScreen extends ConsumerWidget {
               }
               if (context.mounted) Navigator.pop(dialogContext);
             },
-            child: const Text('Enregistrer'),
+            child: Text(l.save),
           ),
         ],
       ),
@@ -188,24 +192,25 @@ void _showEditPhoneDialog(
   WidgetRef ref,
   String currentPhone,
 ) {
+  final l = context.l10n;
   final ctrl = TextEditingController(text: currentPhone);
   showDialog(
     context: context,
     builder: (dialogContext) => AlertDialog(
-      title: const Text('Modifier le téléphone'),
+      title: Text(l.editPhone),
       content: TextField(
         controller: ctrl,
         keyboardType: TextInputType.phone,
-        decoration: const InputDecoration(
-          labelText: 'Numéro de téléphone',
-          prefixIcon: Icon(Icons.phone_outlined),
+        decoration: InputDecoration(
+          labelText: l.phoneOptional,
+          prefixIcon: const Icon(Icons.phone_outlined),
         ),
         autofocus: true,
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(dialogContext),
-          child: const Text('Annuler'),
+          child: Text(l.cancel),
         ),
         FilledButton(
           onPressed: () async {
@@ -215,7 +220,7 @@ void _showEditPhoneDialog(
             }
             if (context.mounted) Navigator.pop(dialogContext);
           },
-          child: const Text('Enregistrer'),
+          child: Text(l.save),
         ),
       ],
     ),
@@ -227,6 +232,7 @@ void _showEditPhoneDialog(
 class _AdminSystemStats extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     final usersAsync = ref.watch(usersProvider);
     final forestsAsync = ref.watch(forestsProvider);
     final rolesAsync = ref.watch(rolesProvider);
@@ -248,7 +254,7 @@ class _AdminSystemStats extends ConsumerWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Statistiques système',
+                    l.systemStats,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -260,21 +266,21 @@ class _AdminSystemStats extends ConsumerWidget {
                 children: [
                   _SysStatTile(
                     icon: Icons.people_outline,
-                    label: 'Utilisateurs',
+                    label: l.users,
                     valueAsync: usersAsync.whenData((u) => u.length),
                     color: AppColors.info,
                   ),
                   const SizedBox(width: 8),
                   _SysStatTile(
                     icon: Icons.forest_outlined,
-                    label: 'Forêts',
+                    label: l.forests,
                     valueAsync: forestsAsync.whenData((f) => f.length),
                     color: AppColors.primaryGreen,
                   ),
                   const SizedBox(width: 8),
                   _SysStatTile(
                     icon: Icons.shield_outlined,
-                    label: 'Rôles',
+                    label: l.roles,
                     valueAsync: rolesAsync.whenData((r) => r.length),
                     color: AppColors.teal,
                   ),

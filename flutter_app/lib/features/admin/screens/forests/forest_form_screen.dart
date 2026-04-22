@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/features/admin/providers/forest_provider.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -6,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_app/core/widgets/app_bar_actions.dart';
 
 const _tunisiaCenter = LatLng(33.8869, 9.5375);
 
@@ -64,18 +66,19 @@ class _State extends ConsumerState<ForestFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final isEdit = widget.forestId != null;
 
     if (!_dataLoaded) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Chargement…')),
+        appBar: AppBar(title: Text(l.loading), actions: kAppBarActions),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEdit ? 'Modifier la forêt' : 'Nouvelle forêt'),
+        title: Text(isEdit ? l.editForest : l.newForest),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
@@ -90,7 +93,7 @@ class _State extends ConsumerState<ForestFormScreen> {
                       ),
                     )
                   : const Icon(Icons.save_outlined),
-              label: const Text('Enregistrer'),
+              label: Text(l.save),
               onPressed: _loading ? null : _save,
             ),
           ),
@@ -109,39 +112,39 @@ class _State extends ConsumerState<ForestFormScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Informations',
+                      l.information,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _nameCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Nom de la forêt *',
-                        prefixIcon: Icon(Icons.forest_outlined),
+                      decoration: InputDecoration(
+                        labelText: l.forestNameLabel,
+                        prefixIcon: const Icon(Icons.forest_outlined),
                       ),
                       validator: (v) =>
-                          (v == null || v.isEmpty) ? 'Requis' : null,
+                          (v == null || v.isEmpty) ? l.required : null,
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _regionCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Région',
-                        prefixIcon: Icon(Icons.location_on_outlined),
+                      decoration: InputDecoration(
+                        labelText: l.region,
+                        prefixIcon: const Icon(Icons.location_on_outlined),
                       ),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _descCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Description',
-                        prefixIcon: Icon(Icons.notes_outlined),
+                      decoration: InputDecoration(
+                        labelText: l.description,
+                        prefixIcon: const Icon(Icons.notes_outlined),
                       ),
                       maxLines: 3,
                     ),
                     const SizedBox(height: 28),
                     Text(
-                      'Délimitation spatiale',
+                      l.spatialBoundary,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 12),
@@ -176,10 +179,10 @@ class _State extends ConsumerState<ForestFormScreen> {
                           const SizedBox(width: 8),
                           Text(
                             _drawingPoints.isEmpty
-                                ? 'Aucune limite définie'
+                                ? l.noBoundaryDefined
                                 : _drawingPoints.length < 3
-                                ? '${_drawingPoints.length} point(s) — min. 3'
-                                : '${_drawingPoints.length} points',
+                                ? '${_drawingPoints.length} ${l.pointsMinThree}'
+                                : '${_drawingPoints.length} ${l.points}',
                             style: Theme.of(context).textTheme.labelMedium
                                 ?.copyWith(
                                   color: _drawingPoints.length >= 3
@@ -209,8 +212,8 @@ class _State extends ConsumerState<ForestFormScreen> {
                         ),
                         label: Text(
                           _isDrawing
-                              ? 'Arrêter le dessin'
-                              : 'Dessiner la limite',
+                              ? l.stopDrawing
+                              : l.drawBoundary, // TODO: add both to ARB
                         ),
                         onPressed: () =>
                             setState(() => _isDrawing = !_isDrawing),
@@ -222,7 +225,7 @@ class _State extends ConsumerState<ForestFormScreen> {
                         width: double.infinity,
                         child: FilledButton.icon(
                           icon: const Icon(Icons.check_circle_outline),
-                          label: const Text('Fermer le polygone'),
+                          label: Text(l.closePolygon),
                           onPressed: () => setState(() => _isDrawing = false),
                         ),
                       ),
@@ -236,7 +239,7 @@ class _State extends ConsumerState<ForestFormScreen> {
                             foregroundColor: AppColors.warning,
                           ),
                           icon: const Icon(Icons.undo),
-                          label: const Text('Annuler dernier point'),
+                          label: Text(l.undoLastPoint),
                           onPressed: () =>
                               setState(() => _drawingPoints.removeLast()),
                         ),
@@ -248,7 +251,7 @@ class _State extends ConsumerState<ForestFormScreen> {
                             foregroundColor: AppColors.danger,
                           ),
                           icon: const Icon(Icons.delete_outline),
-                          label: const Text('Effacer tout'),
+                          label: Text(l.clearAll),
                           onPressed: () =>
                               setState(() => _drawingPoints.clear()),
                         ),
@@ -257,7 +260,7 @@ class _State extends ConsumerState<ForestFormScreen> {
                     if (_isDrawing) ...[
                       const SizedBox(height: 16),
                       Text(
-                        'Tapez sur la carte pour ajouter des points.\nMinimum 3 points pour former un polygone.',
+                        l.drawingHint, // TODO: add to ARB
                         style: Theme.of(context).textTheme.bodyMedium,
                         textAlign: TextAlign.center,
                       ),
@@ -271,10 +274,6 @@ class _State extends ConsumerState<ForestFormScreen> {
           VerticalDivider(width: 1, color: Theme.of(context).dividerColor),
 
           // ── Right: map ──────────────────────────────────────────────────────
-          // FIX: _ForestMapWidget is a StatelessWidget — it never triggers a
-          // full FlutterMap rebuild when the parent state changes (drawing points,
-          // isDrawing toggle).  The MapController is owned by the parent and
-          // passed in so pan/zoom survive setState calls in the form panel.
           Expanded(
             child: _ForestMapWidget(
               mapController: _mapCtrl,
@@ -289,6 +288,7 @@ class _State extends ConsumerState<ForestFormScreen> {
   }
 
   Future<void> _save() async {
+    final l = context.l10n;
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
@@ -324,7 +324,7 @@ class _State extends ConsumerState<ForestFormScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur: $e'),
+            content: Text('${l.errorPrefix} $e'),
             backgroundColor: AppColors.danger,
           ),
         );
@@ -335,12 +335,7 @@ class _State extends ConsumerState<ForestFormScreen> {
   }
 }
 
-// ── Extracted map widget — StatelessWidget prevents full map rebuild ───────────
-//
-// Because FlutterMap is expensive to construct, wrapping it in its own
-// StatelessWidget means Flutter can diff the widget tree and reuse the
-// existing RenderObject instead of tearing down and recreating the map
-// on every `setState` triggered by adding drawing points.
+// ── Extracted map widget ───────────────────────────────────────────────────────
 
 class _ForestMapWidget extends StatelessWidget {
   final MapController mapController;
@@ -357,6 +352,7 @@ class _ForestMapWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final hasPolygon = drawingPoints.length >= 3;
 
     return Stack(
@@ -375,7 +371,6 @@ class _ForestMapWidget extends StatelessWidget {
               flags: isDrawing
                   ? InteractiveFlag.pinchZoom | InteractiveFlag.doubleTapZoom
                   : InteractiveFlag.all,
-              // FIX: disable cursor/keyboard rotation to prevent scroll-wheel freeze on web
               cursorKeyboardRotationOptions:
                   CursorKeyboardRotationOptions.disabled(),
             ),
@@ -389,13 +384,12 @@ class _ForestMapWidget extends StatelessWidget {
             if (hasPolygon)
               PolygonLayer(
                 polygons: [
-                  if (drawingPoints.length >= 3)
-                    Polygon(
-                      points: _filterValidPoints(drawingPoints),
-                      color: AppColors.primaryGreen.withValues(alpha: 0.2),
-                      borderColor: AppColors.primaryGreen,
-                      borderStrokeWidth: 2.5,
-                    ),
+                  Polygon(
+                    points: _filterValidPoints(drawingPoints),
+                    color: AppColors.primaryGreen.withValues(alpha: 0.2),
+                    borderColor: AppColors.primaryGreen,
+                    borderStrokeWidth: 2.5,
+                  ),
                 ],
               ),
             if (drawingPoints.length >= 2)
@@ -475,7 +469,7 @@ class _ForestMapWidget extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Mode dessin actif — Tapez pour ajouter des points',
+                      l.drawingModeActive, // TODO: add to ARB
                       style: Theme.of(
                         context,
                       ).textTheme.labelMedium?.copyWith(color: Colors.white),
@@ -494,13 +488,15 @@ class _ForestMapWidget extends StatelessWidget {
 
 List<LatLng> _filterValidPoints(List<LatLng> points) {
   return points
-      .where((p) =>
-          p.latitude.isFinite &&
-          p.longitude.isFinite &&
-          p.latitude >= -90 &&
-          p.latitude <= 90 &&
-          p.longitude >= -180 &&
-          p.longitude <= 180)
+      .where(
+        (p) =>
+            p.latitude.isFinite &&
+            p.longitude.isFinite &&
+            p.latitude >= -90 &&
+            p.latitude <= 90 &&
+            p.longitude >= -180 &&
+            p.longitude <= 180,
+      )
       .toList();
 }
 
@@ -519,59 +515,31 @@ List<LatLng> _geoJsonToLatLng(Map<String, dynamic> geojson) {
   try {
     final type = geojson['type'] as String?;
     final coordsList = geojson['coordinates'] as List?;
-    
-    if (coordsList == null || coordsList.isEmpty) {
-      return [];
-    }
-    
-    // Handle both Polygon and MultiPolygon formats
+    if (coordsList == null || coordsList.isEmpty) return [];
     dynamic ringData;
-    
     if (type == 'MultiPolygon') {
-      // For MultiPolygon, get the first polygon, then its exterior ring
-      if (coordsList[0] is! List || (coordsList[0] as List).isEmpty) {
-        return [];
-      }
+      if (coordsList[0] is! List || (coordsList[0] as List).isEmpty) return [];
       ringData = (coordsList[0] as List)[0];
     } else {
-      // For Polygon, get the exterior ring directly
       ringData = coordsList[0];
     }
-    
-    if (ringData is! List) {
-      return [];
-    }
-    
-    final ring = ringData;
-    
-    // Convert coordinate pairs [lon, lat] to LatLng(lat, lon)
+    if (ringData is! List) return [];
     final result = <LatLng>[];
-    for (final coord in ring) {
+    for (final coord in ringData) {
       if (coord is! List || (coord).length < 2) continue;
-      
       try {
         final lng = coord[0];
         final lat = coord[1];
-        
         if (lng is! num || lat is! num) continue;
-        
-        final latDouble = lat.toDouble();
-        final lngDouble = lng.toDouble();
-        
-        // Skip invalid coordinates
-        if (!latDouble.isFinite || !lngDouble.isFinite) continue;
-        if (latDouble < -90 || latDouble > 90) continue;
-        if (lngDouble < -180 || lngDouble > 180) continue;
-        
-        result.add(LatLng(latDouble, lngDouble));
-      } catch (_) {
-        // Skip any invalid coordinate
-      }
+        final latD = lat.toDouble();
+        final lngD = lng.toDouble();
+        if (!latD.isFinite || !lngD.isFinite) continue;
+        if (latD < -90 || latD > 90 || lngD < -180 || lngD > 180) continue;
+        result.add(LatLng(latD, lngD));
+      } catch (_) {}
     }
-    
     return result;
-  } catch (e) {
-    // Return empty list if anything goes wrong
+  } catch (_) {
     return [];
   }
 }

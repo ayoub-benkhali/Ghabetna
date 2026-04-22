@@ -1,23 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/core/widgets/async_value_widget.dart';
 import 'package:flutter_app/features/admin/models/user_model.dart';
 import 'package:flutter_app/features/admin/providers/user_provider.dart';
 import 'package:flutter_app/features/admin/screens/users/assignment_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_app/core/widgets/app_bar_actions.dart';
 
 class UserListScreen extends ConsumerWidget {
   const UserListScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     final usersAsync = ref.watch(usersProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Utilisateurs')),
+      appBar: AppBar(title: Text(l.dashboard), actions: kAppBarActions),
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.person_add_outlined),
-        label: const Text('Nouvel utilisateur'),
+        label: Text(l.newUser),
         onPressed: () async {
           await showDialog(
             context: context,
@@ -84,12 +87,13 @@ class _UserTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: SizedBox(
-            width: constraints.maxWidth - 48, // account for padding
+            width: constraints.maxWidth - 48,
             child: Card(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,18 +103,16 @@ class _UserTable extends StatelessWidget {
                     child: Row(
                       children: [
                         Text(
-                          '${users.length} utilisateur${users.length > 1 ? 's' : ''}',
+                          '${users.length} ${l.users}',
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 8),
-                  // Horizontal scroll only if columns overflow screen width
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: ConstrainedBox(
-                      // Ensure the DataTable always stretches to card width
                       constraints: BoxConstraints(
                         minWidth: constraints.maxWidth - 48,
                       ),
@@ -128,12 +130,12 @@ class _UserTable extends StatelessWidget {
                         dataRowMinHeight: 56,
                         dataRowMaxHeight: 56,
                         columnSpacing: 24,
-                        columns: const [
-                          DataColumn(label: Text('UTILISATEUR')),
-                          DataColumn(label: Text('RÔLE')),
-                          DataColumn(label: Text('SERVICE')),
-                          DataColumn(label: Text('STATUT')),
-                          DataColumn(label: Text('ACTIONS')),
+                        columns: [
+                          DataColumn(label: Text(l.users.toUpperCase())),
+                          DataColumn(label: Text(l.roles.toUpperCase())),
+                          DataColumn(label: Text(l.services.toUpperCase())),
+                          DataColumn(label: Text(l.status.toUpperCase())),
+                          DataColumn(label: Text(l.actions.toUpperCase())),
                         ],
                         rows: users.map((u) => _buildRow(context, u)).toList(),
                       ),
@@ -149,6 +151,7 @@ class _UserTable extends StatelessWidget {
   }
 
   DataRow _buildRow(BuildContext context, UserModel u) {
+    final l = context.l10n;
     final roleColor = _roleColor(u.roleName);
     final roleIcon = _roleIcon(u.roleName);
 
@@ -241,7 +244,7 @@ class _UserTable extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               Text(
-                u.isActive ? 'Actif' : 'Inactif',
+                u.isActive ? l.active : l.inactive,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: u.isActive ? AppColors.success : AppColors.danger,
                   fontWeight: FontWeight.w500,
@@ -253,63 +256,62 @@ class _UserTable extends StatelessWidget {
         // Actions
         DataCell(
           Consumer(
-            builder: (ctx, ref, _) => Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // ── Edit button (first) ─────────────────────────────────
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined, size: 18),
-                  tooltip: 'Modifier',
-                  onPressed: () async {
-                    await showDialog(
-                      context: ctx,
-                      builder: (_) => UserFormDialog(user: u),
-                    );
-                    onRefresh();
-                  },
-                ),
-                // ── Activate/Deactivate button ─────────────────
-                IconButton(
-                  icon: Icon(
-                    u.isActive
-                        ? Icons.block_outlined
-                        : Icons.check_circle_outline,
-                    size: 18,
-                    color: u.isActive ? AppColors.danger : AppColors.success,
-                  ),
-                  tooltip: u.isActive ? 'Désactiver' : 'Activer',
-                  onPressed: () async {
-                    await ref.read(userRepositoryProvider).updateUser(u.id, {
-                      'is_active': !u.isActive,
-                    });
-                    onRefresh();
-                  },
-                ),
-                // ── Assignment button  ─────────────
-                if (u.roleName == 'agent' || u.roleName == 'supervisor')
+            builder: (ctx, ref, _) {
+              final lCtx = ctx.l10n;
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
                   IconButton(
-                    icon: Icon(
-                      Icons.assignment_outlined,
-                      size: 18,
-                      // Show green if already assigned, grey if not
-                      color:
-                          (u.roleName == 'supervisor'
-                              ? u.forestId != null
-                              : u.parcelleId != null)
-                          ? AppColors.primaryGreen
-                          : Theme.of(ctx).hintColor,
-                    ),
-                    tooltip: 'Gérer l\'affectation',
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                    tooltip: lCtx.edit,
                     onPressed: () async {
-                      final refreshNeeded = await showDialog<bool>(
+                      await showDialog(
                         context: ctx,
-                        builder: (_) => AssignmentDialog(user: u),
+                        builder: (_) => UserFormDialog(user: u),
                       );
-                      if (refreshNeeded == true) onRefresh();
+                      onRefresh();
                     },
                   ),
-              ],
-            ),
+                  IconButton(
+                    icon: Icon(
+                      u.isActive
+                          ? Icons.block_outlined
+                          : Icons.check_circle_outline,
+                      size: 18,
+                      color: u.isActive ? AppColors.danger : AppColors.success,
+                    ),
+                    tooltip: u.isActive ? lCtx.deactivate : lCtx.activate,
+                    onPressed: () async {
+                      await ref.read(userRepositoryProvider).updateUser(u.id, {
+                        'is_active': !u.isActive,
+                      });
+                      onRefresh();
+                    },
+                  ),
+                  if (u.roleName == 'agent' || u.roleName == 'supervisor')
+                    IconButton(
+                      icon: Icon(
+                        Icons.assignment_outlined,
+                        size: 18,
+                        color:
+                            (u.roleName == 'supervisor'
+                                ? u.forestId != null
+                                : u.parcelleId != null)
+                            ? AppColors.primaryGreen
+                            : Theme.of(ctx).hintColor,
+                      ),
+                      tooltip: lCtx.manageAssignment,
+                      onPressed: () async {
+                        final refreshNeeded = await showDialog<bool>(
+                          context: ctx,
+                          builder: (_) => AssignmentDialog(user: u),
+                        );
+                        if (refreshNeeded == true) onRefresh();
+                      },
+                    ),
+                ],
+              );
+            },
           ),
         ),
       ],
@@ -361,12 +363,13 @@ class _UserFormState extends ConsumerState<UserFormDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final rolesAsync = ref.watch(rolesProvider);
     final servicesAsync = ref.watch(servicesProvider);
     final isEdit = widget.user != null;
 
     return AlertDialog(
-      title: Text(isEdit ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur'),
+      title: Text(isEdit ? l.editUser : l.newUser),
       content: SizedBox(
         width: 460,
         child: Form(
@@ -379,18 +382,17 @@ class _UserFormState extends ConsumerState<UserFormDialog> {
                 TextFormField(
                   controller: _email,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'Adresse email *',
-                    prefixIcon: Icon(Icons.email_outlined),
+                  decoration: InputDecoration(
+                    labelText: l.emailAddressRequired,
+                    prefixIcon: const Icon(Icons.email_outlined),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Requis';
-                    if (!v.contains('@')) return 'Email invalide';
+                    if (v == null || v.isEmpty) return l.required;
+                    if (!v.contains('@')) return l.emailInvalid;
                     return null;
                   },
                 )
               else
-                // Show email read-only in edit mode
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -420,40 +422,38 @@ class _UserFormState extends ConsumerState<UserFormDialog> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _fullName,
-                decoration: const InputDecoration(
-                  labelText: 'Nom complet *',
-                  prefixIcon: Icon(Icons.person_outline),
+                decoration: InputDecoration(
+                  labelText: l.fullNameRequired,
+                  prefixIcon: const Icon(Icons.person_outline),
                 ),
-                validator: (v) => (v == null || v.isEmpty) ? 'Requis' : null,
+                validator: (v) => (v == null || v.isEmpty) ? l.required : null,
               ),
               const SizedBox(height: 12),
-              // CIN
               TextFormField(
                 controller: _cin,
                 keyboardType: TextInputType.number,
                 maxLength: 8,
-                decoration: const InputDecoration(
-                  labelText: 'CIN (optionnel)',
-                  prefixIcon: Icon(Icons.credit_card_outlined),
+                decoration: InputDecoration(
+                  labelText: l.cinOptional,
+                  prefixIcon: const Icon(Icons.credit_card_outlined),
                   counterText: '',
                 ),
                 validator: (v) {
                   if (v != null &&
                       v.isNotEmpty &&
                       !RegExp(r'^\d{8}$').hasMatch(v)) {
-                    return 'Le CIN doit contenir exactement 8 chiffres';
+                    return l.cinInvalid;
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 12),
-              // Phone number
               TextFormField(
                 controller: _phoneNumber,
                 keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: 'Téléphone (optionnel)',
-                  prefixIcon: Icon(Icons.phone_outlined),
+                decoration: InputDecoration(
+                  labelText: l.phoneOptional,
+                  prefixIcon: const Icon(Icons.phone_outlined),
                 ),
               ),
               const SizedBox(height: 12),
@@ -461,14 +461,14 @@ class _UserFormState extends ConsumerState<UserFormDialog> {
               rolesAsync.when(
                 loading: () => const LinearProgressIndicator(),
                 error: (e, _) => Text(
-                  'Erreur rôles: $e',
+                  '${l.errorPrefix} $e',
                   style: const TextStyle(color: AppColors.danger),
                 ),
                 data: (roles) => DropdownButtonFormField<int>(
                   initialValue: _roleId,
-                  decoration: const InputDecoration(
-                    labelText: 'Rôle *',
-                    prefixIcon: Icon(Icons.shield_outlined),
+                  decoration: InputDecoration(
+                    labelText: l.roleRequired,
+                    prefixIcon: const Icon(Icons.shield_outlined),
                   ),
                   items: roles
                       .map(
@@ -489,7 +489,7 @@ class _UserFormState extends ConsumerState<UserFormDialog> {
                       )
                       .toList(),
                   onChanged: (v) => setState(() => _roleId = v),
-                  validator: (v) => v == null ? 'Requis' : null,
+                  validator: (v) => v == null ? l.required : null,
                 ),
               ),
               const SizedBox(height: 12),
@@ -497,20 +497,20 @@ class _UserFormState extends ConsumerState<UserFormDialog> {
               servicesAsync.when(
                 loading: () => const LinearProgressIndicator(),
                 error: (e, _) => Text(
-                  'Erreur services: $e',
+                  '${l.errorPrefix} $e',
                   style: const TextStyle(color: AppColors.danger),
                 ),
                 data: (services) => DropdownButtonFormField<int?>(
                   initialValue: _serviceId,
-                  decoration: const InputDecoration(
-                    labelText: 'Service (optionnel)',
-                    prefixIcon: Icon(Icons.account_tree_outlined),
+                  decoration: InputDecoration(
+                    labelText: l.serviceOptional,
+                    prefixIcon: const Icon(Icons.account_tree_outlined),
                   ),
                   items: [
                     DropdownMenuItem<int?>(
                       value: null,
                       child: Text(
-                        '— Aucun —',
+                        l.noNone,
                         style: TextStyle(color: Theme.of(context).hintColor),
                       ),
                     ),
@@ -524,7 +524,7 @@ class _UserFormState extends ConsumerState<UserFormDialog> {
                   onChanged: (v) => setState(() => _serviceId = v),
                 ),
               ),
-              // Info note for create mode
+              // Activation info note (create only)
               if (!isEdit) ...[
                 const SizedBox(height: 16),
                 Container(
@@ -547,8 +547,7 @@ class _UserFormState extends ConsumerState<UserFormDialog> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Un email d\'activation sera envoyé à cet utilisateur '
-                          'pour qu\'il définisse son mot de passe.',
+                          l.activationEmailNote,
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(color: AppColors.info),
                         ),
@@ -564,7 +563,7 @@ class _UserFormState extends ConsumerState<UserFormDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Annuler'),
+          child: Text(l.cancel),
         ),
         FilledButton(
           onPressed: _loading ? null : _submit,
@@ -577,13 +576,14 @@ class _UserFormState extends ConsumerState<UserFormDialog> {
                     color: Colors.white,
                   ),
                 )
-              : Text(isEdit ? 'Enregistrer' : 'Créer'),
+              : Text(isEdit ? l.save : l.create),
         ),
       ],
     );
   }
 
   Future<void> _submit() async {
+    final l = context.l10n;
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
@@ -609,7 +609,7 @@ class _UserFormState extends ConsumerState<UserFormDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur: $e'),
+            content: Text('${l.errorPrefix} $e'),
             backgroundColor: AppColors.danger,
           ),
         );
@@ -626,6 +626,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -637,19 +638,19 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Aucun utilisateur',
+            l.noUsersDefined,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 8),
           Text(
-            'Créez des comptes pour les agents,\nsuperviseurs et administrateurs.',
+            l.noUsersHint,
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
           FilledButton.icon(
             icon: const Icon(Icons.person_add_outlined),
-            label: const Text('Créer un utilisateur'),
+            label: Text(l.createUser),
             onPressed: onAdd,
           ),
         ],

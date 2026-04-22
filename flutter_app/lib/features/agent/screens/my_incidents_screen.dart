@@ -1,29 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/features/incidents/models/incident_model.dart';
 import 'package:flutter_app/features/incidents/providers/incident_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-
-const _categoryLabels = {
-  'feu': 'Incendie',
-  'coupe_illegale': 'Coupe illégale',
-  'refuge_suspect': 'Refuge suspect',
-  'trafic': 'Trafic',
-  'dechet': 'Déchets',
-  'maladie': 'Maladie',
-  'autre': 'Autre',
-};
 
 class MyIncidentsScreen extends ConsumerWidget {
   const MyIncidentsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     final incidents = ref.watch(myIncidentsProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mes signalements'),
+        title: Text(l.myReports),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -33,12 +25,12 @@ class MyIncidentsScreen extends ConsumerWidget {
       ),
       body: incidents.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Erreur: $e')),
+        error: (e, _) => Center(child: Text('${l.errorPrefix} $e')),
         data: (list) => list.isEmpty
-            ? const Center(
+            ? Center(
                 child: Text(
-                  'Aucun signalement pour l\'instant',
-                  style: TextStyle(color: Colors.grey),
+                  l.noIncidents,
+                  style: const TextStyle(color: Colors.grey),
                 ),
               )
             : RefreshIndicator(
@@ -65,15 +57,36 @@ class _IncidentCard extends StatelessWidget {
     _ => Colors.grey,
   };
 
+  String _localizeCategory(String raw, l) => switch (raw) {
+    'feu' => l.typeIncendie,
+    'coupe_illegale' => l.typeCoupeIllegale,
+    'refuge_suspect' => l.typeRefugeSuspect,
+    'trafic' => l.typeTrafic,
+    'dechet' => l.typeDechet,
+    'maladie' => l.typeMaladie,
+    'autre' => l.typeAutre,
+    _ => raw,
+  };
+
+  String _localizeStatus(String raw, l) => switch (raw) {
+    'pending' => l.pending,
+    'in_progress' => l.inProgress,
+    'resolved' => l.resolved,
+    'rejected' => l.rejected,
+    _ => raw,
+  };
+
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: ListTile(
         leading: incident.isCritical
             ? const Icon(Icons.warning, color: Colors.red)
             : const Icon(Icons.forest, color: Colors.green),
-        title: Text(_categoryLabels[incident.category] ?? incident.category),
+        title: Text(_localizeCategory(incident.category, l)),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -89,7 +102,10 @@ class _IncidentCard extends StatelessWidget {
           ],
         ),
         trailing: Chip(
-          label: Text(incident.status, style: const TextStyle(fontSize: 11)),
+          label: Text(
+            _localizeStatus(incident.status, l),
+            style: const TextStyle(fontSize: 11),
+          ),
           backgroundColor: _statusColor(
             incident.status,
           ).withValues(alpha: 0.15),

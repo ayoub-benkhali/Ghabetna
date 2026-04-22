@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
+import 'package:flutter_app/core/widgets/app_bar_actions.dart';
 import 'package:flutter_app/features/auth/providers/auth_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -22,14 +24,14 @@ class _NavItem {
   const _NavItem(this.label, this.icon, this.route);
 }
 
-const _navItems = [
-  _NavItem('Incidents', Icons.list_alt_outlined, '/supervisor/incidents'),
-  _NavItem('Carte', Icons.map_outlined, '/supervisor/map'),
-  _NavItem('Profil', Icons.person_outline, '/supervisor/profile'),
-  // will uncomment when building these screens:
-  // _NavItem('Agents', Icons.people_outline, '/supervisor/agents'),
-  // _NavItem('Statistiques', Icons.bar_chart_outlined, '/supervisor/analytics'),
-];
+List<_NavItem> _buildNavItems(BuildContext context) {
+  final l = context.l10n;
+  return [
+    _NavItem(l.incidents, Icons.list_alt_outlined, '/supervisor/incidents'),
+    _NavItem(l.map, Icons.map_outlined, '/supervisor/map'),
+    _NavItem(l.profile, Icons.person_outline, '/supervisor/profile'),
+  ];
+}
 
 class _WideLayout extends ConsumerWidget {
   final Widget child;
@@ -37,11 +39,13 @@ class _WideLayout extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     final location = GoRouterState.of(context).matchedLocation;
     final user = ref.watch(authProvider).user;
+    final navItems = _buildNavItems(context);
 
     // Match active nav item — startsWith handles sub-routes like /supervisor/incidents/42
-    final selectedIndex = _navItems.indexWhere(
+    final selectedIndex = navItems.indexWhere(
       (n) => location.startsWith(n.route),
     );
 
@@ -76,7 +80,7 @@ class _WideLayout extends ConsumerWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'Ghabetna',
+                              l.appTitle,
                               style: Theme.of(context).textTheme.titleLarge
                                   ?.copyWith(
                                     color: Colors.white,
@@ -84,7 +88,7 @@ class _WideLayout extends ConsumerWidget {
                                   ),
                             ),
                             Text(
-                              'Administration',
+                              l.administration,
                               style: Theme.of(context).textTheme.labelMedium
                                   ?.copyWith(color: Colors.white70),
                             ),
@@ -131,7 +135,7 @@ class _WideLayout extends ConsumerWidget {
                                       ),
                                 ),
                                 Text(
-                                  'Superviseur',
+                                  l.supervisor,
                                   style: Theme.of(context).textTheme.labelSmall
                                       ?.copyWith(
                                         color: AppColors.sidebarText.withValues(
@@ -145,7 +149,6 @@ class _WideLayout extends ConsumerWidget {
                         ],
                       ),
                     ),
-                  const SizedBox(height: 8),
                   Divider(
                     color: AppColors.sidebarText.withValues(alpha: 0.1),
                     height: 1,
@@ -159,9 +162,9 @@ class _WideLayout extends ConsumerWidget {
                         horizontal: 12,
                         vertical: 4,
                       ),
-                      itemCount: _navItems.length,
+                      itemCount: navItems.length,
                       itemBuilder: (_, i) {
-                        final item = _navItems[i];
+                        final item = navItems[i];
                         final isActive = i == selectedIndex;
                         return Container(
                           margin: const EdgeInsets.only(bottom: 4),
@@ -214,7 +217,7 @@ class _WideLayout extends ConsumerWidget {
                       size: 20,
                     ),
                     title: Text(
-                      'Déconnexion',
+                      l.disconnect,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppColors.sidebarText.withValues(alpha: 0.7),
                       ),
@@ -240,18 +243,21 @@ class _NarrowLayout extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
+    final navItems = _buildNavItems(context);
     final location = GoRouterState.of(context).matchedLocation;
-    final selectedIndex = _navItems.indexWhere(
+    final selectedIndex = navItems.indexWhere(
       (n) => location.startsWith(n.route),
     );
     return Scaffold(
+      appBar: AppBar(title: Text(l.appTitle), actions: kAppBarActions),
       body: child,
       bottomNavigationBar: NavigationBar(
         backgroundColor: AppColors.sidebarBg,
         indicatorColor: AppColors.sidebarActive,
         selectedIndex: selectedIndex < 0 ? 0 : selectedIndex,
-        onDestinationSelected: (i) => context.go(_navItems[i].route),
-        destinations: _navItems
+        onDestinationSelected: (i) => context.go(navItems[i].route),
+        destinations: navItems
             .map(
               (n) => NavigationDestination(
                 icon: Icon(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/features/auth/providers/auth_provider.dart';
+import 'package:flutter_app/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -34,12 +36,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  String _resolveAuthError(String? key, AppLocalizations l) {
+    switch (key) {
+      case 'authError401':
+        return l.authError401;
+      case 'authError403':
+        return l.authError403;
+      case 'authError404':
+        return l.authError404;
+      case 'authErrorNetwork':
+        return l.authErrorNetwork;
+      default:
+        return key ?? '';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final formState = ref.watch(loginFormProvider);
     final authError = ref.watch(authProvider).error;
     final isLoading = formState.isLoading;
     final theme = Theme.of(context);
+    final l = context.l10n;
 
     return Scaffold(
       body: Row(
@@ -66,14 +84,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        'Ghabetna',
+                        l.appTitle,
                         style: theme.textTheme.displayLarge?.copyWith(
                           color: Colors.white,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Soyez la voix de la forêt \nRépondre à son appel est notre devoir.',
+                        l.tagline,
                         textAlign: TextAlign.center,
                         style: theme.textTheme.bodyLarge?.copyWith(
                           color: Colors.white70,
@@ -116,12 +134,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               child: Column(
                                 children: [
                                   Text(
-                                    'Bon retour !',
+                                    l.welcomeBack,
                                     style: theme.textTheme.headlineMedium,
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    'Entrez vos identifiants pour accéder à la plateforme',
+                                    l.loginSubtitle,
                                     style: theme.textTheme.bodyMedium,
                                     textAlign: TextAlign.center,
                                   ),
@@ -134,15 +152,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             TextFormField(
                               controller: _emailCtrl,
                               keyboardType: TextInputType.emailAddress,
-                              decoration: const InputDecoration(
-                                labelText: 'Adresse email',
+                              decoration: InputDecoration(
+                                labelText: l.emailAddress,
                                 prefixIcon: Icon(Icons.email_outlined),
                               ),
                               validator: (v) {
                                 if (v == null || v.trim().isEmpty) {
-                                  return 'Email requis';
+                                  return l.emailRequired;
                                 }
-                                if (!v.contains('@')) return 'Email invalide';
+                                if (!v.contains('@')) return l.emailInvalid;
                                 return null;
                               },
                             ),
@@ -153,7 +171,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               controller: _passCtrl,
                               obscureText: _obscure,
                               decoration: InputDecoration(
-                                labelText: 'Mot de passe',
+                                labelText: l.password,
                                 prefixIcon: const Icon(Icons.lock_outlined),
                                 suffixIcon: IconButton(
                                   onPressed: () =>
@@ -167,7 +185,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                               validator: (v) {
                                 if (v == null || v.isEmpty) {
-                                  return 'Mot de passe requis';
+                                  return l.passwordRequired;
                                 }
                                 return null;
                               },
@@ -204,7 +222,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
-                                        authError,
+                                        _resolveAuthError(authError, l),
                                         style: theme.textTheme.bodyMedium
                                             ?.copyWith(color: AppColors.danger),
                                       ),
@@ -228,7 +246,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                           strokeWidth: 2,
                                         ),
                                       )
-                                    : const Text('Se connecter'),
+                                    : Text(l.signIn),
                               ),
                             ),
                           ],

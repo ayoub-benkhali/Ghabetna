@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/features/admin/providers/forest_provider.dart';
 import 'package:flutter_app/features/admin/providers/user_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_app/core/widgets/app_bar_actions.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -14,19 +16,22 @@ class DashboardScreen extends ConsumerWidget {
     final services = ref.watch(servicesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Tableau de bord')),
+      appBar: AppBar(
+        title: Text(context.l10n.dashboard),
+        actions: kAppBarActions,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Vue d\'ensemble',
+              context.l10n.overview,
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: 4),
             Text(
-              'Données du système en temps réel',
+              context.l10n.realtimeData,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 24),
@@ -36,8 +41,8 @@ class DashboardScreen extends ConsumerWidget {
               children: [
                 _KpiCard(
                   icon: Icons.forest,
-                  label: 'Forêts',
-                  color: AppColors.primaryGreen, // was Colors.green
+                  label: context.l10n.forests,
+                  color: AppColors.primaryGreen,
                   value: forests.when(
                     data: (d) => '${d.length}',
                     loading: () => '…',
@@ -46,8 +51,8 @@ class DashboardScreen extends ConsumerWidget {
                 ),
                 _KpiCard(
                   icon: Icons.people,
-                  label: 'Utilisateurs',
-                  color: AppColors.info, // was Colors.blue
+                  label: context.l10n.users,
+                  color: AppColors.info, 
                   value: users.when(
                     data: (d) => '${d.length}',
                     loading: () => '…',
@@ -56,18 +61,17 @@ class DashboardScreen extends ConsumerWidget {
                 ),
                 _KpiCard(
                   icon: Icons.account_tree,
-                  label: 'Services',
-                  color: AppColors.warning, // was Colors.orange
+                  label: context.l10n.services,
+                  color: AppColors.warning,
                   value: services.when(
                     data: (d) => '${d.length}',
                     loading: () => '…',
                     error: (_, __) => '!',
                   ),
                 ),
-                // REPLACE the Parcelles KpiCard:
                 _KpiCard(
                   icon: Icons.map_outlined,
-                  label: 'Parcelles',
+                  label: context.l10n.parcelles,
                   color: AppColors.teal,
                   value: forests.when(
                     data: (list) =>
@@ -101,7 +105,6 @@ class _KpiCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: 180,
-      // Card styling (border-radius, color, elevation) comes from cardTheme in buildTheme()
       child: Card(
         child: Padding(
           padding: const EdgeInsets.all(20),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/features/admin/providers/forest_provider.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -45,7 +46,6 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
   Future<void> _loadData() async {
     final repo = ref.read(forestRepositoryProvider);
     final forest = await repo.getForest(widget.forestId);
-
     if (forest.boundaryGeojson != null) {
       _forestBoundary = _geoJsonToLatLng(forest.boundaryGeojson!);
     }
@@ -65,9 +65,11 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
+
     if (!_dataLoaded) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Chargement…')),
+        appBar: AppBar(title: Text(l.loading)),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -77,7 +79,7 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEdit ? 'Modifier la parcelle' : 'Nouvelle parcelle'),
+        title: Text(isEdit ? l.editParcelle : l.newParcelle),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
@@ -92,7 +94,7 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
                       ),
                     )
                   : const Icon(Icons.save_outlined),
-              label: const Text('Enregistrer'),
+              label: Text(l.save),
               onPressed: _loading ? null : _save,
             ),
           ),
@@ -109,29 +111,29 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Informations',
+                    l.information,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _nameCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Nom de la parcelle *',
-                      prefixIcon: Icon(Icons.map_outlined),
+                    decoration: InputDecoration(
+                      labelText: l.parcelleNameLabel,
+                      prefixIcon: const Icon(Icons.map_outlined),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _descCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Description',
-                      prefixIcon: Icon(Icons.notes_outlined),
+                    decoration: InputDecoration(
+                      labelText: l.description,
+                      prefixIcon: const Icon(Icons.notes_outlined),
                     ),
                     maxLines: 2,
                   ),
                   const SizedBox(height: 28),
                   Text(
-                    'Délimitation de la parcelle',
+                    l.parcelleBoundary,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 12),
@@ -144,9 +146,7 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
                     ),
                     decoration: BoxDecoration(
                       color: hasPolygon
-                          ? AppColors.info.withValues(
-                              alpha: 0.1,
-                            ) // parcelle = info blue
+                          ? AppColors.info.withValues(alpha: 0.1)
                           : AppColors.warning.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
@@ -167,8 +167,8 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
                         const SizedBox(width: 8),
                         Text(
                           _drawingPoints.isEmpty
-                              ? 'Aucun polygone dessiné'
-                              : '${_drawingPoints.length} points',
+                              ? l.noPolygonDrawn
+                              : '${_drawingPoints.length} ${l.points}',
                           style: Theme.of(context).textTheme.labelMedium
                               ?.copyWith(
                                 color: hasPolygon
@@ -195,7 +195,7 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
                       icon: Icon(
                         _isDrawing ? Icons.stop : Icons.edit_location_alt,
                       ),
-                      label: Text(_isDrawing ? 'Arrêter' : 'Dessiner'),
+                      label: Text(_isDrawing ? l.stopDrawing : l.drawBoundary),
                       onPressed: () => setState(() => _isDrawing = !_isDrawing),
                     ),
                   ),
@@ -206,7 +206,7 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
                       width: double.infinity,
                       child: FilledButton.icon(
                         icon: const Icon(Icons.check_circle_outline),
-                        label: const Text('Fermer le polygone'),
+                        label: Text(l.closePolygon),
                         onPressed: () => setState(() => _isDrawing = false),
                       ),
                     ),
@@ -219,7 +219,7 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
                         foregroundColor: AppColors.warning,
                       ),
                       icon: const Icon(Icons.undo),
-                      label: const Text('Dernier point'),
+                      label: Text(l.undoLastPoint),
                       onPressed: () =>
                           setState(() => _drawingPoints.removeLast()),
                     ),
@@ -228,7 +228,7 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
                         foregroundColor: AppColors.danger,
                       ),
                       icon: const Icon(Icons.delete_outline),
-                      label: const Text('Effacer tout'),
+                      label: Text(l.clearAll),
                       onPressed: () => setState(() => _drawingPoints.clear()),
                     ),
                   ],
@@ -247,18 +247,18 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Légende',
+                          l.legend,
                           style: Theme.of(context).textTheme.labelMedium,
                         ),
                         const SizedBox(height: 8),
                         _LegendItem(
                           color: AppColors.primaryGreen,
-                          label: 'Limite forêt parente',
+                          label: l.parentForestBoundary,
                         ),
                         const SizedBox(height: 4),
                         _LegendItem(
                           color: AppColors.info,
-                          label: 'Parcelle en cours',
+                          label: l.currentParcelle,
                         ),
                       ],
                     ),
@@ -285,16 +285,17 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
   }
 
   Future<void> _save() async {
+    final l = context.l10n;
     if (_nameCtrl.text.trim().isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Le nom est obligatoire')));
+      ).showSnackBar(SnackBar(content: Text(l.nameRequired)));
       return;
     }
     if (_drawingPoints.length < 3) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Dessinez au moins 3 points')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l.minThreePoints)));
       return;
     }
     setState(() => _loading = true);
@@ -318,7 +319,7 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur: $e'),
+            content: Text('${l.errorPrefix} $e'),
             backgroundColor: AppColors.danger,
           ),
         );
@@ -329,13 +330,7 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
   }
 }
 
-// ── Extracted draw map widget — StatelessWidget prevents full map rebuild ─────
-//
-// Receives immutable snapshots of drawingPoints, forestBoundary, and isDrawing.
-// Flutter diffs the widget tree and reuses the existing FlutterMap render
-// object instead of tearing it down on every setState in the parent.
-// Also adds cursorKeyboardRotationOptions.disabled() which was missing,
-// preventing the scroll-wheel freeze on Flutter Web.
+// ── Extracted draw map widget ─────────────────────────────────────────────────
 
 class _ParcelleDrawMapWidget extends StatelessWidget {
   final List<LatLng> forestBoundary;
@@ -352,6 +347,7 @@ class _ParcelleDrawMapWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final hasPolygon = drawingPoints.length >= 3;
     final centerLL = forestBoundary.isNotEmpty
         ? forestBoundary.first
@@ -365,13 +361,11 @@ class _ParcelleDrawMapWidget extends StatelessWidget {
             initialZoom: forestBoundary.isNotEmpty ? 12 : 8,
             minZoom: 6,
             maxZoom: 18,
-
             onTap: isDrawing ? (_, ll) => onTap(ll) : null,
             interactionOptions: InteractionOptions(
               flags: isDrawing
                   ? InteractiveFlag.pinchZoom | InteractiveFlag.doubleTapZoom
                   : InteractiveFlag.all,
-              // FIX: was missing entirely — causes scroll-wheel freeze on web
               cursorKeyboardRotationOptions:
                   CursorKeyboardRotationOptions.disabled(),
             ),
@@ -382,7 +376,6 @@ class _ParcelleDrawMapWidget extends StatelessWidget {
               userAgentPackageName: 'com.ghabetna.app',
               maxZoom: 19,
             ),
-            // Parent forest boundary — green reference outline
             if (forestBoundary.length >= 3)
               PolygonLayer(
                 polygons: [
@@ -391,7 +384,7 @@ class _ParcelleDrawMapWidget extends StatelessWidget {
                     color: AppColors.primaryGreen.withValues(alpha: 0.06),
                     borderColor: AppColors.primaryGreen,
                     borderStrokeWidth: 3,
-                    label: 'Limite forêt',
+                    label: l.forestBoundary,
                     labelStyle: const TextStyle(
                       color: AppColors.primaryGreen,
                       fontSize: 11,
@@ -400,17 +393,15 @@ class _ParcelleDrawMapWidget extends StatelessWidget {
                   ),
                 ],
               ),
-            // Parcelle polygon — info blue
             if (hasPolygon)
               PolygonLayer(
                 polygons: [
-                  if (drawingPoints.length >= 3)
-                    Polygon(
-                      points: _filterValidPoints(drawingPoints),
-                      color: AppColors.primaryGreen.withValues(alpha: 0.2),
-                      borderColor: AppColors.primaryGreen,
-                      borderStrokeWidth: 2.5,
-                    ),
+                  Polygon(
+                    points: _filterValidPoints(drawingPoints),
+                    color: AppColors.primaryGreen.withValues(alpha: 0.2),
+                    borderColor: AppColors.primaryGreen,
+                    borderStrokeWidth: 2.5,
+                  ),
                 ],
               ),
             if (drawingPoints.length >= 2)
@@ -485,7 +476,7 @@ class _ParcelleDrawMapWidget extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Tapez dans la forêt pour ajouter des points',
+                      l.drawingInsideForestHint,
                       style: Theme.of(
                         context,
                       ).textTheme.labelMedium?.copyWith(color: Colors.white),
@@ -551,59 +542,31 @@ List<LatLng> _geoJsonToLatLng(Map<String, dynamic> geojson) {
   try {
     final type = geojson['type'] as String?;
     final coordsList = geojson['coordinates'] as List?;
-
-    if (coordsList == null || coordsList.isEmpty) {
-      return [];
-    }
-
-    // Handle both Polygon and MultiPolygon formats
+    if (coordsList == null || coordsList.isEmpty) return [];
     dynamic ringData;
-
     if (type == 'MultiPolygon') {
-      // For MultiPolygon, get the first polygon, then its exterior ring
-      if (coordsList[0] is! List || (coordsList[0] as List).isEmpty) {
-        return [];
-      }
+      if (coordsList[0] is! List || (coordsList[0] as List).isEmpty) return [];
       ringData = (coordsList[0] as List)[0];
     } else {
-      // For Polygon, get the exterior ring directly
       ringData = coordsList[0];
     }
-
-    if (ringData is! List) {
-      return [];
-    }
-
-    final ring = ringData;
-
-    // Convert coordinate pairs [lon, lat] to LatLng(lat, lon)
+    if (ringData is! List) return [];
     final result = <LatLng>[];
-    for (final coord in ring) {
-      if (coord is! List || (coord).length < 2) continue;
-
+    for (final coord in ringData) {
+      if (coord is! List || coord.length < 2) continue;
       try {
         final lng = coord[0];
         final lat = coord[1];
-
         if (lng is! num || lat is! num) continue;
-
-        final latDouble = lat.toDouble();
-        final lngDouble = lng.toDouble();
-
-        // Skip invalid coordinates
-        if (!latDouble.isFinite || !lngDouble.isFinite) continue;
-        if (latDouble < -90 || latDouble > 90) continue;
-        if (lngDouble < -180 || lngDouble > 180) continue;
-
-        result.add(LatLng(latDouble, lngDouble));
-      } catch (_) {
-        // Skip any invalid coordinate
-      }
+        final latD = lat.toDouble();
+        final lngD = lng.toDouble();
+        if (!latD.isFinite || !lngD.isFinite) continue;
+        if (latD < -90 || latD > 90 || lngD < -180 || lngD > 180) continue;
+        result.add(LatLng(latD, lngD));
+      } catch (_) {}
     }
-
     return result;
-  } catch (e) {
-    // Return empty list if anything goes wrong
+  } catch (_) {
     return [];
   }
 }

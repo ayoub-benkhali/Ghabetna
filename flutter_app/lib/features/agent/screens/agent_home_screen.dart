@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
+import 'package:flutter_app/core/widgets/app_bar_actions.dart';
 import 'package:flutter_app/features/auth/providers/auth_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,19 +12,21 @@ class AgentHomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider).user;
+    final l = context.l10n;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ghabetna'),
+        title: Text(l.appTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.person_outline),
-            tooltip: 'Mon profil',
+            tooltip: l.myProfile,
             onPressed: () => context.push('/agent/profile'),
           ),
+          ...kAppBarActions,
           IconButton(
             icon: const Icon(Icons.logout_outlined),
-            tooltip: 'Déconnexion',
+            tooltip: l.disconnect,
             onPressed: () => ref.read(authProvider.notifier).logout(),
           ),
         ],
@@ -54,7 +58,7 @@ class AgentHomeScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              Text('Bienvenue,', style: Theme.of(context).textTheme.bodyLarge),
+              Text(l.welcome, style: Theme.of(context).textTheme.bodyLarge),
               Text(
                 user?.fullName ?? '',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -66,7 +70,7 @@ class AgentHomeScreen extends ConsumerWidget {
               FilledButton.icon(
                 onPressed: () => context.push('/agent/report'),
                 icon: const Icon(Icons.add_alert),
-                label: const Text('Signaler un incident'),
+                label: Text(l.reportIncident),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size(double.infinity, 52),
                 ),
@@ -75,7 +79,7 @@ class AgentHomeScreen extends ConsumerWidget {
               OutlinedButton.icon(
                 onPressed: () => context.push('/agent/incidents'),
                 icon: const Icon(Icons.list_alt),
-                label: const Text('Mes signalements'),
+                label: Text(l.myReports),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 52),
                 ),

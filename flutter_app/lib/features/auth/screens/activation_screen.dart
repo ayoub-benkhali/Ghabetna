@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/features/auth/providers/auth_provider.dart';
+import 'package:flutter_app/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -28,6 +30,7 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
   }
 
   Future<void> _activate() async {
+    final l = context.l10n;
     if (!_formKey.currentState!.validate()) return;
     setState(() {
       _loading = true;
@@ -38,11 +41,9 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
           .read(authRepositoryProvider)
           .activateAccount(widget.token, _passCtrl.text);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Compte activé avec succés! Connectez-vous.'),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l.accountActivated)));
         context.go('/login');
       }
     } catch (e) {
@@ -52,8 +53,24 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
     }
   }
 
+  String _resolveAuthError(String? key, AppLocalizations l) {
+    switch (key) {
+      case 'authError401':
+        return l.authError401;
+      case 'authError403':
+        return l.authError403;
+      case 'authError404':
+        return l.authError404;
+      case 'authErrorNetwork':
+        return l.authErrorNetwork;
+      default:
+        return key ?? '';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final theme = Theme.of(context);
     return Scaffold(
       body: Center(
@@ -80,13 +97,13 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
                       ),
                       const SizedBox(height: 24),
                       Text(
-                        'Activation de compte',
+                        l.activateAccount,
                         style: theme.textTheme.headlineMedium,
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Définissez votre mot de passe pour activer votre compte.',
+                        l.activateAccountSubtitle,
                         style: theme.textTheme.bodyMedium,
                         textAlign: TextAlign.center,
                       ),
@@ -95,7 +112,7 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
                         controller: _passCtrl,
                         obscureText: _obscure1,
                         decoration: InputDecoration(
-                          labelText: 'Nouveau mot de passe',
+                          labelText: l.newPassword,
                           prefixIcon: const Icon(Icons.lock_clock_outlined),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -109,7 +126,7 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
                         ),
                         validator: (v) {
                           if (v == null || v.length < 8) {
-                            return 'Minimum 8 caractéres';
+                            return l.minChars;
                           }
                           return null;
                         },
@@ -119,7 +136,7 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
                         controller: _confirmCtrl,
                         obscureText: _obscure2,
                         decoration: InputDecoration(
-                          labelText: 'Confirmer le mot de passe',
+                          labelText: l.confirmPassword,
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -133,7 +150,7 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
                         ),
                         validator: (v) {
                           if (v != _passCtrl.text) {
-                            return 'Les mots de passe ne correspondent pas';
+                            return l.passwordMismatch;
                           }
                           return null;
                         },
@@ -150,7 +167,7 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
                             ),
                           ),
                           child: Text(
-                            _error!,
+                            _resolveAuthError(_error, l),
                             style: const TextStyle(color: AppColors.danger),
                           ),
                         ),
@@ -169,7 +186,7 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : const Text('Activer mon compte'),
+                              : Text(l.activateButton),
                         ),
                       ),
                     ],

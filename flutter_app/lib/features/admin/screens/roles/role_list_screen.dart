@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/core/widgets/async_value_widget.dart';
 import 'package:flutter_app/features/admin/models/role_model.dart';
 import 'package:flutter_app/features/admin/providers/user_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-//All available permission from CDC
+import 'package:flutter_app/core/widgets/app_bar_actions.dart';
 
 const _allPermissions = [
   'user:create',
@@ -41,7 +41,6 @@ const _allPermissions = [
   'notification:send',
 ];
 
-// Each resource group gets a color from AppColors
 const _resourceColors = {
   'user': AppColors.info,
   'role': AppColors.teal,
@@ -61,12 +60,16 @@ class RoleListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final rolesAsync = ref.watch(rolesProvider);
+    final l = context.l10n;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Rôles & Permissions')),
+      appBar: AppBar(
+        title: Text(l.rolesAndPermissions),
+        actions: kAppBarActions,
+      ),
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.shield_outlined),
-        label: const Text('Nouveau rôle'),
+        label: Text(l.newRole),
         onPressed: () async {
           await showDialog(
             context: context,
@@ -108,6 +111,7 @@ class _RoleCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     final groups = <String, List<String>>{};
     for (final p in role.permissions) {
       final res = p.split(':')[0];
@@ -140,7 +144,7 @@ class _RoleCard extends ConsumerWidget {
           children: [
             IconButton(
               icon: const Icon(Icons.edit_outlined, size: 18),
-              tooltip: 'Modifier',
+              tooltip: l.edit,
               onPressed: () async {
                 await showDialog(
                   context: context,
@@ -155,28 +159,24 @@ class _RoleCard extends ConsumerWidget {
                 size: 18,
                 color: AppColors.danger,
               ),
-              tooltip: 'Supprimer',
+              tooltip: l.delete,
               onPressed: () async {
-                // FIX: use dialogCtx so Navigator.pop targets the dialog, not the router stack
                 final confirm = await showDialog<bool>(
                   context: context,
                   builder: (dialogCtx) => AlertDialog(
-                    title: const Text('Supprimer ce rôle ?'),
-                    content: Text(
-                      'Les utilisateurs avec le rôle "${role.name}" '
-                      'n\'auront plus accès au système.',
-                    ),
+                    title: Text(l.deleteRole),
+                    content: Text('${l.delete} "${role.name}"?'),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(dialogCtx, false),
-                        child: const Text('Annuler'),
+                        child: Text(l.cancel),
                       ),
                       FilledButton(
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.danger,
                         ),
                         onPressed: () => Navigator.pop(dialogCtx, true),
-                        child: const Text('Supprimer'),
+                        child: Text(l.delete),
                       ),
                     ],
                   ),
@@ -192,7 +192,7 @@ class _RoleCard extends ConsumerWidget {
         children: [
           if (groups.isEmpty)
             Text(
-              'Aucune permission assignée',
+              l.noPermissionsAssigned,
               style: Theme.of(context).textTheme.bodyMedium,
             )
           else
@@ -291,6 +291,7 @@ class _RoleFormState extends ConsumerState<_RoleFormDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final groups = <String, List<String>>{};
     for (final p in _allPermissions) {
       final parts = p.split(':');
@@ -298,7 +299,7 @@ class _RoleFormState extends ConsumerState<_RoleFormDialog> {
     }
 
     return AlertDialog(
-      title: Text(widget.role == null ? 'Nouveau rôle' : 'Modifier le rôle'),
+      title: Text(widget.role == null ? l.newRole : l.editRole),
       content: SizedBox(
         width: 560,
         height: 520,
@@ -308,38 +309,38 @@ class _RoleFormState extends ConsumerState<_RoleFormDialog> {
             children: [
               TextFormField(
                 controller: _nameCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Nom du rôle *',
-                  prefixIcon: Icon(Icons.shield_outlined),
+                decoration: InputDecoration(
+                  labelText: l.roleNameLabel,
+                  prefixIcon: const Icon(Icons.shield_outlined),
                 ),
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _descCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  prefixIcon: Icon(Icons.notes_outlined),
+                decoration: InputDecoration(
+                  labelText: l.description,
+                  prefixIcon: const Icon(Icons.notes_outlined),
                 ),
               ),
               const SizedBox(height: 24),
               Row(
                 children: [
                   Text(
-                    'Permissions',
+                    l.permissions,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const Spacer(),
                   TextButton(
                     onPressed: () =>
                         setState(() => _selected = Set.from(_allPermissions)),
-                    child: const Text('Tout sélectionner'),
+                    child: Text(l.selectAll),
                   ),
                   TextButton(
                     style: TextButton.styleFrom(
                       foregroundColor: AppColors.danger,
                     ),
                     onPressed: () => setState(() => _selected.clear()),
-                    child: const Text('Effacer'),
+                    child: Text(l.clear),
                   ),
                 ],
               ),
@@ -354,7 +355,7 @@ class _RoleFormState extends ConsumerState<_RoleFormDialog> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  '${_selected.length} / ${_allPermissions.length} sélectionnées',
+                  '${_selected.length} / ${_allPermissions.length} ${l.selected}',
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
                     color: AppColors.primaryGreen,
                     fontWeight: FontWeight.w600,
@@ -379,7 +380,7 @@ class _RoleFormState extends ConsumerState<_RoleFormDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Annuler'),
+          child: Text(l.cancel),
         ),
         FilledButton(
           onPressed: _loading ? null : _submit,
@@ -392,17 +393,18 @@ class _RoleFormState extends ConsumerState<_RoleFormDialog> {
                     color: Colors.white,
                   ),
                 )
-              : Text(widget.role == null ? 'Créer' : 'Enregistrer'),
+              : Text(widget.role == null ? l.create : l.save),
         ),
       ],
     );
   }
 
   Future<void> _submit() async {
+    final l = context.l10n;
     if (_nameCtrl.text.trim().isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Le nom est obligatoire')));
+      ).showSnackBar(SnackBar(content: Text(l.nameRequired)));
       return;
     }
     setState(() => _loading = true);
@@ -421,7 +423,7 @@ class _RoleFormState extends ConsumerState<_RoleFormDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur: $e'),
+            content: Text('${l.errorPrefix} $e'),
             backgroundColor: AppColors.danger,
           ),
         );
@@ -449,6 +451,7 @@ class _PermGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final allSelected = actions.every((a) => selected.contains('$resource:$a'));
 
     return Padding(
@@ -483,7 +486,7 @@ class _PermGroup extends StatelessWidget {
                   }
                 },
                 child: Text(
-                  allSelected ? 'Désélectionner' : 'Tout',
+                  allSelected ? l.clear : l.selectAll,
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
                     color: color.withValues(alpha: 0.7),
                   ),
@@ -520,12 +523,13 @@ class _PermGroup extends StatelessWidget {
   }
 }
 
-class _EmptyState extends StatelessWidget {
+class _EmptyState extends ConsumerWidget {
   final VoidCallback onAdd;
   const _EmptyState({required this.onAdd});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -537,19 +541,19 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Aucun rôle défini',
+            l.noRolesDefined,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 8),
           Text(
-            'Créez les rôles et leurs permissions\npour gérer les accès au système.',
+            l.noRolesHint,
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
           FilledButton.icon(
             icon: const Icon(Icons.shield_outlined),
-            label: const Text('Créer un rôle'),
+            label: Text(l.newRole),
             onPressed: onAdd,
           ),
         ],

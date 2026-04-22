@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/features/admin/models/forest_model.dart';
 import 'package:flutter_app/features/admin/models/parcelle_model.dart';
@@ -8,8 +9,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-// A distinct palette for parcelles — using AppColors as base, no raw Color()
 
 const _parcellePalette = [
   AppColors.info,
@@ -26,48 +25,41 @@ class ParcelleListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     final forestAsync = ref.watch(forestProvider(forestId));
     final parcellesAsync = ref.watch(parcellesProvider(forestId));
 
-    // Resolve forest name for AppBar while loading
     final forestName = forestAsync.whenOrNull(data: (f) => f.name);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          forestName != null ? 'Parcelles — $forestName' : 'Parcelles',
+          forestName != null ? '${l.parcelles} — $forestName' : l.parcelles,
         ),
-        // Back arrow automatically goes to /admin/forests via go_router shell
       ),
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.add_location_alt_outlined),
-        label: const Text('Dessiner une parcelle'),
+        label: Text(l.drawParcelle),
         onPressed: () => context.go('/admin/forests/$forestId/parcelles/draw'),
       ),
       body: switch ((forestAsync, parcellesAsync)) {
-        // Both loading
         (AsyncLoading(), _) ||
         (_, AsyncLoading()) => const Center(child: CircularProgressIndicator()),
-        // Any error
         (AsyncError(:final error), _) => _ErrorState(message: error.toString()),
         (_, AsyncError(:final error)) => _ErrorState(message: error.toString()),
-        // Both data
         (AsyncData(:final value), AsyncData(value: final parcelles)) =>
           _ParcelleLayout(
             forest: value,
             parcelles: parcelles,
-            onRefresh: () {
-              ref.invalidate(parcellesProvider(forestId));
-            },
+            onRefresh: () => ref.invalidate(parcellesProvider(forestId)),
           ),
-        // Fallback (should never happen)
         _ => const Center(child: CircularProgressIndicator()),
       },
     );
   }
 }
 
-// ── Main layout: list on left, map on right ───────────────────────────────────
+// ── Main layout ───────────────────────────────────────────────────────────────
 
 class _ParcelleLayout extends ConsumerWidget {
   final ForestModel forest;
@@ -82,6 +74,7 @@ class _ParcelleLayout extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     return Row(
       children: [
         // ── Left: parcelle list ──────────────────────────────────
@@ -90,7 +83,6 @@ class _ParcelleLayout extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
               Container(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
                 decoration: BoxDecoration(
@@ -101,19 +93,18 @@ class _ParcelleLayout extends ConsumerWidget {
                 child: Row(
                   children: [
                     Text(
-                      '${parcelles.length} parcelle${parcelles.length > 1 ? 's' : ''}',
+                      '${parcelles.length} ${l.parcelles}',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const Spacer(),
                     if (forest.areaHectares != null)
                       Text(
-                        '${forest.areaHectares!.toStringAsFixed(0)} ha total',
+                        '${forest.areaHectares!.toStringAsFixed(0)} ha ${l.total}',
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                   ],
                 ),
               ),
-              // List
               Expanded(
                 child: parcelles.isEmpty
                     ? _EmptyParcelleState(
@@ -124,7 +115,7 @@ class _ParcelleLayout extends ConsumerWidget {
                     : ListView.separated(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         itemCount: parcelles.length,
-                        separatorBuilder: (_, _) => Divider(
+                        separatorBuilder: (_, __) => Divider(
                           height: 1,
                           color: Theme.of(context).dividerColor,
                         ),
@@ -140,12 +131,8 @@ class _ParcelleLayout extends ConsumerWidget {
           ),
         ),
 
-        // Vertical divider
         VerticalDivider(width: 1, color: Theme.of(context).dividerColor),
 
-        // ── Right: overview map ─────────────────────────────────────────────
-        // FIX: _OverviewMap is already a StatelessWidget — good. But it was
-        // missing cursorKeyboardRotationOptions (scroll-wheel freeze on web).
         Expanded(
           child: _OverviewMap(forest: forest, parcelles: parcelles),
         ),
@@ -154,7 +141,7 @@ class _ParcelleLayout extends ConsumerWidget {
   }
 }
 
-// ── Parcelle tile ──────────────────────────────────────────────────────────────
+// ── Parcelle tile ─────────────────────────────────────────────────────────────
 
 class _ParcelleTile extends ConsumerWidget {
   final ParcelleModel parcelle;
@@ -171,6 +158,7 @@ class _ParcelleTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     return ListTile(
       contentPadding: const EdgeInsets.fromLTRB(16, 4, 8, 4),
       leading: Container(
@@ -198,7 +186,7 @@ class _ParcelleTile extends ConsumerWidget {
         children: [
           IconButton(
             icon: const Icon(Icons.edit_outlined, size: 18),
-            tooltip: 'Modifier',
+            tooltip: l.edit,
             color: AppColors.primaryGreen,
             onPressed: () => context.go(
               '/admin/forests/$forestId/parcelles/${parcelle.id}/edit',
@@ -206,29 +194,25 @@ class _ParcelleTile extends ConsumerWidget {
           ),
           IconButton(
             icon: const Icon(Icons.delete_outline, size: 18),
-            tooltip: 'Supprimer',
+            tooltip: l.delete,
             color: AppColors.danger,
             onPressed: () async {
-              // FIX: use dialogCtx so Navigator.pop targets the dialog overlay,
-              // not the GoRouter navigation stack (which causes blank page crash).
               final confirm = await showDialog<bool>(
                 context: context,
                 builder: (dialogCtx) => AlertDialog(
-                  title: Text('Supprimer "${parcelle.name}" ?'),
-                  content: const Text(
-                    'Cette parcelle sera supprimée définitivement.',
-                  ),
+                  title: Text('${l.delete} "${parcelle.name}" ?'),
+                  content: Text(l.deleteParcelleWarning), 
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(dialogCtx, false),
-                      child: const Text('Annuler'),
+                      child: Text(l.cancel),
                     ),
                     FilledButton(
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.danger,
                       ),
                       onPressed: () => Navigator.pop(dialogCtx, true),
-                      child: const Text('Supprimer'),
+                      child: Text(l.delete),
                     ),
                   ],
                 ),
@@ -247,10 +231,7 @@ class _ParcelleTile extends ConsumerWidget {
   }
 }
 
-// ── Overview map — StatelessWidget, receives data as props ────────────────────
-//
-// FIX: added cursorKeyboardRotationOptions: CursorKeyboardRotationOptions.disabled()
-// to InteractionOptions to prevent scroll-wheel freeze on Flutter Web.
+// ── Overview map ──────────────────────────────────────────────────────────────
 
 class _OverviewMap extends StatelessWidget {
   final ForestModel forest;
@@ -259,6 +240,7 @@ class _OverviewMap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final forestPoints = forest.boundaryGeojson != null
         ? _geoJsonToLatLng(forest.boundaryGeojson!)
         : <LatLng>[];
@@ -278,8 +260,6 @@ class _OverviewMap extends StatelessWidget {
             minZoom: 6,
             maxZoom: 18,
             interactionOptions: InteractionOptions(
-              // FIX: disables the cursor/keyboard rotation that causes
-              // scroll-wheel events to freeze the map on web
               cursorKeyboardRotationOptions:
                   CursorKeyboardRotationOptions.disabled(),
             ),
@@ -290,34 +270,31 @@ class _OverviewMap extends StatelessWidget {
               userAgentPackageName: 'com.ghabetna.app',
               maxZoom: 19,
             ),
-            // Forest boundary — primaryGreen outline
             if (forestPoints.length >= 3)
               PolygonLayer(
                 polygons: [
-                  if (forestPoints.length >= 3)
-                    Polygon(
-                      points: _filterValidPoints(forestPoints),
-                      color: AppColors.primaryGreen.withValues(alpha: 0.08),
-                      borderColor: AppColors.primaryGreen,
-                      borderStrokeWidth: 2.5,
-                      label: forest.name,
-                      labelStyle: const TextStyle(
-                        color: AppColors.darkForest,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
+                  Polygon(
+                    points: _filterValidPoints(forestPoints),
+                    color: AppColors.primaryGreen.withValues(alpha: 0.08),
+                    borderColor: AppColors.primaryGreen,
+                    borderStrokeWidth: 2.5,
+                    label: forest.name,
+                    labelStyle: const TextStyle(
+                      color: AppColors.darkForest,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
                     ),
+                  ),
                 ],
               ),
-            // Parcelles — each with its palette color
             if (parcelles.isNotEmpty)
               PolygonLayer(
-                polygons: parcelles.asMap().entries
+                polygons: parcelles
+                    .asMap()
+                    .entries
                     .map((e) {
                       final pts = _geoJsonToLatLng(e.value.boundaryGeojson);
-                      // Skip invalid polygons with fewer than 3 points
                       if (pts.length < 3) return null;
-                      
                       final color =
                           _parcellePalette[e.key % _parcellePalette.length];
                       return Polygon(
@@ -349,7 +326,6 @@ class _OverviewMap extends StatelessWidget {
             ),
           ],
         ),
-        // Legend overlay — bottom-left
         if (parcelles.isNotEmpty)
           Positioned(
             bottom: 16,
@@ -367,7 +343,7 @@ class _OverviewMap extends StatelessWidget {
                 children: [
                   _LegendRow(
                     color: AppColors.primaryGreen,
-                    label: 'Limite forêt',
+                    label: l.forestBoundary,
                     dashed: true,
                   ),
                   const SizedBox(height: 6),
@@ -390,7 +366,7 @@ class _OverviewMap extends StatelessWidget {
                   if (parcelles.length > 5) ...[
                     const SizedBox(height: 4),
                     Text(
-                      '+ ${parcelles.length - 5} autres',
+                      '+ ${parcelles.length - 5} ${l.others}',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ],
@@ -445,6 +421,7 @@ class _EmptyParcelleState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -457,20 +434,20 @@ class _EmptyParcelleState extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Aucune parcelle',
+            l.noParcelles,
             style: Theme.of(context).textTheme.titleMedium,
             textAlign: TextAlign.center,
-          ),
+          ), 
           const SizedBox(height: 8),
           Text(
-            'Dessinez des zones de patrouille à l\'intérieur de cette forêt.',
+            l.noParcellesHint, 
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20),
           FilledButton.icon(
             icon: const Icon(Icons.add_location_alt_outlined),
-            label: const Text('Dessiner une parcelle'),
+            label: Text(l.drawParcelle),
             onPressed: onDraw,
           ),
         ],
@@ -487,6 +464,7 @@ class _ErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -494,7 +472,7 @@ class _ErrorState extends StatelessWidget {
           const Icon(Icons.error_outline, size: 48, color: AppColors.danger),
           const SizedBox(height: 12),
           Text(
-            'Une erreur est survenue',
+            l.errorOccurred,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 8),
@@ -513,13 +491,15 @@ class _ErrorState extends StatelessWidget {
 
 List<LatLng> _filterValidPoints(List<LatLng> points) {
   return points
-      .where((p) =>
-          p.latitude.isFinite &&
-          p.longitude.isFinite &&
-          p.latitude >= -90 &&
-          p.latitude <= 90 &&
-          p.longitude >= -180 &&
-          p.longitude <= 180)
+      .where(
+        (p) =>
+            p.latitude.isFinite &&
+            p.longitude.isFinite &&
+            p.latitude >= -90 &&
+            p.latitude <= 90 &&
+            p.longitude >= -180 &&
+            p.longitude <= 180,
+      )
       .toList();
 }
 
@@ -527,67 +507,37 @@ List<LatLng> _geoJsonToLatLng(Map<String, dynamic> geojson) {
   try {
     final type = geojson['type'] as String?;
     final coordsList = geojson['coordinates'] as List?;
-    
-    if (coordsList == null || coordsList.isEmpty) {
-      return [];
-    }
-    
-    // Handle both Polygon and MultiPolygon formats
+    if (coordsList == null || coordsList.isEmpty) return [];
     dynamic ringData;
-    
     if (type == 'MultiPolygon') {
-      // For MultiPolygon, get the first polygon, then its exterior ring
-      if (coordsList[0] is! List || (coordsList[0] as List).isEmpty) {
-        return [];
-      }
+      if (coordsList[0] is! List || (coordsList[0] as List).isEmpty) return [];
       ringData = (coordsList[0] as List)[0];
     } else {
-      // For Polygon, get the exterior ring directly
       ringData = coordsList[0];
     }
-    
-    if (ringData is! List) {
-      return [];
-    }
-    
-    final ring = ringData;
-    
-    // Convert coordinate pairs [lon, lat] to LatLng(lat, lon)
+    if (ringData is! List) return [];
     final result = <LatLng>[];
-    for (final coord in ring) {
+    for (final coord in ringData) {
       if (coord is! List || (coord).length < 2) continue;
-      
       try {
         final lng = coord[0];
         final lat = coord[1];
-        
         if (lng is! num || lat is! num) continue;
-        
-        final latDouble = lat.toDouble();
-        final lngDouble = lng.toDouble();
-        
-        // Skip invalid coordinates
-        if (!latDouble.isFinite || !lngDouble.isFinite) continue;
-        if (latDouble < -90 || latDouble > 90) continue;
-        if (lngDouble < -180 || lngDouble > 180) continue;
-        
-        result.add(LatLng(latDouble, lngDouble));
-      } catch (_) {
-        // Skip any invalid coordinate
-      }
+        final latD = lat.toDouble();
+        final lngD = lng.toDouble();
+        if (!latD.isFinite || !lngD.isFinite) continue;
+        if (latD < -90 || latD > 90 || lngD < -180 || lngD > 180) continue;
+        result.add(LatLng(latD, lngD));
+      } catch (_) {}
     }
-    
     return result;
-  } catch (e) {
-    // Return empty list if anything goes wrong
+  } catch (_) {
     return [];
   }
 }
 
 LatLng _centroid(List<LatLng> pts) {
-  if (pts.isEmpty) {
-    return const LatLng(33.8869, 9.5375); // Default to Tunisia center
-  }
+  if (pts.isEmpty) return const LatLng(33.8869, 9.5375);
   double lat = 0, lng = 0;
   for (final p in pts) {
     lat += p.latitude;

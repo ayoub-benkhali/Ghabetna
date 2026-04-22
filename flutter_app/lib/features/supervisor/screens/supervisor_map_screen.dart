@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
+import 'package:flutter_app/core/widgets/app_bar_actions.dart';
 import 'package:flutter_app/features/incidents/models/incident_model.dart';
 import 'package:flutter_app/features/supervisor/providers/supervisor_provider.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -32,25 +34,27 @@ class SupervisorMapScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     final async = ref.watch(allIncidentsProvider);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Carte des incidents'),
+        title: Text('${l.map} — ${l.incidents}'),
         actions: [
           IconButton(
             icon: const Icon(Icons.list_alt_outlined),
-            tooltip: 'Vue liste',
+            tooltip: l.listView,
             onPressed: () => context.go('/supervisor/incidents'),
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => ref.invalidate(allIncidentsProvider),
           ),
+          ...kAppBarActions,
         ],
       ),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Erreur:$e')),
+        error: (e, _) => Center(child: Text('${l.errorPrefix} $e')),
         data: (incidents) {
           //only incidents with GPS coords
           final mapped = incidents
@@ -174,7 +178,7 @@ class SupervisorMapScreen extends ConsumerWidget {
                     ],
                   ),
                   child: Text(
-                    '${mapped.length} incident${mapped.length != 1 ? "s" : ""} géolocalisé${mapped.length != 1 ? "s" : ""}',
+                    '${mapped.length} ${l.incidents}',
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -193,6 +197,7 @@ class SupervisorMapScreen extends ConsumerWidget {
 class _MapLegend extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -204,17 +209,17 @@ class _MapLegend extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'Légende',
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+          Text(
+            l.legend,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
           ),
           const SizedBox(height: 6),
-          _LegendItem(color: AppColors.warning, label: 'En attente'),
-          _LegendItem(color: AppColors.info, label: 'En cours'),
-          _LegendItem(color: AppColors.success, label: 'Résolu'),
-          _LegendItem(color: AppColors.danger, label: 'Rejeté'),
+          _LegendItem(color: AppColors.warning, label: l.pending),
+          _LegendItem(color: AppColors.info, label: l.inProgress),
+          _LegendItem(color: AppColors.success, label: l.resolved),
+          _LegendItem(color: AppColors.danger, label: l.rejected),
           const SizedBox(height: 4),
-          const _CriticalLegendItem(),
+          _CriticalLegendItem(),
         ],
       ),
     );
@@ -248,6 +253,7 @@ class _CriticalLegendItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
@@ -263,7 +269,7 @@ class _CriticalLegendItem extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
-          const Text('Critique', style: TextStyle(fontSize: 11)),
+          Text(l.critical, style: const TextStyle(fontSize: 11)),
         ],
       ),
     );

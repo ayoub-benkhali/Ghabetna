@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/core/widgets/async_value_widget.dart';
 import 'package:flutter_app/features/auth/providers/auth_provider.dart';
@@ -14,11 +15,12 @@ class AgentProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     final profileAsync = ref.watch(myProfileProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mon Profil'),
+        title: Text(l.myProfile),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_outlined),
@@ -32,12 +34,11 @@ class AgentProfileScreen extends ConsumerWidget {
           onRefresh: () async => ref.invalidate(myProfileProvider),
           child: ListView(
             children: [
-              // ── Header ──────────────────────────────────────────────
               ProfileHeader(user: user),
               const SizedBox(height: 20),
 
-              // ── Score card (placeholder until scoring service) ──────
-              _ScorePlaceholderCard(),
+              // ── Score card ───────────────────────────────────────────
+              const _ScorePlaceholderCard(),
               const SizedBox(height: 12),
 
               // ── Account info ─────────────────────────────────────────
@@ -50,53 +51,51 @@ class AgentProfileScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Informations du compte',
+                          l.accountInfo,
                           style: Theme.of(context).textTheme.titleSmall
                               ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                         const Divider(height: 20),
                         ProfileInfoTile(
                           icon: Icons.badge_outlined,
-                          label: 'Identifiant',
+                          label: l.identifier,
                           value: '#${user.id}',
                         ),
                         ProfileInfoTile(
                           icon: Icons.email_outlined,
-                          label: 'Email',
+                          label: l.emailAddress,
                           value: user.email,
                         ),
                         ProfileInfoTile(
                           icon: Icons.verified_outlined,
-                          label: 'Statut',
-                          value: user.isActive
-                              ? 'Compte actif'
-                              : 'Compte inactif',
+                          label: l.status,
+                          value: user.isActive ? l.active : l.inactive,
                           iconColor: user.isActive
                               ? AppColors.success
                               : AppColors.danger,
                         ),
                         ProfileInfoTile(
                           icon: Icons.calendar_month_outlined,
-                          label: 'Membre depuis',
+                          label: l.memberSince,
                           value: DateFormat(
                             'dd MMMM yyyy',
-                            'fr',
+                            l.localeName,
                           ).format(user.createdAt),
                         ),
                         if (user.cin != null)
                           ProfileInfoTile(
                             icon: Icons.credit_card_outlined,
-                            label: 'CIN',
+                            label: l.cin,
                             value: user.cin!,
                           ),
                         if (user.phoneNumber != null)
                           ProfileInfoTile(
                             icon: Icons.phone_outlined,
-                            label: 'Téléphone',
+                            label: l.phone,
                             value: user.phoneNumber!,
                             trailing: IconButton(
                               icon: const Icon(Icons.edit_outlined, size: 16),
-                              tooltip: 'Modifier le téléphone',
+                              tooltip: l.editPhone,
                               onPressed: () => _showEditPhoneDialog(
                                 context,
                                 ref,
@@ -112,41 +111,35 @@ class AgentProfileScreen extends ConsumerWidget {
               const SizedBox(height: 12),
 
               // ── Incident stats ───────────────────────────────────────
-              _AgentIncidentStats(),
+              const _AgentIncidentStats(),
               const SizedBox(height: 12),
 
               // ── Parcelle assignment ──────────────────────────────────
-              if (user.parcelleId != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Card(
-                    child: ListTile(
-                      leading: const Icon(
-                        Icons.crop_square_outlined,
-                        color: AppColors.primaryGreen,
-                      ),
-                      title: const Text('Parcelle assignée'),
-                      subtitle: Text('Parcelle #${user.parcelleId}'),
-                    ),
-                  ),
-                )
-              else
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Card(
-                    child: ListTile(
-                      leading: const Icon(
-                        Icons.crop_square_outlined,
-                        color: Colors.grey,
-                      ),
-                      title: const Text('Aucune parcelle assignée'),
-                      subtitle: const Text(
-                        'Contactez votre superviseur pour une affectation.',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ),
-                  ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Card(
+                  child: user.parcelleId != null
+                      ? ListTile(
+                          leading: const Icon(
+                            Icons.crop_square_outlined,
+                            color: AppColors.primaryGreen,
+                          ),
+                          title: Text(l.assignedParcelle),
+                          subtitle: Text('${l.parcelles} #${user.parcelleId}'),
+                        )
+                      : ListTile(
+                          leading: const Icon(
+                            Icons.crop_square_outlined,
+                            color: Colors.grey,
+                          ),
+                          title: Text(l.noParcelleAssigned),
+                          subtitle: Text(
+                            l.contactSupervisor,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ),
                 ),
+              ),
               const SizedBox(height: 12),
 
               // ── Edit name ────────────────────────────────────────────
@@ -154,7 +147,7 @@ class AgentProfileScreen extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.edit_outlined),
-                  label: const Text('Modifier mon nom'),
+                  label: Text(l.editName),
                   onPressed: () =>
                       _showEditNameDialog(context, ref, user.fullName),
                 ),
@@ -170,7 +163,7 @@ class AgentProfileScreen extends ConsumerWidget {
                     side: const BorderSide(color: AppColors.danger),
                   ),
                   icon: const Icon(Icons.logout_outlined),
-                  label: const Text('Se déconnecter'),
+                  label: Text(l.disconnect),
                   onPressed: () => ref.read(authProvider.notifier).logout(),
                 ),
               ),
@@ -204,24 +197,25 @@ void _showEditPhoneDialog(
   WidgetRef ref,
   String currentPhone,
 ) {
+  final l = context.l10n;
   final ctrl = TextEditingController(text: currentPhone);
   showDialog(
     context: context,
     builder: (dialogContext) => AlertDialog(
-      title: const Text('Modifier le téléphone'),
+      title: Text(l.editPhone),
       content: TextField(
         controller: ctrl,
         keyboardType: TextInputType.phone,
-        decoration: const InputDecoration(
-          labelText: 'Numéro de téléphone',
-          prefixIcon: Icon(Icons.phone_outlined),
+        decoration: InputDecoration(
+          labelText: l.phoneOptional,
+          prefixIcon: const Icon(Icons.phone_outlined),
         ),
         autofocus: true,
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(dialogContext),
-          child: const Text('Annuler'),
+          child: Text(l.cancel),
         ),
         FilledButton(
           onPressed: () async {
@@ -231,7 +225,7 @@ void _showEditPhoneDialog(
             }
             if (context.mounted) Navigator.pop(dialogContext);
           },
-          child: const Text('Enregistrer'),
+          child: Text(l.save),
         ),
       ],
     ),
@@ -241,8 +235,11 @@ void _showEditPhoneDialog(
 // ── Score placeholder ─────────────────────────────────────────────────────────
 
 class _ScorePlaceholderCard extends StatelessWidget {
+  const _ScorePlaceholderCard();
+
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Card(
@@ -256,7 +253,7 @@ class _ScorePlaceholderCard extends StatelessWidget {
                   const Icon(Icons.star_outline, color: AppColors.warning),
                   const SizedBox(width: 8),
                   Text(
-                    'Score de fiabilité',
+                    l.reliabilityScore,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -283,7 +280,7 @@ class _ScorePlaceholderCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Disponible après le Sprint 4. Continuez à signaler des incidents !',
+                        l.scoreComingSoon,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppColors.warning,
                         ),
@@ -303,8 +300,11 @@ class _ScorePlaceholderCard extends StatelessWidget {
 // ── Agent incident stats ──────────────────────────────────────────────────────
 
 class _AgentIncidentStats extends ConsumerWidget {
+  const _AgentIncidentStats();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     final incidentsAsync = ref.watch(myIncidentsProvider);
 
     return Padding(
@@ -316,7 +316,7 @@ class _AgentIncidentStats extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Mes signalements',
+                l.myReports,
                 style: Theme.of(
                   context,
                 ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
@@ -324,8 +324,10 @@ class _AgentIncidentStats extends ConsumerWidget {
               const SizedBox(height: 16),
               incidentsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) =>
-                    Text('Erreur: $e', style: const TextStyle(fontSize: 12)),
+                error: (e, _) => Text(
+                  '${l.errorPrefix} $e',
+                  style: const TextStyle(fontSize: 12),
+                ),
                 data: (incidents) {
                   final total = incidents.length;
                   final pending = incidents
@@ -342,25 +344,25 @@ class _AgentIncidentStats extends ConsumerWidget {
                     children: [
                       _StatChip(
                         value: total,
-                        label: 'Total',
+                        label: l.total,
                         color: AppColors.primaryGreen,
                       ),
                       const SizedBox(width: 8),
                       _StatChip(
                         value: pending,
-                        label: 'En attente',
+                        label: l.pending,
                         color: AppColors.warning,
                       ),
                       const SizedBox(width: 8),
                       _StatChip(
                         value: inProgress,
-                        label: 'En cours',
+                        label: l.inProgress,
                         color: AppColors.info,
                       ),
                       const SizedBox(width: 8),
                       _StatChip(
                         value: resolved,
-                        label: 'Résolus',
+                        label: l.resolved,
                         color: AppColors.success,
                       ),
                     ],
@@ -427,13 +429,14 @@ class _EditNameDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return AlertDialog(
-      title: const Text('Modifier le nom'),
+      title: Text(l.editNameTitle),
       content: TextField(
         controller: controller,
-        decoration: const InputDecoration(
-          labelText: 'Nom complet',
-          prefixIcon: Icon(Icons.person_outline),
+        decoration: InputDecoration(
+          labelText: l.fullNameRequired,
+          prefixIcon: const Icon(Icons.person_outline),
         ),
         autofocus: true,
         textCapitalization: TextCapitalization.words,
@@ -441,17 +444,15 @@ class _EditNameDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Annuler'),
+          child: Text(l.cancel),
         ),
         FilledButton(
           onPressed: () async {
             final name = controller.text.trim();
-            if (name.isNotEmpty) {
-              await onSave(name);
-            }
+            if (name.isNotEmpty) await onSave(name);
             if (context.mounted) Navigator.pop(context);
           },
-          child: const Text('Enregistrer'),
+          child: Text(l.save),
         ),
       ],
     );

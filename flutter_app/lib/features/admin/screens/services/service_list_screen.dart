@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/core/widgets/async_value_widget.dart';
 import 'package:flutter_app/features/admin/models/service_model.dart';
 import 'package:flutter_app/features/admin/providers/user_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_app/core/widgets/app_bar_actions.dart';
 
 const _serviceTypes = [
   'administratif',
@@ -13,7 +15,6 @@ const _serviceTypes = [
   'terrain',
 ];
 
-// Each service type gets a distinct color + icon from AppColors
 const _typeConfig = {
   'administratif': (color: AppColors.info, icon: Icons.business_outlined),
   'informatique': (color: AppColors.teal, icon: Icons.computer_outlined),
@@ -27,13 +28,14 @@ class ServiceListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     final servicesAsync = ref.watch(servicesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Services Administratifs')),
+      appBar: AppBar(title: Text(l.adminServices), actions: kAppBarActions),
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.add),
-        label: const Text('Nouveau service'),
+        label: Text(l.newService),
         onPressed: () async {
           await showDialog(
             context: context,
@@ -90,6 +92,7 @@ class _ServiceCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     final cfg =
         _typeConfig[service.type] ??
         (color: AppColors.primaryGreen, icon: Icons.folder_outlined);
@@ -115,10 +118,9 @@ class _ServiceCard extends ConsumerWidget {
                     child: Icon(icon, color: color, size: 22),
                   ),
                   const Spacer(),
-                  // Actions
                   IconButton(
                     icon: const Icon(Icons.edit_outlined, size: 18),
-                    tooltip: 'Modifier',
+                    tooltip: l.edit,
                     onPressed: () async {
                       await showDialog(
                         context: context,
@@ -133,11 +135,12 @@ class _ServiceCard extends ConsumerWidget {
                       size: 18,
                       color: AppColors.danger,
                     ),
-                    tooltip: 'Supprimer',
+                    tooltip: l.delete,
                     onPressed: () async {
                       final confirm = await _confirmDelete(
                         context,
                         service.name,
+                        l,
                       );
                       if (confirm == true) {
                         await ref
@@ -157,7 +160,6 @@ class _ServiceCard extends ConsumerWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 6),
-              // Type badge
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
@@ -189,24 +191,21 @@ class _ServiceCard extends ConsumerWidget {
     );
   }
 
-  Future<bool?> _confirmDelete(BuildContext context, String name) {
+  Future<bool?> _confirmDelete(BuildContext context, String name, l) {
     return showDialog<bool>(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        title: const Text('Supprimer ce service ?'),
-        content: Text(
-          'Le service "$name" sera supprimé. Les utilisateurs rattachés '
-          'n\'auront plus de service assigné.',
-        ),
+        title: Text(l.deleteService),
+        content: Text('"$name" ${l.willBeDeleted}'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx, false),
-            child: const Text('Annuler'),
+            child: Text(l.cancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
             onPressed: () => Navigator.pop(dialogCtx, true),
-            child: const Text('Supprimer'),
+            child: Text(l.delete),
           ),
         ],
       ),
@@ -247,13 +246,14 @@ class _State extends ConsumerState<_ServiceFormDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final isEdit = widget.service != null;
     final cfg =
         _typeConfig[_type] ??
         (color: AppColors.primaryGreen, icon: Icons.folder_outlined);
 
     return AlertDialog(
-      title: Text(isEdit ? 'Modifier le service' : 'Nouveau service'),
+      title: Text(isEdit ? l.editService : l.newService),
       content: SizedBox(
         width: 420,
         child: Column(
@@ -262,15 +262,14 @@ class _State extends ConsumerState<_ServiceFormDialog> {
           children: [
             TextFormField(
               controller: _nameCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Nom du service *',
-                prefixIcon: Icon(Icons.business_outlined),
+              decoration: InputDecoration(
+                labelText: l.serviceNameLabel,
+                prefixIcon: const Icon(Icons.business_outlined),
               ),
             ),
             const SizedBox(height: 12),
-            // Type selector — visual chips instead of plain dropdown
             Text(
-              'Type',
+              l.type,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
                 color: Theme.of(context).hintColor,
               ),
@@ -302,13 +301,12 @@ class _State extends ConsumerState<_ServiceFormDialog> {
             const SizedBox(height: 12),
             TextFormField(
               controller: _descCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Description',
-                prefixIcon: Icon(Icons.notes_outlined),
+              decoration: InputDecoration(
+                labelText: l.description,
+                prefixIcon: const Icon(Icons.notes_outlined),
               ),
               maxLines: 2,
             ),
-            // Live preview of how the card will look
             const SizedBox(height: 20),
             Container(
               padding: const EdgeInsets.all(12),
@@ -324,7 +322,7 @@ class _State extends ConsumerState<_ServiceFormDialog> {
                   Expanded(
                     child: Text(
                       _nameCtrl.text.isEmpty
-                          ? 'Nom du service'
+                          ? l.serviceNameLabel
                           : _nameCtrl.text,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
@@ -338,7 +336,7 @@ class _State extends ConsumerState<_ServiceFormDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Annuler'),
+          child: Text(l.cancel),
         ),
         FilledButton(
           onPressed: _loading ? null : _submit,
@@ -351,17 +349,18 @@ class _State extends ConsumerState<_ServiceFormDialog> {
                     color: Colors.white,
                   ),
                 )
-              : Text(isEdit ? 'Enregistrer' : 'Créer'),
+              : Text(isEdit ? l.save : l.create),
         ),
       ],
     );
   }
 
   Future<void> _submit() async {
+    final l = context.l10n;
     if (_nameCtrl.text.trim().isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Le nom est obligatoire')));
+      ).showSnackBar(SnackBar(content: Text(l.nameRequired)));
       return;
     }
     setState(() => _loading = true);
@@ -382,7 +381,7 @@ class _State extends ConsumerState<_ServiceFormDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur: $e'),
+            content: Text('${l.errorPrefix} $e'),
             backgroundColor: AppColors.danger,
           ),
         );
@@ -399,6 +398,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -410,19 +410,19 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Aucun service créé',
+            l.noServicesDefined,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 8),
           Text(
-            'Créez les services administratifs de la Direction\nGénérale des Forêts.',
+            l.noServicesHint,
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
           FilledButton.icon(
             icon: const Icon(Icons.add),
-            label: const Text('Créer un service'),
+            label: Text(l.newService),
             onPressed: onAdd,
           ),
         ],

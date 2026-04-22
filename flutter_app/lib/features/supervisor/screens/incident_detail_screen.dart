@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/features/incidents/models/incident_model.dart';
 import 'package:flutter_app/features/supervisor/providers/supervisor_provider.dart';
@@ -6,24 +7,32 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:flutter_app/core/widgets/app_bar_actions.dart';
 
-// ── Labels ────────────────────────────────────────────────────────────────────
-const _categoryLabels = {
-  'feu': 'Incendie',
-  'coupe_illegale': 'Coupe illégale',
-  'refuge_suspect': 'Refuge suspect',
-  'trafic': 'Trafic',
-  'dechet': 'Déchets',
-  'maladie': 'Maladie végétale',
-  'autre': 'Autre',
-};
+// ── Label helpers (context-aware) ─────────────────────────────────────────────
 
-const _statusLabels = {
-  'pending': 'En attente',
-  'in_progress': 'En cours',
-  'resolved': 'Résolu',
-  'rejected': 'Rejeté',
-};
+Map<String, String> _categoryLabels(BuildContext context) {
+  final l = context.l10n;
+  return {
+    'feu': l.typeIncendie,
+    'coupe_illegale': l.typeCoupeIllegale,
+    'refuge_suspect': l.typeRefugeSuspect,
+    'trafic': l.typeTrafic,
+    'dechet': l.typeDechet,
+    'maladie': l.typeMaladie,
+    'autre': l.typeAutre,
+  };
+}
+
+Map<String, String> _statusLabels(BuildContext context) {
+  final l = context.l10n;
+  return {
+    'pending': l.pending,
+    'in_progress': l.inProgress,
+    'resolved': l.resolved,
+    'rejected': l.rejected,
+  };
+}
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 class IncidentDetailScreen extends ConsumerWidget {
@@ -32,12 +41,14 @@ class IncidentDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     final async = ref.watch(singleIncidentProvider(incidentId));
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Détail de l\'incident'),
+        title: Text(l.incidentDetail),
         leading: const BackButton(),
+        actions: kAppBarActions,
       ),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -51,12 +62,12 @@ class IncidentDetailScreen extends ConsumerWidget {
                 color: AppColors.danger,
               ),
               const SizedBox(height: 12),
-              Text('Erreur: $e', textAlign: TextAlign.center),
+              Text('${l.errorPrefix} $e', textAlign: TextAlign.center),
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: () =>
                     ref.invalidate(singleIncidentProvider(incidentId)),
-                child: const Text('Réessayer'),
+                child: Text(l.retry),
               ),
             ],
           ),
@@ -74,20 +85,20 @@ class _IncidentDetail extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     final updateState = ref.watch(statusUpdateProvider);
 
-    // Show a snackbar when update succeeds or fails
     ref.listen(statusUpdateProvider, (_, next) {
       next.whenOrNull(
         data: (_) => ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Incident mis à jour'),
+          SnackBar(
+            content: Text(l.incidentUpdated),
             backgroundColor: AppColors.success,
           ),
         ),
         error: (e, _) => ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur: $e'),
+            content: Text('${l.errorPrefix} $e'),
             backgroundColor: AppColors.danger,
           ),
         ),
@@ -128,7 +139,10 @@ class _HeaderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final theme = Theme.of(context);
+    final labels = _categoryLabels(context);
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -139,7 +153,7 @@ class _HeaderCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    _categoryLabels[incident.category] ?? incident.category,
+                    labels[incident.category] ?? incident.category,
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -158,18 +172,18 @@ class _HeaderCard extends StatelessWidget {
                         color: AppColors.danger.withOpacity(.4),
                       ),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.warning_amber,
                           size: 14,
                           color: AppColors.danger,
                         ),
-                        SizedBox(width: 4),
+                        const SizedBox(width: 4),
                         Text(
-                          'CRITIQUE',
-                          style: TextStyle(
+                          l.critical.toUpperCase(),
+                          style: const TextStyle(
                             fontSize: 11,
                             color: AppColors.danger,
                             fontWeight: FontWeight.w700,
@@ -183,12 +197,12 @@ class _HeaderCard extends StatelessWidget {
             const SizedBox(height: 12),
             _InfoRow(
               icon: Icons.person_outline,
-              label: 'Agent',
-              value: incident.agentName ?? 'Inconnu',
+              label: l.agent,
+              value: incident.agentName ?? l.unknown,
             ),
             _InfoRow(
               icon: Icons.access_time,
-              label: 'Signalé le',
+              label: l.reportedOn,
               value: DateFormat(
                 'dd MMM yyyy à HH:mm',
               ).format(incident.createdAt),
@@ -196,13 +210,13 @@ class _HeaderCard extends StatelessWidget {
             if (incident.parcelleId != null)
               _InfoRow(
                 icon: Icons.grid_view,
-                label: 'Parcelle',
+                label: l.parcelles,
                 value: '#${incident.parcelleId}',
               ),
             if (incident.forestId != null)
               _InfoRow(
                 icon: Icons.forest,
-                label: 'Forêt',
+                label: l.forests,
                 value: '#${incident.forestId}',
               ),
             const SizedBox(height: 12),
@@ -229,6 +243,7 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final labels = _statusLabels(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
@@ -237,7 +252,7 @@ class _StatusChip extends StatelessWidget {
         border: Border.all(color: _color.withOpacity(.4)),
       ),
       child: Text(
-        _statusLabels[status] ?? status,
+        labels[status] ?? status,
         style: TextStyle(
           color: _color,
           fontWeight: FontWeight.w600,
@@ -298,6 +313,7 @@ class _ImageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Card(
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -308,7 +324,7 @@ class _ImageCard extends StatelessWidget {
             child: Row(
               children: [
                 Text(
-                  'Photo',
+                  l.photo,
                   style: Theme.of(
                     context,
                   ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
@@ -316,9 +332,9 @@ class _ImageCard extends StatelessWidget {
                 const Spacer(),
                 const Icon(Icons.open_in_full, size: 14, color: Colors.grey),
                 const SizedBox(width: 4),
-                const Text(
-                  'Appuyer pour agrandir',
-                  style: TextStyle(fontSize: 11, color: Colors.grey),
+                Text(
+                  l.tapToZoom,
+                  style: const TextStyle(fontSize: 11, color: Colors.grey),
                 ),
               ],
             ),
@@ -369,6 +385,7 @@ class _MapCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final point = LatLng(lat, lng);
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -380,7 +397,7 @@ class _MapCard extends StatelessWidget {
             child: Row(
               children: [
                 Text(
-                  'Localisation',
+                  l.location,
                   style: Theme.of(
                     context,
                   ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
@@ -432,6 +449,7 @@ class _DescriptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -439,7 +457,7 @@ class _DescriptionCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Description',
+              l.description,
               style: Theme.of(
                 context,
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
@@ -452,7 +470,7 @@ class _DescriptionCard extends StatelessWidget {
             if (incident.supervisorComment != null) ...[
               const Divider(height: 24),
               Text(
-                'Commentaire de ${incident.supervisorName ?? 'superviseur'}',
+                l.supervisorCommentBy(incident.supervisorName ?? l.supervisor),
                 style: Theme.of(
                   context,
                 ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
@@ -520,7 +538,8 @@ class _SupervisorActionCardState extends ConsumerState<_SupervisorActionCard> {
 
   @override
   Widget build(BuildContext context) {
-    // Only show actions if incident is not already closed
+    final l = context.l10n;
+    final statusLabels = _statusLabels(context);
     final isClosed =
         widget.incident.status == 'resolved' ||
         widget.incident.status == 'rejected';
@@ -532,7 +551,7 @@ class _SupervisorActionCardState extends ConsumerState<_SupervisorActionCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Actions superviseur',
+              l.supervisorActions,
               style: Theme.of(
                 context,
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
@@ -540,17 +559,16 @@ class _SupervisorActionCardState extends ConsumerState<_SupervisorActionCard> {
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               value: _selectedStatus,
-              decoration: const InputDecoration(
-                labelText: 'Statut',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l.status,
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
-              items: const [
-                DropdownMenuItem(value: 'pending', child: Text('En attente')),
-                DropdownMenuItem(value: 'in_progress', child: Text('En cours')),
-                DropdownMenuItem(value: 'resolved', child: Text('Résolu')),
-                DropdownMenuItem(value: 'rejected', child: Text('Rejeté')),
-              ],
+              items: statusLabels.entries
+                  .map(
+                    (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+                  )
+                  .toList(),
               onChanged: isClosed
                   ? null
                   : (v) => setState(() => _selectedStatus = v!),
@@ -560,16 +578,16 @@ class _SupervisorActionCardState extends ConsumerState<_SupervisorActionCard> {
               controller: _commentController,
               maxLines: 3,
               enabled: !isClosed,
-              decoration: const InputDecoration(
-                labelText: 'Commentaire (optionnel)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l.supervisorComment,
+                border: const OutlineInputBorder(),
                 alignLabelWithHint: true,
               ),
             ),
             const SizedBox(height: 16),
             if (isClosed)
               Text(
-                'Cet incident est clôturé.',
+                l.closedIncident,
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
               )
             else
@@ -587,7 +605,7 @@ class _SupervisorActionCardState extends ConsumerState<_SupervisorActionCard> {
                           ),
                         )
                       : const Icon(Icons.save_outlined),
-                  label: const Text('Enregistrer'),
+                  label: Text(l.save),
                 ),
               ),
           ],

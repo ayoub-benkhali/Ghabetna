@@ -1,39 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/features/incidents/models/incident_model.dart';
 import 'package:flutter_app/features/supervisor/providers/supervisor_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_app/core/widgets/app_bar_actions.dart';
 
-const _categoryLabels = {
-  'feu': 'Incendie',
-  'coupe_illegale': 'Coupe illégale',
-  'refuge_suspect': 'Refuge suspect',
-  'trafic': 'Trafic',
-  'dechet': 'Déchets',
-  'maladie': 'Maladie végétale',
-  'autre': 'Autre',
-};
+Map<String, String> _categoryLabels(BuildContext context) {
+  final l = context.l10n;
+  return {
+    'feu': l.typeIncendie,
+    'coupe_illegale': l.typeCoupeIllegale,
+    'refuge_suspect': l.typeRefugeSuspect,
+    'trafic': l.typeTrafic,
+    'dechet': l.typeDechet,
+    'maladie': l.typeMaladie,
+    'autre': l.typeAutre,
+  };
+}
 
 class SupervisorIncidentScreen extends ConsumerWidget {
   const SupervisorIncidentScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
     final async = ref.watch(allIncidentsProvider);
     final filter = ref.watch(incidentFilterProvider);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Incidents'),
+        title: Text(l.incidents),
         actions: [
           //view toggle: list and map
           IconButton(
             icon: const Icon(Icons.map_outlined),
-            tooltip: 'Vue carte',
+            tooltip: l.mapView,
             onPressed: () => context.go('/supervisor/map'),
           ),
           _FilterButton(filter: filter),
+          ...kAppBarActions,
         ],
       ),
       body: async.when(
@@ -48,17 +55,17 @@ class SupervisorIncidentScreen extends ConsumerWidget {
                 color: AppColors.danger,
               ),
               const SizedBox(height: 12),
-              Text('Erreur:$e'),
+              Text('${l.errorPrefix} $e'),
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: () => ref.invalidate(allIncidentsProvider),
-                child: const Text('Réssayer'),
+                child: Text(l.retry),
               ),
             ],
           ),
         ),
         data: (incidents) => incidents.isEmpty
-            ? const Center(child: Text('Aucun incident signalé'))
+            ? Center(child: Text(l.noIncidents))
             : RefreshIndicator(
                 onRefresh: () async => ref.invalidate(allIncidentsProvider),
                 child: ListView.separated(
@@ -79,6 +86,8 @@ class _IncidentTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
+    final labels = _categoryLabels(context);
     final statusColor = switch (incident.status) {
       'pending' => AppColors.warning,
       'in_progress' => AppColors.info,
@@ -106,7 +115,7 @@ class _IncidentTile extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                _categoryLabels[incident.category] ?? incident.category,
+                labels[incident.category] ?? incident.category,
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
@@ -133,7 +142,7 @@ class _IncidentTile extends StatelessWidget {
           children: [
             const SizedBox(height: 4),
             Text(
-              'Agent:${incident.agentName ?? "-"}',
+              '${l.agent}: ${incident.agentName ?? "-"}',
               style: const TextStyle(fontSize: 12),
             ),
             Text(
@@ -149,7 +158,7 @@ class _IncidentTile extends StatelessWidget {
   }
 }
 
-//Simple filter bottome sheet button
+//Simple filter bottom sheet button
 class _FilterButton extends ConsumerWidget {
   final IncidentFilter filter;
 
@@ -201,18 +210,20 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
+    final labels = _categoryLabels(context);
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Filtres',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          Text(
+            l.incidents,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 16),
-          const Text('Statut', style: TextStyle(fontWeight: FontWeight.w600)),
+          Text(l.status, style: const TextStyle(fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -227,14 +238,11 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
             }).toList(),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'Catégorie',
-            style: TextStyle(fontWeight: FontWeight.w600),
-          ),
+          Text(l.type, style: const TextStyle(fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
-            children: _categoryLabels.entries.map((e) {
+            children: labels.entries.map((e) {
               return FilterChip(
                 label: Text(e.value),
                 selected: _category == e.key,
@@ -251,7 +259,7 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
                       const IncidentFilter();
                   Navigator.pop(context);
                 },
-                child: const Text('Réinitialiser'),
+                child: Text(l.reset),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -261,7 +269,7 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
                         IncidentFilter(status: _status, category: _category);
                     Navigator.pop(context);
                   },
-                  child: const Text('Appliquer'),
+                  child: Text(l.apply),
                 ),
               ),
             ],

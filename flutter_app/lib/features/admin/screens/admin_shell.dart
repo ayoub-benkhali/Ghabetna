@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
+import 'package:flutter_app/core/widgets/language_toggle.dart';
 import 'package:flutter_app/features/auth/providers/auth_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -22,14 +24,17 @@ class _NavItem {
   const _NavItem(this.label, this.icon, this.route);
 }
 
-const _navItems = [
-  _NavItem('Tableau de bord', Icons.dashboard_outlined, '/admin/dashboard'),
-  _NavItem('Forêts', Icons.forest_outlined, '/admin/forests'),
-  _NavItem('Utilisateurs', Icons.people_outline, '/admin/users'),
-  _NavItem('Rôles', Icons.shield_outlined, '/admin/roles'),
-  _NavItem('Services', Icons.account_tree_outlined, '/admin/services'),
-  _NavItem('Profil', Icons.person_outline, '/admin/profile'),
-];
+List<_NavItem> _buildNavItems(BuildContext context) {
+  final l = context.l10n;
+  return [
+    _NavItem(l.dashboard, Icons.dashboard_outlined, '/admin/dashboard'),
+    _NavItem(l.forests, Icons.forest_outlined, '/admin/forests'),
+    _NavItem(l.users, Icons.people_outline, '/admin/users'),
+    _NavItem(l.roles, Icons.shield_outlined, '/admin/roles'),
+    _NavItem(l.services, Icons.account_tree_outlined, '/admin/services'),
+    _NavItem(l.profile, Icons.person_outline, '/admin/profile'),
+  ];
+}
 
 class _WideLayout extends ConsumerWidget {
   final Widget child;
@@ -37,15 +42,16 @@ class _WideLayout extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
+    final navItems = _buildNavItems(context);
     final location = GoRouterState.of(context).matchedLocation;
-    final selectedIndex = _navItems.indexWhere(
+    final selectedIndex = navItems.indexWhere(
       (n) => location.startsWith(n.route),
     );
 
     return Scaffold(
       body: Row(
         children: [
-          // ── Custom sidebar using sidebarBg / sidebarActive / sidebarText ──
           SizedBox(
             width: 240,
             child: Container(
@@ -53,7 +59,7 @@ class _WideLayout extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Logo / brand area with gradient
+                  // Logo / brand area
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.fromLTRB(20, 15, 20, 15),
@@ -73,7 +79,7 @@ class _WideLayout extends ConsumerWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'Ghabetna',
+                              l.appTitle,
                               style: Theme.of(context).textTheme.titleLarge
                                   ?.copyWith(
                                     color: Colors.white,
@@ -81,7 +87,7 @@ class _WideLayout extends ConsumerWidget {
                                   ),
                             ),
                             Text(
-                              'Administration',
+                              l.administration,
                               style: Theme.of(context).textTheme.labelMedium
                                   ?.copyWith(color: Colors.white70),
                             ),
@@ -98,9 +104,9 @@ class _WideLayout extends ConsumerWidget {
                         horizontal: 12,
                         vertical: 4,
                       ),
-                      itemCount: _navItems.length,
+                      itemCount: navItems.length,
                       itemBuilder: (_, i) {
-                        final item = _navItems[i];
+                        final item = navItems[i];
                         final isActive = i == selectedIndex;
                         return Container(
                           margin: const EdgeInsets.only(bottom: 4),
@@ -152,7 +158,7 @@ class _WideLayout extends ConsumerWidget {
                       size: 20,
                     ),
                     title: Text(
-                      'Déconnexion',
+                      l.disconnect,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppColors.sidebarText.withValues(alpha: 0.7),
                       ),
@@ -177,13 +183,17 @@ class _NarrowLayout extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
+    final navItems = _buildNavItems(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ghabetna'),
+        title: Text(l.appTitle),
         actions: [
+          const LanguageToggle(compact: true),
           IconButton(
             icon: const Icon(Icons.logout_outlined),
-            tooltip: 'Déconnexion',
+            tooltip: l.disconnect,
             onPressed: () => ref.read(authProvider.notifier).logout(),
           ),
         ],
@@ -192,7 +202,7 @@ class _NarrowLayout extends ConsumerWidget {
       bottomNavigationBar: NavigationBar(
         backgroundColor: AppColors.sidebarBg,
         indicatorColor: AppColors.sidebarActive,
-        destinations: _navItems
+        destinations: navItems
             .map(
               (n) => NavigationDestination(
                 icon: Icon(
@@ -204,7 +214,7 @@ class _NarrowLayout extends ConsumerWidget {
               ),
             )
             .toList(),
-        onDestinationSelected: (i) => context.go(_navItems[i].route),
+        onDestinationSelected: (i) => context.go(navItems[i].route),
       ),
     );
   }
