@@ -237,5 +237,6 @@
   "geoContextUnavailable": "Contexte géographique indisponible",
   "geoContextPending": "Localisation forestière en cours d'enrichissement…",
   "area": "Superficie",
-  "geoContextNotFound": "Hors zone forestière enregistrée"
+  "geoContextNotFound": "Hors zone forestière enregistrée",
+  "admin": "Administrateur"
 }

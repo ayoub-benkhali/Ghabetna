@@ -664,4 +664,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get geoContextNotFound => 'خارج نطاق الغابات المسجلة';
+
+  @override
+  String get admin => 'مسؤول';
 }

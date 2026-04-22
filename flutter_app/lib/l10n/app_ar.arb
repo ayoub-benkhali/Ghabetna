@@ -237,5 +237,6 @@
   "geoContextUnavailable": "البيانات الجغرافية غير متاحة",
   "geoContextPending": "جارٍ تحديد المنطقة الغابوية…",
   "area": "المساحة",
-  "geoContextNotFound": "خارج نطاق الغابات المسجلة"
+  "geoContextNotFound": "خارج نطاق الغابات المسجلة",
+  "admin": "مسؤول"
 }

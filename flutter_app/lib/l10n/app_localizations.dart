@@ -1381,6 +1381,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Hors zone forestière enregistrée'**
   String get geoContextNotFound;
+
+  /// No description provided for @admin.
+  ///
+  /// In fr, this message translates to:
+  /// **'Administrateur'**
+  String get admin;
 }
 
 class _AppLocalizationsDelegate

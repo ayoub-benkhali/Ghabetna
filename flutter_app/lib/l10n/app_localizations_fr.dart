@@ -675,4 +675,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get geoContextNotFound => 'Hors zone forestière enregistrée';
+
+  @override
+  String get admin => 'Administrateur';
 }

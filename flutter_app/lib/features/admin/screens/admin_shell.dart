@@ -32,7 +32,6 @@ List<_NavItem> _buildNavItems(BuildContext context) {
     _NavItem(l.users, Icons.people_outline, '/admin/users'),
     _NavItem(l.roles, Icons.shield_outlined, '/admin/roles'),
     _NavItem(l.services, Icons.account_tree_outlined, '/admin/services'),
-    _NavItem(l.profile, Icons.person_outline, '/admin/profile'),
   ];
 }
 
@@ -45,6 +44,7 @@ class _WideLayout extends ConsumerWidget {
     final l = context.l10n;
     final navItems = _buildNavItems(context);
     final location = GoRouterState.of(context).matchedLocation;
+    final user = ref.watch(authProvider).user;
     final selectedIndex = navItems.indexWhere(
       (n) => location.startsWith(n.route),
     );
@@ -96,7 +96,68 @@ class _WideLayout extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  // User info chip
+                  if (user != null)
+                    InkWell(
+                      onTap: ()=>context.go('/admin/profile'),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 16,
+                              backgroundColor: AppColors.sidebarActive.withValues(
+                                alpha: 0.3,
+                              ),
+                              child: Text(
+                                user.fullName.isNotEmpty
+                                    ? user.fullName[0].toUpperCase()
+                                    : '?',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    user.fullName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
+                                          color: AppColors.sidebarText,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                  ),
+                                  Text(
+                                    l.administration,
+                                    style: Theme.of(context).textTheme.labelSmall
+                                        ?.copyWith(
+                                          color: AppColors.sidebarText.withValues(
+                                            alpha: 0.6,
+                                          ),
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  Divider(
+                    color: AppColors.sidebarText.withValues(alpha: 0.1),
+                    height: 1,
+                    indent: 16,
+                    endIndent: 16,
+                  ),
+                  const SizedBox(height: 8),
                   // Nav items
                   Expanded(
                     child: ListView.builder(

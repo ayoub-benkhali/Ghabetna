@@ -29,7 +29,6 @@ List<_NavItem> _buildNavItems(BuildContext context) {
   return [
     _NavItem(l.incidents, Icons.list_alt_outlined, '/supervisor/incidents'),
     _NavItem(l.map, Icons.map_outlined, '/supervisor/map'),
-    _NavItem(l.profile, Icons.person_outline, '/supervisor/profile'),
   ];
 }
 
@@ -99,54 +98,57 @@ class _WideLayout extends ConsumerWidget {
                   ),
                   // User info chip
                   if (user != null)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 16,
-                            backgroundColor: AppColors.sidebarActive.withValues(
-                              alpha: 0.3,
-                            ),
-                            child: Text(
-                              user.fullName.isNotEmpty
-                                  ? user.fullName[0].toUpperCase()
-                                  : '?',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
+                    InkWell(
+                      onTap: ()=>context.go('/supervisor/profile'),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 16,
+                              backgroundColor: AppColors.sidebarActive.withValues(
+                                alpha: 0.3,
+                              ),
+                              child: Text(
+                                user.fullName.isNotEmpty
+                                    ? user.fullName[0].toUpperCase()
+                                    : '?',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  user.fullName,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(
-                                        color: AppColors.sidebarText,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                ),
-                                Text(
-                                  l.supervisor,
-                                  style: Theme.of(context).textTheme.labelSmall
-                                      ?.copyWith(
-                                        color: AppColors.sidebarText.withValues(
-                                          alpha: 0.6,
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    user.fullName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
+                                          color: AppColors.sidebarText,
+                                          fontWeight: FontWeight.w600,
                                         ),
-                                      ),
-                                ),
-                              ],
+                                  ),
+                                  Text(
+                                    l.supervisor,
+                                    style: Theme.of(context).textTheme.labelSmall
+                                        ?.copyWith(
+                                          color: AppColors.sidebarText.withValues(
+                                            alpha: 0.6,
+                                          ),
+                                        ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   Divider(
