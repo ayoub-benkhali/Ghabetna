@@ -130,7 +130,7 @@
   "sendReport": "Envoyer le signalement",
   "describeIncident": "Décrivez l'incident…",
   "locating": "Localisation en cours...",
-  "locationUnavailable": "Position non disponible — prenez une photo ou activez le GPS",
+  "locationUnavailable": "Position non disponible, prenez une photo ou activez le GPS",
 
   "createUser": "Créer un utilisateur",
   "manageAssignment": "Gérer l'affectation",
@@ -186,12 +186,12 @@
   "region":            "Région",
   "spatialBoundary":   "Délimitation spatiale",
   "noBoundaryDefined": "Aucune limite définie",
-  "pointsMinThree":    "point(s) — min. 3",
+  "pointsMinThree":    "point(s), min. 3",
   "points":            "points",
   "stopDrawing":       "Arrêter le dessin",
   "drawBoundary":      "Dessiner la limite",
   "drawingHint":       "Tapez sur la carte pour ajouter des points.\nMinimum 3 points pour former un polygone.",
-  "drawingModeActive": "Mode dessin actif — Tapez pour ajouter des points",
+  "drawingModeActive": "Mode dessin actif, Tapez pour ajouter des points",
 
   "deleteParcelleWarning": "Cette parcelle sera supprimée définitivement.",
   "others":                "autres",
@@ -238,5 +238,6 @@
   "geoContextPending": "Localisation forestière en cours d'enrichissement…",
   "area": "Superficie",
   "geoContextNotFound": "Hors zone forestière enregistrée",
-  "admin": "Administrateur"
+  "admin": "Administrateur",
+  "ha": "ha"
 }

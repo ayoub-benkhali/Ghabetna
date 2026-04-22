@@ -833,7 +833,7 @@ abstract class AppLocalizations {
   /// No description provided for @locationUnavailable.
   ///
   /// In fr, this message translates to:
-  /// **'Position non disponible — prenez une photo ou activez le GPS'**
+  /// **'Position non disponible, prenez une photo ou activez le GPS'**
   String get locationUnavailable;
 
   /// No description provided for @createUser.
@@ -1127,7 +1127,7 @@ abstract class AppLocalizations {
   /// No description provided for @pointsMinThree.
   ///
   /// In fr, this message translates to:
-  /// **'point(s) — min. 3'**
+  /// **'point(s), min. 3'**
   String get pointsMinThree;
 
   /// No description provided for @points.
@@ -1157,7 +1157,7 @@ abstract class AppLocalizations {
   /// No description provided for @drawingModeActive.
   ///
   /// In fr, this message translates to:
-  /// **'Mode dessin actif — Tapez pour ajouter des points'**
+  /// **'Mode dessin actif, Tapez pour ajouter des points'**
   String get drawingModeActive;
 
   /// No description provided for @deleteParcelleWarning.
@@ -1387,6 +1387,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Administrateur'**
   String get admin;
+
+  /// No description provided for @ha.
+  ///
+  /// In fr, this message translates to:
+  /// **'ha'**
+  String get ha;
 }
 
 class _AppLocalizationsDelegate

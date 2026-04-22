@@ -5,6 +5,7 @@ import 'package:flutter_app/core/widgets/async_value_widget.dart';
 import 'package:flutter_app/features/admin/models/user_model.dart';
 import 'package:flutter_app/features/admin/providers/user_provider.dart';
 import 'package:flutter_app/features/admin/screens/users/assignment_dialog.dart';
+import 'package:flutter_app/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_app/core/widgets/app_bar_actions.dart';
 
@@ -50,7 +51,7 @@ class UserListScreen extends ConsumerWidget {
   }
 }
 
-// ── Role badge color mapping ──────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 Color _roleColor(String roleName) {
   switch (roleName) {
@@ -78,16 +79,36 @@ IconData _roleIcon(String roleName) {
   }
 }
 
+String _roleLabel(String roleName, AppLocalizations l) {
+  switch (roleName) {
+    case 'admin':
+      return l.admin;
+    case 'supervisor':
+      return l.supervisor;
+    case 'agent':
+      return l.agent;
+    default:
+      return roleName;
+  }
+}
+
 // ── Table ─────────────────────────────────────────────────────────────────────
 
-class _UserTable extends StatelessWidget {
+class _UserTable extends ConsumerWidget {
   final List<UserModel> users;
   final VoidCallback onRefresh;
   const _UserTable({required this.users, required this.onRefresh});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l = context.l10n;
+    final serviceMap =
+        ref
+            .watch(servicesProvider)
+            .whenData((list) => {for (final s in list) s.id: s.name})
+            .valueOrNull ??
+        {};
+
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
@@ -137,7 +158,9 @@ class _UserTable extends StatelessWidget {
                           DataColumn(label: Text(l.status.toUpperCase())),
                           DataColumn(label: Text(l.actions.toUpperCase())),
                         ],
-                        rows: users.map((u) => _buildRow(context, u)).toList(),
+                        rows: users
+                            .map((u) => _buildRow(context, u, l, serviceMap))
+                            .toList(),
                       ),
                     ),
                   ),
@@ -150,8 +173,12 @@ class _UserTable extends StatelessWidget {
     );
   }
 
-  DataRow _buildRow(BuildContext context, UserModel u) {
-    final l = context.l10n;
+  DataRow _buildRow(
+    BuildContext context,
+    UserModel u,
+    AppLocalizations l,
+    Map<int, String> serviceMap,
+  ) {
     final roleColor = _roleColor(u.roleName);
     final roleIcon = _roleIcon(u.roleName);
 
@@ -205,7 +232,7 @@ class _UserTable extends StatelessWidget {
                 Icon(roleIcon, color: roleColor, size: 14),
                 const SizedBox(width: 4),
                 Text(
-                  u.roleName,
+                  _roleLabel(u.roleName, l),
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
                     color: roleColor,
                     fontWeight: FontWeight.w600,
@@ -215,11 +242,11 @@ class _UserTable extends StatelessWidget {
             ),
           ),
         ),
-        // Service
+        // Service name
         DataCell(
           u.serviceId != null
               ? Text(
-                  'ID ${u.serviceId}',
+                  serviceMap[u.serviceId] ?? '…',
                   style: Theme.of(context).textTheme.bodyMedium,
                 )
               : Text(
@@ -482,7 +509,7 @@ class _UserFormState extends ConsumerState<UserFormDialog> {
                                 color: _roleColor(r.name),
                               ),
                               const SizedBox(width: 8),
-                              Text(r.name),
+                              Text(_roleLabel(r.name, l)),
                             ],
                           ),
                         ),
@@ -619,6 +646,8 @@ class _UserFormState extends ConsumerState<UserFormDialog> {
     }
   }
 }
+
+// ── Empty state ───────────────────────────────────────────────────────────────
 
 class _EmptyState extends StatelessWidget {
   final VoidCallback onAdd;

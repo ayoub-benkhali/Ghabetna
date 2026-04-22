@@ -774,7 +774,7 @@ class _GeoContextCard extends ConsumerWidget {
                       icon: Icons.straighten_outlined,
                       label: l.area,
                       value:
-                          '${ctx.parcelle!.areaHectares!.toStringAsFixed(2)} ha',
+                          '${ctx.parcelle!.areaHectares!.toStringAsFixed(2)} ${l.ha}',
                     ),
                 ],
               ),

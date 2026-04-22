@@ -99,7 +99,7 @@ class _ForestGrid extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            '${l.total} : ${total.toStringAsFixed(0)} ha',
+            '${l.total} : ${total.toStringAsFixed(0)} ${l.ha}',
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
               color: AppColors.primaryGreen,
               fontWeight: FontWeight.w600,
@@ -200,7 +200,7 @@ class _ForestCard extends ConsumerWidget {
                       _StatChip(
                         icon: Icons.straighten_outlined,
                         label: forest.areaHectares != null
-                            ? '${forest.areaHectares!.toStringAsFixed(1)} ha'
+                            ? '${forest.areaHectares!.toStringAsFixed(1)} ${l.ha}'
                             : l.unknownArea,
                         color: AppColors.primaryGreen,
                       ),

@@ -130,7 +130,7 @@
   "sendReport": "إرسال البلاغ",
   "describeIncident": "صف الحادثة…",
   "locating": "جارٍ تحديد الموقع...",
-  "locationUnavailable": "الموقع غير متاح — التقط صورة أو فعّل GPS",
+  "locationUnavailable": "الموقع غير متاح , التقط صورة أو فعّل GPS",
 
   "createUser": "إنشاء مستخدم",
   "manageAssignment": "إدارة التخصيص",
@@ -186,12 +186,12 @@
   "region":            "المنطقة",
   "spatialBoundary":   "التحديد المكاني",
   "noBoundaryDefined": "لا توجد حدود محددة",
-  "pointsMinThree":    "نقطة — الحد الأدنى 3",
+  "pointsMinThree":    "نقاط , الحد الأدنى 3",
   "points":            "نقاط",
   "stopDrawing":       "إيقاف الرسم",
   "drawBoundary":      "رسم الحدود",
   "drawingHint":       "انقر على الخريطة لإضافة نقاط.\nالحد الأدنى 3 نقاط لتكوين مضلع.",
-  "drawingModeActive": "وضع الرسم نشط — انقر لإضافة نقاط",
+  "drawingModeActive": "وضع الرسم نشط, انقر لإضافة نقاط",
 
   "deleteParcelleWarning": "ستُحذف هذه القطعة بشكل نهائي.",
   "others":                "أخرى",
@@ -238,5 +238,6 @@
   "geoContextPending": "جارٍ تحديد المنطقة الغابوية…",
   "area": "المساحة",
   "geoContextNotFound": "خارج نطاق الغابات المسجلة",
-  "admin": "مسؤول"
+  "admin": "مسؤول",
+  "ha": "هـ"
 }

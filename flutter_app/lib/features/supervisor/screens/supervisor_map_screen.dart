@@ -38,7 +38,7 @@ class SupervisorMapScreen extends ConsumerWidget {
     final async = ref.watch(allIncidentsProvider);
     return Scaffold(
       appBar: AppBar(
-        title: Text('${l.map} — ${l.incidents}'),
+        title: Text('${l.map} ${l.incidents}'),
         actions: [
           IconButton(
             icon: const Icon(Icons.list_alt_outlined),

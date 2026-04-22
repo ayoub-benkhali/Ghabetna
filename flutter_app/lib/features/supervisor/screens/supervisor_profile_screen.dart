@@ -398,7 +398,7 @@ class _AssignedForestCard extends ConsumerWidget {
               ),
               trailing: forest.areaHectares != null
                   ? Text(
-                      '${forest.areaHectares!.toStringAsFixed(1)} ha',
+                      '${forest.areaHectares!.toStringAsFixed(1)} ${l.ha}',
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.primaryGreen,

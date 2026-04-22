@@ -34,7 +34,7 @@ class ParcelleListScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          forestName != null ? '${l.parcelles} — $forestName' : l.parcelles,
+          forestName != null ? '${l.parcelles}  $forestName' : l.parcelles,
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -99,7 +99,7 @@ class _ParcelleLayout extends ConsumerWidget {
                     const Spacer(),
                     if (forest.areaHectares != null)
                       Text(
-                        '${forest.areaHectares!.toStringAsFixed(0)} ha ${l.total}',
+                        '${forest.areaHectares!.toStringAsFixed(0)} ${l.ha} ${l.total}',
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                   ],
@@ -177,7 +177,7 @@ class _ParcelleTile extends ConsumerWidget {
       ),
       subtitle: parcelle.areaHectares != null
           ? Text(
-              '${parcelle.areaHectares!.toStringAsFixed(1)} ha',
+              '${parcelle.areaHectares!.toStringAsFixed(1)} ${l.ha}',
               style: Theme.of(context).textTheme.bodyMedium,
             )
           : null,
@@ -201,7 +201,7 @@ class _ParcelleTile extends ConsumerWidget {
                 context: context,
                 builder: (dialogCtx) => AlertDialog(
                   title: Text('${l.delete} "${parcelle.name}" ?'),
-                  content: Text(l.deleteParcelleWarning), 
+                  content: Text(l.deleteParcelleWarning),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(dialogCtx, false),
@@ -437,10 +437,10 @@ class _EmptyParcelleState extends StatelessWidget {
             l.noParcelles,
             style: Theme.of(context).textTheme.titleMedium,
             textAlign: TextAlign.center,
-          ), 
+          ),
           const SizedBox(height: 8),
           Text(
-            l.noParcellesHint, 
+            l.noParcellesHint,
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
@@ -471,10 +471,7 @@ class _ErrorState extends StatelessWidget {
         children: [
           const Icon(Icons.error_outline, size: 48, color: AppColors.danger),
           const SizedBox(height: 12),
-          Text(
-            l.errorOccurred,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+          Text(l.errorOccurred, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           Text(
             message,

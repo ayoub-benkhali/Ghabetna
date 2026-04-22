@@ -72,10 +72,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: Container(
                     decoration: BoxDecoration(
                       gradient: AppColors.primaryGradient,
-                      borderRadius: const BorderRadius.only(
-                        topRight: Radius.circular(30),
-                        bottomRight: Radius.circular(30),
-                      ),
+                      borderRadius: const BorderRadiusDirectional.only(
+                        topEnd: Radius.circular(30),
+                        bottomEnd: Radius.circular(30),
+                      ).resolve(Directionality.of(context)),
                     ),
                     child: Center(
                       child: Column(
@@ -266,10 +266,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
             ],
           ),
-          const Positioned(
-            top: 12,
-            right: 12,
-            child: SafeArea(child: LanguageToggle(compact: true)),
+          Align(
+            alignment: AlignmentDirectional.topEnd,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: LanguageToggle(compact: true),
+              ),
+            ),
           ),
         ],
       ),

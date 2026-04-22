@@ -376,7 +376,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get locating => 'جارٍ تحديد الموقع...';
 
   @override
-  String get locationUnavailable => 'الموقع غير متاح — التقط صورة أو فعّل GPS';
+  String get locationUnavailable => 'الموقع غير متاح , التقط صورة أو فعّل GPS';
 
   @override
   String get createUser => 'إنشاء مستخدم';
@@ -532,7 +532,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noBoundaryDefined => 'لا توجد حدود محددة';
 
   @override
-  String get pointsMinThree => 'نقطة — الحد الأدنى 3';
+  String get pointsMinThree => 'نقاط , الحد الأدنى 3';
 
   @override
   String get points => 'نقاط';
@@ -548,7 +548,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'انقر على الخريطة لإضافة نقاط.\nالحد الأدنى 3 نقاط لتكوين مضلع.';
 
   @override
-  String get drawingModeActive => 'وضع الرسم نشط — انقر لإضافة نقاط';
+  String get drawingModeActive => 'وضع الرسم نشط, انقر لإضافة نقاط';
 
   @override
   String get deleteParcelleWarning => 'ستُحذف هذه القطعة بشكل نهائي.';
@@ -667,4 +667,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get admin => 'مسؤول';
+
+  @override
+  String get ha => 'هـ';
 }

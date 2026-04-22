@@ -380,7 +380,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get locationUnavailable =>
-      'Position non disponible — prenez une photo ou activez le GPS';
+      'Position non disponible, prenez une photo ou activez le GPS';
 
   @override
   String get createUser => 'Créer un utilisateur';
@@ -536,7 +536,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get noBoundaryDefined => 'Aucune limite définie';
 
   @override
-  String get pointsMinThree => 'point(s) — min. 3';
+  String get pointsMinThree => 'point(s), min. 3';
 
   @override
   String get points => 'points';
@@ -553,7 +553,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get drawingModeActive =>
-      'Mode dessin actif — Tapez pour ajouter des points';
+      'Mode dessin actif, Tapez pour ajouter des points';
 
   @override
   String get deleteParcelleWarning =>
@@ -678,4 +678,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get admin => 'Administrateur';
+
+  @override
+  String get ha => 'ha';
 }
