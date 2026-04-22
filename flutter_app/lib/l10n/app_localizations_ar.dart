@@ -135,7 +135,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get nameRequired => 'الاسم مطلوب';
 
   @override
-  String get tagline => 'كن صوت الغابة\nالاستجابة لندائها واجبنا.';
+  String get tagline => 'كون إنتي صوت الغابة\nو خلي تلبية النداء علينا.';
 
   @override
   String get forestSurveillance => 'مراقبة الغابات الذكية';
