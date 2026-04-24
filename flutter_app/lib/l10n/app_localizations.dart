@@ -1010,6 +1010,24 @@ abstract class AppLocalizations {
   /// **'Créez les rôles et leurs permissions\npour gérer les accès au système.'**
   String get noRolesHint;
 
+  /// No description provided for @existingParcelles.
+  ///
+  /// In fr, this message translates to:
+  /// **'Parcelles existantes'**
+  String get existingParcelles;
+
+  /// No description provided for @existingForests.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autres forêts'**
+  String get existingForests;
+
+  /// No description provided for @currentForestBoundary.
+  ///
+  /// In fr, this message translates to:
+  /// **'Forêt en cours de dessin'**
+  String get currentForestBoundary;
+
   /// No description provided for @editService.
   ///
   /// In fr, this message translates to:

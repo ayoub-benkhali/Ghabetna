@@ -475,6 +475,15 @@ class AppLocalizationsFr extends AppLocalizations {
       'Créez les rôles et leurs permissions\npour gérer les accès au système.';
 
   @override
+  String get existingParcelles => 'Parcelles existantes';
+
+  @override
+  String get existingForests => 'Autres forêts';
+
+  @override
+  String get currentForestBoundary => 'Forêt en cours de dessin';
+
+  @override
   String get editService => 'Modifier le service';
 
   @override

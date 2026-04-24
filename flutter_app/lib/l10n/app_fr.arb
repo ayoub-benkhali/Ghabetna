@@ -165,6 +165,10 @@
   "selected": "sélectionnées",
   "noRolesHint": "Créez les rôles et leurs permissions\npour gérer les accès au système.",
 
+  "existingParcelles":    "Parcelles existantes",
+  "existingForests":      "Autres forêts",
+  "currentForestBoundary":"Forêt en cours de dessin",
+
   "editService": "Modifier le service",
   "serviceNameLabel": "Nom du service *",
   "type": "Type",

@@ -471,6 +471,15 @@ class AppLocalizationsAr extends AppLocalizations {
       'أنشئ الأدوار وصلاحياتها\nلإدارة الوصول إلى النظام.';
 
   @override
+  String get existingParcelles => 'القطع الموجودة';
+
+  @override
+  String get existingForests => 'الغابات الأخرى';
+
+  @override
+  String get currentForestBoundary => 'الغابة الحالية';
+
+  @override
   String get editService => 'تعديل الخدمة';
 
   @override

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
+import 'package:flutter_app/features/admin/models/forest_model.dart';
 import 'package:flutter_app/features/admin/providers/forest_provider.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,6 +27,8 @@ class _State extends ConsumerState<ForestFormScreen> {
   final _mapCtrl = MapController();
 
   List<LatLng> _drawingPoints = [];
+  // All forests already saved, excluding the one currently being edited.
+  List<ForestModel> _existingForests = [];
   bool _isDrawing = false;
   bool _loading = false;
   bool _dataLoaded = false;
@@ -33,11 +36,9 @@ class _State extends ConsumerState<ForestFormScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.forestId != null) {
-      _loadExisting();
-    } else {
-      _dataLoaded = true;
-    }
+    // Always run async load — even for create mode we need the forest list
+    // to show existing boundaries on the map.
+    _loadData();
   }
 
   @override
@@ -49,19 +50,42 @@ class _State extends ConsumerState<ForestFormScreen> {
     super.dispose();
   }
 
-  Future<void> _loadExisting() async {
-    final forest = await ref
-        .read(forestRepositoryProvider)
-        .getForest(widget.forestId!);
-    setState(() {
+  Future<void> _loadData() async {
+    // ── 1. All forests (via Riverpod cache) ────────────────────────────────
+    //
+    // ref.read(forestsProvider.future) reuses whatever is already in the
+    // Riverpod cache (e.g. loaded by the forest list screen). Zero extra
+    // network calls if the data is already warm.
+    final allForests = await ref.read(forestsProvider.future);
+
+    // Keep only the forests that are NOT the one being edited so we don't
+    // render the current drawing twice on the map.
+    _existingForests = allForests
+        .where((f) => f.id != widget.forestId)
+        .toList();
+
+    // ── 2. Pre-populate form when editing ──────────────────────────────────
+    if (widget.forestId != null) {
+      // Re-use the already-fetched list instead of making a second call.
+      final current = allForests
+          .where((f) => f.id == widget.forestId)
+          .firstOrNull;
+
+      // Fallback: if for some reason it wasn't in the list (e.g. stale cache
+      // before the forest was created), hit the endpoint directly.
+      final forest =
+          current ??
+          await ref.read(forestRepositoryProvider).getForest(widget.forestId!);
+
       _nameCtrl.text = forest.name;
       _regionCtrl.text = forest.region ?? '';
       _descCtrl.text = forest.description ?? '';
       if (forest.boundaryGeojson != null) {
         _drawingPoints = _geoJsonToLatLng(forest.boundaryGeojson!);
       }
-      _dataLoaded = true;
-    });
+    }
+
+    setState(() => _dataLoaded = true);
   }
 
   @override
@@ -101,7 +125,7 @@ class _State extends ConsumerState<ForestFormScreen> {
       ),
       body: Row(
         children: [
-          // ── Left: form panel ────────────────────────────────────────────────
+          // ── Left: form panel ──────────────────────────────────────────────
           SizedBox(
             width: 320,
             child: SingleChildScrollView(
@@ -148,6 +172,7 @@ class _State extends ConsumerState<ForestFormScreen> {
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 12),
+
                     // Status chip
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -194,6 +219,7 @@ class _State extends ConsumerState<ForestFormScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
+
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
@@ -211,14 +237,13 @@ class _State extends ConsumerState<ForestFormScreen> {
                           _isDrawing ? Icons.stop : Icons.edit_location_alt,
                         ),
                         label: Text(
-                          _isDrawing
-                              ? l.stopDrawing
-                              : l.drawBoundary, // TODO: add both to ARB
+                          _isDrawing ? l.stopDrawing : l.drawBoundary,
                         ),
                         onPressed: () =>
                             setState(() => _isDrawing = !_isDrawing),
                       ),
                     ),
+
                     if (_isDrawing && _drawingPoints.length >= 3) ...[
                       const SizedBox(height: 8),
                       SizedBox(
@@ -230,6 +255,7 @@ class _State extends ConsumerState<ForestFormScreen> {
                         ),
                       ),
                     ],
+
                     if (_drawingPoints.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       SizedBox(
@@ -257,14 +283,49 @@ class _State extends ConsumerState<ForestFormScreen> {
                         ),
                       ),
                     ],
+
                     if (_isDrawing) ...[
                       const SizedBox(height: 16),
                       Text(
-                        l.drawingHint, // TODO: add to ARB
+                        l.drawingHint,
                         style: Theme.of(context).textTheme.bodyMedium,
                         textAlign: TextAlign.center,
                       ),
                     ],
+
+                    const SizedBox(height: 20),
+
+                    // ── Legend ──────────────────────────────────────────────
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l.legend,
+                            style: Theme.of(context).textTheme.labelMedium,
+                          ),
+                          const SizedBox(height: 8),
+                          // New key — see ARB changes below
+                          _LegendItem(
+                            color: Colors.orange,
+                            label: l.existingForests,
+                          ),
+                          const SizedBox(height: 4),
+                          // New key — see ARB changes below
+                          _LegendItem(
+                            color: AppColors.primaryGreen,
+                            label: l.currentForestBoundary,
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -273,10 +334,11 @@ class _State extends ConsumerState<ForestFormScreen> {
 
           VerticalDivider(width: 1, color: Theme.of(context).dividerColor),
 
-          // ── Right: map ──────────────────────────────────────────────────────
+          // ── Right: map ────────────────────────────────────────────────────
           Expanded(
             child: _ForestMapWidget(
               mapController: _mapCtrl,
+              existingForests: _existingForests,
               drawingPoints: _drawingPoints,
               isDrawing: _isDrawing,
               onTap: (latlng) => setState(() => _drawingPoints.add(latlng)),
@@ -335,16 +397,18 @@ class _State extends ConsumerState<ForestFormScreen> {
   }
 }
 
-// ── Extracted map widget ───────────────────────────────────────────────────────
+// ── Extracted map widget ──────────────────────────────────────────────────────
 
 class _ForestMapWidget extends StatelessWidget {
   final MapController mapController;
+  final List<ForestModel> existingForests;
   final List<LatLng> drawingPoints;
   final bool isDrawing;
   final void Function(LatLng) onTap;
 
   const _ForestMapWidget({
     required this.mapController,
+    required this.existingForests,
     required this.drawingPoints,
     required this.isDrawing,
     required this.onTap,
@@ -354,6 +418,14 @@ class _ForestMapWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final hasPolygon = drawingPoints.length >= 3;
+
+    // Pre-convert existing forest boundaries so we don't re-parse GeoJSON on
+    // every repaint triggered by drawing points being added.
+    final existingPolygons = existingForests
+        .where((f) => f.boundaryGeojson != null)
+        .map((f) => _geoJsonToLatLng(f.boundaryGeojson!))
+        .where((pts) => pts.length >= 3)
+        .toList();
 
     return Stack(
       children: [
@@ -376,11 +448,33 @@ class _ForestMapWidget extends StatelessWidget {
             ),
           ),
           children: [
+            // ── Base tile layer ───────────────────────────────────────────
             TileLayer(
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
               userAgentPackageName: 'com.ghabetna.app',
               maxZoom: 19,
             ),
+
+            // ── Existing forests overlay ──────────────────────────────────
+            //
+            // Rendered below the active drawing so the user always sees their
+            // own polygon on top. Orange makes them visually distinct from the
+            // current forest being drawn (green).
+            if (existingPolygons.isNotEmpty)
+              PolygonLayer(
+                polygons: existingPolygons
+                    .map(
+                      (pts) => Polygon(
+                        points: pts,
+                        color: Colors.orange.withValues(alpha: 0.18),
+                        borderColor: Colors.orange,
+                        borderStrokeWidth: 1.5,
+                      ),
+                    )
+                    .toList(),
+              ),
+
+            // ── Current drawing: filled polygon (≥ 3 pts) ─────────────────
             if (hasPolygon)
               PolygonLayer(
                 polygons: [
@@ -392,6 +486,8 @@ class _ForestMapWidget extends StatelessWidget {
                   ),
                 ],
               ),
+
+            // ── Current drawing: outline while < 3 pts ────────────────────
             if (drawingPoints.length >= 2)
               PolylineLayer(
                 polylines: [
@@ -407,6 +503,8 @@ class _ForestMapWidget extends StatelessWidget {
                   ),
                 ],
               ),
+
+            // ── Vertex markers ────────────────────────────────────────────
             MarkerLayer(
               markers: drawingPoints
                   .asMap()
@@ -432,6 +530,7 @@ class _ForestMapWidget extends StatelessWidget {
                   )
                   .toList(),
             ),
+
             RichAttributionWidget(
               attributions: [
                 TextSourceAttribution(
@@ -444,6 +543,8 @@ class _ForestMapWidget extends StatelessWidget {
             ),
           ],
         ),
+
+        // ── Drawing mode hint banner ──────────────────────────────────────
         if (isDrawing)
           Positioned(
             top: 12,
@@ -469,7 +570,7 @@ class _ForestMapWidget extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      l.drawingModeActive, // TODO: add to ARB
+                      l.drawingModeActive,
                       style: Theme.of(
                         context,
                       ).textTheme.labelMedium?.copyWith(color: Colors.white),
@@ -479,6 +580,37 @@ class _ForestMapWidget extends StatelessWidget {
               ),
             ),
           ),
+      ],
+    );
+  }
+}
+
+// ── Legend item ───────────────────────────────────────────────────────────────
+
+class _LegendItem extends StatelessWidget {
+  final Color color;
+  final String label;
+  const _LegendItem({required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 20,
+          height: 3,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelMedium,
+          overflow: TextOverflow.ellipsis,
+        ),
       ],
     );
   }

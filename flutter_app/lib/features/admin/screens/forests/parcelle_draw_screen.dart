@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
+import 'package:flutter_app/features/admin/models/parcelle_model.dart';
 import 'package:flutter_app/features/admin/providers/forest_provider.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,6 +27,9 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
 
   List<LatLng> _forestBoundary = [];
   List<LatLng> _drawingPoints = [];
+  // All sibling parcelles already saved in this forest (excluding the one
+  // currently being edited so we don't show it twice).
+  List<ParcelleModel> _existingParcelles = [];
   bool _isDrawing = false;
   bool _loading = false;
   bool _dataLoaded = false;
@@ -45,13 +49,36 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
 
   Future<void> _loadData() async {
     final repo = ref.read(forestRepositoryProvider);
+
+    // ── 1. Forest boundary ──────────────────────────────────────────────────
     final forest = await repo.getForest(widget.forestId);
     if (forest.boundaryGeojson != null) {
       _forestBoundary = _geoJsonToLatLng(forest.boundaryGeojson!);
     }
+
+    // ── 2. All parcelles for this forest (via Riverpod cache) ───────────────
+    //
+    // Using ref.read(parcellesProvider(...).future) means:
+    //   • If the parcelle list was already loaded elsewhere (e.g. parcelle list
+    //     screen), Riverpod serves the cached value — zero extra network calls.
+    //   • If it hasn't been loaded yet, it fetches once and the result stays
+    //     cached for the lifetime of the provider.
+    //
+    // This is the Flutter-idiomatic equivalent of the "JS in-memory cache"
+    // pattern: no manual caching, no JS interop needed.
+    final allParcelles = await ref.read(
+      parcellesProvider(widget.forestId).future,
+    );
+
+    // Keep only the parcelles that are NOT the one being edited so we don't
+    // render a duplicate of the polygon the user is actively drawing.
+    _existingParcelles = allParcelles
+        .where((p) => p.id != widget.parcelleId)
+        .toList();
+
+    // ── 3. Pre-populate form when editing ───────────────────────────────────
     if (widget.parcelleId != null) {
-      final parcelles = await repo.getParcelles(widget.forestId);
-      final existing = parcelles
+      final existing = allParcelles
           .where((p) => p.id == widget.parcelleId)
           .firstOrNull;
       if (existing != null) {
@@ -60,6 +87,7 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
         _drawingPoints = _geoJsonToLatLng(existing.boundaryGeojson);
       }
     }
+
     setState(() => _dataLoaded = true);
   }
 
@@ -234,7 +262,8 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
                   ],
 
                   const SizedBox(height: 20),
-                  // Reference legend
+
+                  // ── Legend ──────────────────────────────────────────────
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -257,6 +286,11 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
                         ),
                         const SizedBox(height: 4),
                         _LegendItem(
+                          color: Colors.orange,
+                          label: l.existingParcelles,
+                        ),
+                        const SizedBox(height: 4),
+                        _LegendItem(
                           color: AppColors.info,
                           label: l.currentParcelle,
                         ),
@@ -274,6 +308,7 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
           Expanded(
             child: _ParcelleDrawMapWidget(
               forestBoundary: _forestBoundary,
+              existingParcelles: _existingParcelles,
               drawingPoints: _drawingPoints,
               isDrawing: _isDrawing,
               onTap: (latlng) => setState(() => _drawingPoints.add(latlng)),
@@ -313,6 +348,8 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
       } else {
         await repo.updateParcelle(widget.forestId, widget.parcelleId!, body);
       }
+      // Invalidate the cache so the list screen and any future draw sessions
+      // reflect the newly saved parcelle.
       ref.invalidate(parcellesProvider(widget.forestId));
       if (mounted) context.go('/admin/forests/${widget.forestId}/parcelles');
     } catch (e) {
@@ -334,12 +371,14 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
 
 class _ParcelleDrawMapWidget extends StatelessWidget {
   final List<LatLng> forestBoundary;
+  final List<ParcelleModel> existingParcelles;
   final List<LatLng> drawingPoints;
   final bool isDrawing;
   final void Function(LatLng) onTap;
 
   const _ParcelleDrawMapWidget({
     required this.forestBoundary,
+    required this.existingParcelles,
     required this.drawingPoints,
     required this.isDrawing,
     required this.onTap,
@@ -352,6 +391,13 @@ class _ParcelleDrawMapWidget extends StatelessWidget {
     final centerLL = forestBoundary.isNotEmpty
         ? forestBoundary.first
         : const LatLng(33.8869, 9.5375);
+
+    // Pre-convert existing parcelle boundaries outside the build tree so we
+    // don't re-parse GeoJSON on every repaint.
+    final existingPolygons = existingParcelles
+        .map((p) => _geoJsonToLatLng(p.boundaryGeojson))
+        .where((pts) => pts.length >= 3)
+        .toList();
 
     return Stack(
       children: [
@@ -371,11 +417,14 @@ class _ParcelleDrawMapWidget extends StatelessWidget {
             ),
           ),
           children: [
+            // ── Base tile layer ─────────────────────────────────────────────
             TileLayer(
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
               userAgentPackageName: 'com.ghabetna.app',
               maxZoom: 19,
             ),
+
+            // ── Forest boundary ─────────────────────────────────────────────
             if (forestBoundary.length >= 3)
               PolygonLayer(
                 polygons: [
@@ -393,17 +442,41 @@ class _ParcelleDrawMapWidget extends StatelessWidget {
                   ),
                 ],
               ),
+
+            // ── Existing parcelles overlay ──────────────────────────────────
+            //
+            // Rendered below the active drawing so the user can always see
+            // what they're drawing on top. Orange fill + border makes them
+            // visually distinct from both the forest boundary (green) and the
+            // current parcelle being drawn (blue).
+            if (existingPolygons.isNotEmpty)
+              PolygonLayer(
+                polygons: existingPolygons
+                    .map(
+                      (pts) => Polygon(
+                        points: pts,
+                        color: Colors.orange.withValues(alpha: 0.18),
+                        borderColor: Colors.orange,
+                        borderStrokeWidth: 1.5,
+                      ),
+                    )
+                    .toList(),
+              ),
+
+            // ── Current drawing: filled polygon (≥ 3 pts) ──────────────────
             if (hasPolygon)
               PolygonLayer(
                 polygons: [
                   Polygon(
                     points: _filterValidPoints(drawingPoints),
-                    color: AppColors.primaryGreen.withValues(alpha: 0.2),
-                    borderColor: AppColors.primaryGreen,
+                    color: AppColors.info.withValues(alpha: 0.2),
+                    borderColor: AppColors.info,
                     borderStrokeWidth: 2.5,
                   ),
                 ],
               ),
+
+            // ── Current drawing: outline while < 3 pts ─────────────────────
             if (drawingPoints.length >= 2)
               PolylineLayer(
                 polylines: [
@@ -419,6 +492,8 @@ class _ParcelleDrawMapWidget extends StatelessWidget {
                   ),
                 ],
               ),
+
+            // ── Vertex markers ──────────────────────────────────────────────
             MarkerLayer(
               markers: drawingPoints
                   .asMap()
@@ -439,6 +514,7 @@ class _ParcelleDrawMapWidget extends StatelessWidget {
                   )
                   .toList(),
             ),
+
             RichAttributionWidget(
               attributions: [
                 TextSourceAttribution(
@@ -451,6 +527,8 @@ class _ParcelleDrawMapWidget extends StatelessWidget {
             ),
           ],
         ),
+
+        // ── Drawing mode hint banner ────────────────────────────────────────
         if (isDrawing)
           Positioned(
             top: 12,

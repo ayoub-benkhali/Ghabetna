@@ -193,6 +193,10 @@
   "drawingHint":       "انقر على الخريطة لإضافة نقاط.\nالحد الأدنى 3 نقاط لتكوين مضلع.",
   "drawingModeActive": "وضع الرسم نشط, انقر لإضافة نقاط",
 
+  "existingParcelles":    "القطع الموجودة",
+  "existingForests":      "الغابات الأخرى",
+  "currentForestBoundary":"الغابة الحالية",
+
   "deleteParcelleWarning": "ستُحذف هذه القطعة بشكل نهائي.",
   "others":                "أخرى",
   "noParcelles":           "لا توجد قطع",
