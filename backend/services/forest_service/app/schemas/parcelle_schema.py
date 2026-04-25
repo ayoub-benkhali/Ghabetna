@@ -1,5 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel
+from typing import Optional
 
 class ParcelleCreate(BaseModel):
     name:str
@@ -26,7 +27,7 @@ class ParcelleResponse(BaseModel):
 
 class ParcelleLocationResponse(BaseModel):
     """Returned by the internal point-in-polygon lookup."""
-    parcelle_id: int
-    parcelle_name: str
+    parcelle_id: Optional[int] = None
+    parcelle_name: Optional[str] = None
     forest_id: int
     forest_name: str

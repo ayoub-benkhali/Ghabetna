@@ -42,32 +42,72 @@ async def get_parcelle_by_point(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Internal endpoint: given a lat/lng point, return the parcelle
-    (and its parent forest) whose boundary contains that point.
-    Returns 404 if the point falls outside all known parcelles.
+    Internal endpoint: given a lat/lng point, identify which forest (and
+    optionally which parcelle) contains it.
+ 
+    Lookup strategy (two steps):
+ 
+    Step 1 — Parcelle match:
+        Query for a parcelle whose boundary contains the point.  If found,
+        return both the parcelle and its parent forest.  This is the happy
+        path for forests that have parcelles drawn.
+ 
+    Step 2 — Forest fallback:
+        If no parcelle matches, check whether the point falls inside a
+        forest boundary directly.  This handles two real-world cases:
+          a) A forest exists but has no parcelles drawn yet.
+          b) A forest has some parcelles, but the reported point is in a
+             part of the forest that isn't covered by any of them.
+        In this case we return the forest with parcelle_id=None so the
+        incident is still correctly linked to its forest.
+ 
+    Returns 404 only when the point is outside every registered forest.
     """
     point = ST_SetSRID(ST_MakePoint(lng, lat), 4326)
-
-    result = await db.execute(
+ 
+    # ── Step 1: try to find a matching parcelle ───────────────────────────
+    parcelle_result = await db.execute(
         select(Parcelle, Forest)
         .join(Forest, Forest.id == Parcelle.forest_id)
         .where(ST_Within(point, Parcelle.boundary))
         .limit(1)
     )
-    row = result.first()
-
-    if row is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No parcelle found at the given coordinates",
+    parcelle_row = parcelle_result.first()
+ 
+    if parcelle_row is not None:
+        parcelle, forest = parcelle_row
+        return ParcelleLocationResponse(
+            parcelle_id=parcelle.id,
+            parcelle_name=parcelle.name,
+            forest_id=forest.id,
+            forest_name=forest.name,
         )
-
-    parcelle, forest = row
-    return ParcelleLocationResponse(
-        parcelle_id=parcelle.id,
-        parcelle_name=parcelle.name,
-        forest_id=forest.id,
-        forest_name=forest.name,
+ 
+    # ── Step 2: fall back to forest boundary ─────────────────────────────
+    # Only attempt this for forests that have a boundary drawn
+    # (boundary is nullable on the Forest model).
+    forest_result = await db.execute(
+        select(Forest)
+        .where(
+            Forest.boundary.isnot(None),
+            ST_Within(point, Forest.boundary),
+        )
+        .limit(1)
+    )
+    forest = forest_result.scalar_one_or_none()
+ 
+    if forest is not None:
+        return ParcelleLocationResponse(
+            parcelle_id=None,
+            parcelle_name=None,
+            forest_id=forest.id,
+            forest_name=forest.name,
+        )
+ 
+    # ── Point is outside every registered forest ──────────────────────────
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="No forest or parcelle found at the given coordinates",
     )
 
 # Flat lookup used internally by auth_service for assignment validation

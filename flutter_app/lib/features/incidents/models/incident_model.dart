@@ -76,6 +76,17 @@ class IncidentModel {
     );
   }
 
+  /// Two IncidentModel instances are equal when they share the same [id].
+  /// This is required so that FutureProvider.family can cache geoContextProvider
+  /// correctly — without this, every IncidentModel instance is a distinct key
+  /// (object identity), causing redundant fetches on every rebuild.
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is IncidentModel && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
+
   /// Converts a server-relative path like "/uploads/foo.jpg" into a full URL
   /// like "http://192.168.1.10:8000/uploads/foo.jpg".
   /// Already-absolute URLs (http/https) are returned unchanged.

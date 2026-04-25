@@ -122,7 +122,12 @@ class _IncidentDetail extends ConsumerWidget {
             const SizedBox(height: 16),
           ],
 
-          _GeoContextCard(incident: incident),
+          // Pass the incidentId so _GeoContextCard can re-watch
+          // singleIncidentProvider directly. This means it automatically
+          // reflects the updated incident once polling triggers a refresh —
+          // without relying on the stale IncidentModel snapshot passed down
+          // from the parent.
+          _GeoContextCard(incidentId: incident.id),
           const SizedBox(height: 16),
 
           _DescriptionCard(incident: incident),
@@ -649,17 +654,50 @@ class _InfoRow extends StatelessWidget {
 }
 
 // ── Geo context card ──────────────────────────────────────────────────────────
+//
+// IMPORTANT: This widget intentionally watches [singleIncidentProvider] by id
+// rather than receiving an [IncidentModel] snapshot from its parent. This is
+// what makes auto-refresh work correctly:
+//
+//   1. The agent reports an incident → backend sets geo_enrichment_status='pending'
+//   2. singleIncidentProvider fetches the incident and sees 'pending'
+//   3. supervisor_provider schedules a Timer(3s) → invalidateSelf()
+//   4. After 3 s, the provider re-fetches; if still 'pending', schedules again
+//   5. Once enriched, geoContextProvider fetches the forest/parcelle names
+//
+// If _GeoContextCard received a plain IncidentModel from its parent instead,
+// it would be stuck on the stale snapshot and would never see the enriched
+// data — even after the provider refreshes.
+//
 class _GeoContextCard extends ConsumerWidget {
+  final int incidentId;
+  const _GeoContextCard({required this.incidentId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Re-watch singleIncidentProvider so this card rebuilds automatically
+    // when the polling timer fires and the provider is invalidated.
+    final incidentAsync = ref.watch(singleIncidentProvider(incidentId));
+
+    return incidentAsync.when(
+      // While the initial load (or a polling re-fetch) is in flight, show
+      // nothing — the parent screen already shows a full-screen spinner on
+      // the very first load, and subsequent polling re-fetches are silent.
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (incident) => _GeoContextCardContent(incident: incident),
+    );
+  }
+}
+
+class _GeoContextCardContent extends ConsumerWidget {
   final IncidentModel incident;
-  const _GeoContextCard({required this.incident});
+  const _GeoContextCardContent({required this.incident});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = context.l10n;
-    final asyncGeo = ref.watch(geoContextProvider(incident));
 
-    // If we know there's nothing to show yet (worker hasn't enriched),
-    // show a subtle "pending enrichment" card instead of nothing.
     if (incident.geoEnrichmentStatus == 'not_found') {
       return Card(
         child: Padding(
@@ -711,6 +749,9 @@ class _GeoContextCard extends ConsumerWidget {
         ),
       );
     }
+
+    // Status is 'enriched' — fetch forest and parcelle names.
+    final asyncGeo = ref.watch(geoContextProvider(incident));
 
     return Card(
       child: Padding(

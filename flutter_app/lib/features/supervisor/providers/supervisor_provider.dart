@@ -38,9 +38,7 @@ class IncidentFilter {
 }
 
 final incidentFilterProvider = StateProvider<IncidentFilter>((ref) {
-  ref.watch(
-    userSessionProvider,
-  ); // ADD — resets filter to default on session change
+  ref.watch(userSessionProvider); // resets filter to default on session change
   return const IncidentFilter();
 });
 
@@ -59,6 +57,8 @@ final allIncidentsProvider = FutureProvider<List<IncidentModel>>((ref) async {
       .getAllIncidents(status: filter.status, category: filter.category);
 
   return incidents.where(_isIncidentVisible).toList();
+  //
+  //return incidents;
 });
 
 // Update status notifier
@@ -83,6 +83,19 @@ final statusUpdateProvider =
     );
 
 final singleIncidentProvider = FutureProvider.autoDispose
-    .family<IncidentModel, int>((ref, id) {
-      return ref.watch(supervisorRepoProvider).getById(id);
+    .family<IncidentModel, int>((ref, id) async {
+      final incident = await ref.watch(supervisorRepoProvider).getById(id);
+
+      // The geo-enrichment worker runs asynchronously on the backend. If the
+      // incident is still pending, schedule a re-fetch so the detail screen
+      // updates automatically once enrichment completes — without the user
+      // having to navigate away and back.
+      if (incident.geoEnrichmentStatus == 'pending') {
+        final timer = Timer(const Duration(seconds: 3), () {
+          ref.invalidateSelf();
+        });
+        ref.onDispose(timer.cancel);
+      }
+
+      return incident;
     });
