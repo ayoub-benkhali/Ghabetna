@@ -413,7 +413,7 @@ class _ParcelleSelector extends ConsumerWidget {
                     initialValue: selectedParcelleId,
                     decoration: InputDecoration(
                       labelText: l.chooseParcelle,
-                      prefixIcon: const Icon(Icons.crop_square_outlined),
+                      prefixIcon: const Icon(Icons.map_outlined),
                     ),
                     items: [
                       DropdownMenuItem<int?>(
@@ -435,7 +435,7 @@ class _ParcelleSelector extends ConsumerWidget {
             initialValue: null,
             decoration: InputDecoration(
               labelText: l.chooseParcelle,
-              prefixIcon: const Icon(Icons.crop_square_outlined),
+              prefixIcon: const Icon(Icons.map_outlined),
               enabled: false,
             ),
             items: const [],

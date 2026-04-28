@@ -34,7 +34,11 @@ class AgentProfileScreen extends ConsumerWidget {
           onRefresh: () async => ref.invalidate(myProfileProvider),
           child: ListView(
             children: [
-              ProfileHeader(user: user),
+              ProfileHeader(
+                user: user,
+                onEditName: () =>
+                    _showEditNameDialog(context, ref, user.fullName),
+              ),
               const SizedBox(height: 20),
 
               // ── Score card ───────────────────────────────────────────
@@ -138,18 +142,6 @@ class AgentProfileScreen extends ConsumerWidget {
                             style: const TextStyle(fontSize: 12),
                           ),
                         ),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // ── Edit name ────────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.edit_outlined),
-                  label: Text(l.editName),
-                  onPressed: () =>
-                      _showEditNameDialog(context, ref, user.fullName),
                 ),
               ),
               const SizedBox(height: 12),

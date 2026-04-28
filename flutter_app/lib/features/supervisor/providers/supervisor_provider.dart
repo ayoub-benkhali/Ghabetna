@@ -56,9 +56,8 @@ final allIncidentsProvider = FutureProvider<List<IncidentModel>>((ref) async {
       .watch(supervisorRepoProvider)
       .getAllIncidents(status: filter.status, category: filter.category);
 
-  return incidents.where(_isIncidentVisible).toList();
-  //
-  //return incidents;
+  //return incidents.where(_isIncidentVisible).toList();
+  return incidents;
 });
 
 // Update status notifier

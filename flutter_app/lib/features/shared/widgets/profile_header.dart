@@ -5,9 +5,13 @@ import 'package:flutter_app/features/admin/models/user_model.dart';
 
 /// Displays the avatar, name, role badge and service badge at the top of
 /// every profile screen. Reused by Agent, Supervisor and Admin.
+///
+/// Pass [onEditName] to show a small pen icon next to the user's name.
 class ProfileHeader extends StatelessWidget {
   final UserModel user;
-  const ProfileHeader({super.key, required this.user});
+  final VoidCallback? onEditName; // ← new optional callback
+
+  const ProfileHeader({super.key, required this.user, this.onEditName});
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +22,7 @@ class ProfileHeader extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
+        color: AppColors.primaryGreen,
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
       ),
       padding: const EdgeInsets.fromLTRB(24, 48, 24, 32),
@@ -36,13 +40,42 @@ class ProfileHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          Text(
-            user.fullName,
-            style: theme.textTheme.titleLarge?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-            ),
+
+          // ── Name row with optional inline edit pen ──────────────────
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text(
+                  user.fullName,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              if (onEditName != null) ...[
+                const SizedBox(width: 6),
+                SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    icon: const Icon(
+                      Icons.edit_outlined,
+                      size: 16,
+                      color: Colors.white70,
+                    ),
+                    tooltip: l.editName,
+                    onPressed: onEditName,
+                  ),
+                ),
+              ],
+            ],
           ),
+
           const SizedBox(height: 4),
           Text(
             user.email,

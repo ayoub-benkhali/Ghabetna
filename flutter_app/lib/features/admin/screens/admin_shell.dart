@@ -64,7 +64,7 @@ class _WideLayout extends ConsumerWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.fromLTRB(20, 15, 20, 15),
                     decoration: const BoxDecoration(
-                      gradient: AppColors.primaryGradient,
+                      color: AppColors.primaryGreen,
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,

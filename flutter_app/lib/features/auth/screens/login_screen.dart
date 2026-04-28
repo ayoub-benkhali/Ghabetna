@@ -71,11 +71,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   flex: 1,
                   child: Container(
                     decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
                       borderRadius: const BorderRadiusDirectional.only(
                         topEnd: Radius.circular(30),
                         bottomEnd: Radius.circular(30),
                       ).resolve(Directionality.of(context)),
+                      image: DecorationImage(
+                        image: const AssetImage('assets/images/background.png'),
+                        fit: BoxFit.cover,
+                        colorFilter: ColorFilter.mode(
+                          Colors.black.withValues(
+                            alpha: 0.15,
+                          ), // subtle darkening overlay
+                          BlendMode.darken,
+                        ),
+                      ),
                     ),
                     child: Center(
                       child: Column(
@@ -112,7 +121,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 420),
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(32),
+                      padding: const EdgeInsets.all(25),
                       child: Card(
                         elevation: 4,
                         shape: RoundedRectangleBorder(

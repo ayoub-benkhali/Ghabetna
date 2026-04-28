@@ -43,7 +43,7 @@ class AgentHomeScreen extends ConsumerWidget {
                 height: 80,
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: AppColors.primaryGradient,
+                  color: AppColors.primaryGreen,
                 ),
                 child: Center(
                   child: Text(

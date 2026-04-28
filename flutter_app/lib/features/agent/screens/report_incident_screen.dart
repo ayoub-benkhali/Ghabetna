@@ -263,65 +263,78 @@ class _ReportIncidentScreenState extends ConsumerState<ReportIncidentScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Is critical
-            SwitchListTile(
-              value: _isCritical,
-              onChanged: (v) => setState(() => _isCritical = v),
-              title: Text(l.criticalIncident),
-              subtitle: Text(l.criticalIncidentHint),
-              activeThumbColor: AppColors.danger,
-              secondary: Icon(
-                Icons.warning_amber_rounded,
-                color: _isCritical ? AppColors.danger : Colors.grey,
+            Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
               ),
-            ),
-            const SizedBox(height: 8),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    // Is critical
+                    SwitchListTile(
+                      value: _isCritical,
+                      onChanged: (v) => setState(() => _isCritical = v),
+                      title: Text(l.criticalIncident),
+                      subtitle: Text(l.criticalIncidentHint),
+                      activeThumbColor: AppColors.danger,
+                      secondary: Icon(
+                        Icons.warning_amber_rounded,
+                        color: _isCritical ? AppColors.danger : Colors.grey,
+                      ),
+                    ),
+                    const Divider(height: 24),
 
-            // Description
-            TextField(
-              controller: _descController,
-              decoration: InputDecoration(
-                labelText: l.description,
-                hintText: l.describeIncident,
-                border: const OutlineInputBorder(),
-              ),
-              maxLines: 6,
-            ),
-            const SizedBox(height: 16),
+                    // Description
+                    TextField(
+                      controller: _descController,
+                      decoration: InputDecoration(
+                        labelText: l.description,
+                        hintText: l.describeIncident,
+                        border: const OutlineInputBorder(),
+                      ),
+                      maxLines: 6,
+                    ),
+                    const SizedBox(height: 16),
 
-            // Image picker
-            if (_imageFile != null)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.file(
-                  _imageFile!,
-                  height: 180,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
+                    // Image picker
+                    if (_imageFile != null) ...[
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(
+                          _imageFile!,
+                          height: 180,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => _pickImage(ImageSource.camera),
+                            icon: const Icon(Icons.camera_alt),
+                            label: Text(l.camera),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => _pickImage(ImageSource.gallery),
+                            icon: const Icon(Icons.photo_library),
+                            label: Text(l.gallery),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _pickImage(ImageSource.camera),
-                    icon: const Icon(Icons.camera_alt),
-                    label: Text(l.camera),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _pickImage(ImageSource.gallery),
-                    icon: const Icon(Icons.photo_library),
-                    label: Text(l.gallery),
-                  ),
-                ),
-              ],
             ),
             const SizedBox(height: 24),
-
             SizedBox(
               width: double.infinity,
               child: FilledButton(
