@@ -1,9 +1,10 @@
 import httpx
-from fastapi import APIRouter,Request,Response
+from fastapi import APIRouter, Request, Response
 from app.config import settings
 from app.middleware.rbac import verify_and_inject
 
-router=APIRouter(prefix="/api/forests",tags=["Parcelles"])
+router = APIRouter(prefix="/api/forests", tags=["Parcelles"])
+flat_router = APIRouter(prefix="/api/parcelles", tags=["Parcelles"])
 
 async def _proxy(path: str, request: Request, payload: dict | None) -> Response:
     body = await request.body()
@@ -24,12 +25,26 @@ async def _proxy(path: str, request: Request, payload: dict | None) -> Response:
         media_type=resp.headers.get("content-type"),
     )
 
-@router.api_route("/{forest_id}/parcelles",methods=["GET","POST"])
-async def parcelles_root(forest_id:int,request:Request):
-    payload=await verify_and_inject(request)
-    return await _proxy(f"/{forest_id}/parcelles",request,payload)
+@router.api_route("/{forest_id}/parcelles", methods=["GET", "POST"])
+async def parcelles_root(forest_id: int, request: Request):
+    payload = await verify_and_inject(request)
+    return await _proxy(f"/{forest_id}/parcelles", request, payload)
 
-@router.api_route("/{forest_id}/parcelles/{parcelle_id}",methods=["GET", "PUT", "DELETE"])
-async def parcelle_by_id(forest_id:int,parcelle_id:int,request:Request):
-    payload=await verify_and_inject(request)
-    return await _proxy(f"/{forest_id}/parcelles/{parcelle_id}",request,payload)
+@router.api_route("/{forest_id}/parcelles/{parcelle_id}", methods=["GET", "PUT", "DELETE"])
+async def parcelle_by_id(forest_id: int, parcelle_id: int, request: Request):
+    payload = await verify_and_inject(request)
+    return await _proxy(f"/{forest_id}/parcelles/{parcelle_id}", request, payload)
+
+@flat_router.get("/{parcelle_id}")
+async def parcelle_flat_by_id(parcelle_id: int, request: Request):
+    payload = await verify_and_inject(request)
+    async with httpx.AsyncClient(base_url=settings.FOREST_SERVICE_URL) as client:
+        resp = await client.get(
+            f"/parcelles/{parcelle_id}",
+            headers={"Authorization": request.headers.get("Authorization", "")},
+        )
+    return Response(
+        content=resp.content,
+        status_code=resp.status_code,
+        media_type=resp.headers.get("content-type"),
+    )

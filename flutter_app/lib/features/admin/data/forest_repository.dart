@@ -67,4 +67,14 @@ class ForestRepository {
 
   Future<void> deleteParcelle(int forestId, int parcelleId) =>
       _dio.delete('/api/forests/$forestId/parcelles/$parcelleId');
+
+  Future<ParcelleModel?> getParcelleFlatById(int parcelleId) async {
+    try {
+      final r = await _dio.get('/api/parcelles/$parcelleId');
+      return ParcelleModel.fromJson(r.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return null;
+      rethrow;
+    }
+  }
 }

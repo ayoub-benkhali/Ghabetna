@@ -275,7 +275,11 @@ class _CurrentAssignmentBanner extends ConsumerWidget {
         orElse: () => '${l.forests} #$forestId',
       );
     } else if (!isSupervisor && parcelleId != null) {
-      label = '${l.parcelles} #$parcelleId';
+      final parcelleAsync = ref.watch(parcelleFlatProvider(parcelleId!));
+      label = parcelleAsync.maybeWhen(
+        data: (p) => p?.name ?? '${l.parcelles} #$parcelleId',
+        orElse: () => '${l.parcelles} #$parcelleId',
+      );
     }
 
     return Container(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/core/widgets/async_value_widget.dart';
+import 'package:flutter_app/features/admin/providers/forest_provider.dart';
 import 'package:flutter_app/features/auth/providers/auth_provider.dart';
 import 'package:flutter_app/features/incidents/providers/incident_provider.dart';
 import 'package:flutter_app/features/shared/providers/profile_provider.dart';
@@ -40,10 +41,6 @@ class AgentProfileScreen extends ConsumerWidget {
                     _showEditNameDialog(context, ref, user.fullName),
               ),
               const SizedBox(height: 20),
-
-              // ── Score card ───────────────────────────────────────────
-              const _ScorePlaceholderCard(),
-              const SizedBox(height: 12),
 
               // ── Account info ─────────────────────────────────────────
               Padding(
@@ -118,22 +115,16 @@ class AgentProfileScreen extends ConsumerWidget {
               const _AgentIncidentStats(),
               const SizedBox(height: 12),
 
-              // ── Parcelle assignment ──────────────────────────────────
+              // ── Parcelle assignment ──────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Card(
+                  // AFTER (fixed)
                   child: user.parcelleId != null
-                      ? ListTile(
-                          leading: const Icon(
-                            Icons.crop_square_outlined,
-                            color: AppColors.primaryGreen,
-                          ),
-                          title: Text(l.assignedParcelle),
-                          subtitle: Text('${l.parcelles} #${user.parcelleId}'),
-                        )
+                      ? _ParcelleAssignmentTile(parcelleId: user.parcelleId!)
                       : ListTile(
                           leading: const Icon(
-                            Icons.crop_square_outlined,
+                            Icons.map_outlined,
                             color: Colors.grey,
                           ),
                           title: Text(l.noParcelleAssigned),
@@ -224,71 +215,6 @@ void _showEditPhoneDialog(
   );
 }
 
-// ── Score placeholder ─────────────────────────────────────────────────────────
-
-class _ScorePlaceholderCard extends StatelessWidget {
-  const _ScorePlaceholderCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.star_outline, color: AppColors.warning),
-                  const SizedBox(width: 8),
-                  Text(
-                    l.reliabilityScore,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.warning.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: AppColors.warning.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.hourglass_top_outlined,
-                      size: 16,
-                      color: AppColors.warning,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        l.scoreComingSoon,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.warning,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 // ── Agent incident stats ──────────────────────────────────────────────────────
 
 class _AgentIncidentStats extends ConsumerWidget {
@@ -364,6 +290,36 @@ class _AgentIncidentStats extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ParcelleAssignmentTile extends ConsumerWidget {
+  final int parcelleId;
+
+  const _ParcelleAssignmentTile({required this.parcelleId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
+    // Use the new flat provider (see Step 2)
+    final parcelleAsync = ref.watch(parcelleFlatProvider(parcelleId));
+
+    return parcelleAsync.when(
+      loading: () => const ListTile(
+        leading: Icon(Icons.map_outlined, color: AppColors.primaryGreen),
+        title: LinearProgressIndicator(),
+      ),
+      error: (_, __) => ListTile(
+        leading: const Icon(Icons.map_outlined, color: AppColors.primaryGreen),
+        title: Text(l.assignedParcelle),
+        subtitle: Text('${l.parcelles} #$parcelleId'),
+      ),
+      data: (parcelle) => ListTile(
+        leading: const Icon(Icons.map_outlined, color: AppColors.primaryGreen),
+        title: Text(l.assignedParcelle),
+        subtitle: Text(parcelle?.name ?? '${l.parcelles} #$parcelleId'),
       ),
     );
   }

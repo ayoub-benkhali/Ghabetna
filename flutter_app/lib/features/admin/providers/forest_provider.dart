@@ -26,3 +26,21 @@ final parcellesProvider = FutureProvider.family<List<ParcelleModel>, int>((
   ref.watch(userSessionProvider);
   return ref.watch(forestRepositoryProvider).getParcelles(forestId);
 });
+
+// Fetches a single parcelle by (forestId, parcelleId).
+final parcelleProvider = FutureProvider.family<ParcelleModel?, (int, int)>((
+  ref,
+  ids,
+) {
+  final (forestId, parcelleId) = ids;
+  return ref.watch(forestRepositoryProvider).getParcelle(forestId, parcelleId);
+});
+
+// Fetches a single parcelle by parcelleId only (flat lookup — no forestId needed).
+final parcelleFlatProvider = FutureProvider.family<ParcelleModel?, int>((
+  ref,
+  parcelleId,
+) {
+  ref.watch(userSessionProvider);
+  return ref.watch(forestRepositoryProvider).getParcelleFlatById(parcelleId);
+});
