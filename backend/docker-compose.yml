@@ -115,11 +115,13 @@ services:
       AUTH_SERVICE_URL: http://auth-service:8000
       FOREST_SERVICE_URL: http://forest-service:8000
       INCIDENT_SERVICE_URL: http://incident-service:8000
+      ANALYTICS_SERVICE_URL: http://analytics-service:8000
       UPLOAD_DIR: /uploads
     depends_on:
       - auth-service
       - forest-service
       - incident-service
+      - analytics-service
     ports:
       - "8000:8000"
     volumes:
@@ -148,6 +150,22 @@ services:
     volumes:
       - ./services/incident_service:/app
       - incident_uploads:/uploads
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  analytics-service:
+    build: ./services/analytics_service
+    container_name: ghabetna_analytics_service
+    env_file: .env
+    environment:
+      INCIDENT_DATABASE_URL: postgresql+asyncpg://${INCIDENT_DB_USER}:${INCIDENT_DB_PASSWORD}@incident-db:5432/${INCIDENT_DB_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      incident-db:
+        condition: service_healthy
+    ports:
+      - "8004:8000"
+    volumes:
+      - ./services/analytics_service:/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 volumes:
