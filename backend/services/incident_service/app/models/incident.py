@@ -54,6 +54,7 @@ class Incident(Base):
     # Organisational context (plain ints — no cross-service FK)
     parcelle_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
     forest_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    forest_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
     geo_enrichment_status: Mapped[GeoEnrichmentStatus] = mapped_column(
         SAEnum(GeoEnrichmentStatus, name="geoenrichmentstatus",
                values_callable=lambda x: [e.value for e in x]),

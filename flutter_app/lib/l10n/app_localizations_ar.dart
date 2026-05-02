@@ -679,4 +679,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get ha => 'هـ';
+
+  @override
+  String get analytics => 'إحصائيات';
 }

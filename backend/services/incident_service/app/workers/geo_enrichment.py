@@ -58,6 +58,7 @@ async def _enrich_one(incident_id: int, lat: float, lng: float) -> None:
         data = resp.json()
 
         forest_id: int = data["forest_id"]
+        forest_name: str | None = data.get("forest_name")
         # parcelle_id is optional — the endpoint returns null when the point
         # is inside a forest but not inside any drawn parcelle.
         parcelle_id: int | None = data.get("parcelle_id")
@@ -75,6 +76,7 @@ async def _enrich_one(incident_id: int, lat: float, lng: float) -> None:
             .where(Incident.id == incident_id)
             .values(
                 forest_id=forest_id,
+                forest_name=data.get("forest_name"),
                 parcelle_id=parcelle_id,
                 geo_enrichment_status=GeoEnrichmentStatus.ENRICHED,
             )

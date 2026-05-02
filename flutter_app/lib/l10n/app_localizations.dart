@@ -1411,6 +1411,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'ha'**
   String get ha;
+
+  /// No description provided for @analytics.
+  ///
+  /// In fr, this message translates to:
+  /// **'Statistiques'**
+  String get analytics;
 }
 
 class _AppLocalizationsDelegate

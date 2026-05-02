@@ -23,6 +23,7 @@ class IncidentResponse(BaseModel):
     longitude: Optional[float] = None
     parcelle_id: Optional[int] = None
     forest_id: Optional[int] = None
+    forest_name: Optional[str] = None
     geo_enrichment_status: GeoEnrichmentStatus
     supervisor_comment: Optional[str] = None
     supervisor_id: Optional[int] = None

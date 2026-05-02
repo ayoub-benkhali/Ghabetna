@@ -690,4 +690,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get ha => 'ha';
+
+  @override
+  String get analytics => 'Statistiques';
 }

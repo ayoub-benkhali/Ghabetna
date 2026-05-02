@@ -243,5 +243,6 @@
   "area": "Superficie",
   "geoContextNotFound": "Hors zone forestière enregistrée",
   "admin": "Administrateur",
-  "ha": "ha"
+  "ha": "ha",
+  "analytics": "Statistiques"
 }

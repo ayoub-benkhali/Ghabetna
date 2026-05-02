@@ -1,5 +1,6 @@
 import 'package:flutter_app/features/admin/screens/admin_profile_screen.dart';
 import 'package:flutter_app/features/admin/screens/admin_shell.dart';
+import 'package:flutter_app/features/admin/screens/analytics_screen.dart';
 import 'package:flutter_app/features/admin/screens/dashboard_screen.dart';
 import 'package:flutter_app/features/admin/screens/forests/forest_form_screen.dart';
 import 'package:flutter_app/features/admin/screens/forests/forest_list_screen.dart';
@@ -77,6 +78,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/admin/dashboard',
             builder: (_, __) => const DashboardScreen(),
+          ),
+          GoRoute(
+            path: '/admin/analytics',
+            builder: (_, __) => const AdminAnalyticsScreen(),
           ),
           GoRoute(
             path: '/admin/forests',

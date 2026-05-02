@@ -28,6 +28,7 @@ List<_NavItem> _buildNavItems(BuildContext context) {
   final l = context.l10n;
   return [
     _NavItem(l.dashboard, Icons.dashboard_outlined, '/admin/dashboard'),
+    _NavItem(l.analytics, Icons.bar_chart_outlined, '/admin/analytics'),
     _NavItem(l.forests, Icons.forest_outlined, '/admin/forests'),
     _NavItem(l.users, Icons.people_outline, '/admin/users'),
     _NavItem(l.roles, Icons.shield_outlined, '/admin/roles'),
@@ -99,16 +100,15 @@ class _WideLayout extends ConsumerWidget {
                   // User info chip
                   if (user != null)
                     InkWell(
-                      onTap: ()=>context.go('/admin/profile'),
+                      onTap: () => context.go('/admin/profile'),
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
                         child: Row(
                           children: [
                             CircleAvatar(
                               radius: 16,
-                              backgroundColor: AppColors.sidebarActive.withValues(
-                                alpha: 0.3,
-                              ),
+                              backgroundColor: AppColors.sidebarActive
+                                  .withValues(alpha: 0.3),
                               child: Text(
                                 user.fullName.isNotEmpty
                                     ? user.fullName[0].toUpperCase()
@@ -137,11 +137,12 @@ class _WideLayout extends ConsumerWidget {
                                   ),
                                   Text(
                                     l.administration,
-                                    style: Theme.of(context).textTheme.labelSmall
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
                                         ?.copyWith(
-                                          color: AppColors.sidebarText.withValues(
-                                            alpha: 0.6,
-                                          ),
+                                          color: AppColors.sidebarText
+                                              .withValues(alpha: 0.6),
                                         ),
                                   ),
                                 ],
