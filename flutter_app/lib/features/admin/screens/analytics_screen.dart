@@ -259,7 +259,7 @@ class _MonthlyLineChart extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Évolution des incidents — $year',
+              'Évolution des incidents en $year',
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -589,7 +589,7 @@ class _HorizontalBarChart extends StatelessWidget {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// 3. Category Pie Chart (full pie — no centre hole)
+// 3. Category Pie Chart
 // ══════════════════════════════════════════════════════════════════════════════
 
 class _CategoryPieChart extends StatelessWidget {
@@ -790,7 +790,7 @@ class _PeakHoursHeatmap extends StatelessWidget {
                             child: Tooltip(
                               message:
                                   '${_days[dow]} ${hour.toString().padLeft(2, '0')}h'
-                                  ' — $count incident${count > 1 ? 's' : ''}',
+                                  ': $count incident${count > 1 ? 's' : ''}',
                               child: Container(
                                 height: 22,
                                 margin: const EdgeInsets.symmetric(
@@ -832,7 +832,7 @@ class _PeakHoursHeatmap extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Faible',
+                  'Légende :',
                   style: TextStyle(fontSize: 10, color: Colors.grey),
                 ),
                 const SizedBox(width: 6),
