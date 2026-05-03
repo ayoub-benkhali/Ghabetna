@@ -28,7 +28,7 @@ List<_NavItem> _buildNavItems(BuildContext context) {
   final l = context.l10n;
   return [
     _NavItem(l.dashboard, Icons.dashboard_outlined, '/admin/dashboard'),
-    _NavItem(l.analytics, Icons.bar_chart_outlined, '/admin/analytics'),
+    // analytics route removed — charts are now part of the dashboard
     _NavItem(l.forests, Icons.forest_outlined, '/admin/forests'),
     _NavItem(l.users, Icons.people_outline, '/admin/users'),
     _NavItem(l.roles, Icons.shield_outlined, '/admin/roles'),
@@ -184,9 +184,8 @@ class _WideLayout extends ConsumerWidget {
                               item.icon,
                               color: isActive
                                   ? Colors.white
-                                  : AppColors.sidebarText.withValues(
-                                      alpha: 0.7,
-                                    ),
+                                  : AppColors.sidebarText
+                                      .withValues(alpha: 0.7),
                               size: 20,
                             ),
                             title: Text(
@@ -222,8 +221,8 @@ class _WideLayout extends ConsumerWidget {
                     title: Text(
                       l.disconnect,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.sidebarText.withValues(alpha: 0.7),
-                      ),
+                            color: AppColors.sidebarText.withValues(alpha: 0.7),
+                          ),
                     ),
                     onTap: () => ref.read(authProvider.notifier).logout(),
                   ),

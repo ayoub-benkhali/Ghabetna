@@ -1,6 +1,5 @@
 import 'package:flutter_app/features/admin/screens/admin_profile_screen.dart';
 import 'package:flutter_app/features/admin/screens/admin_shell.dart';
-import 'package:flutter_app/features/admin/screens/analytics_screen.dart';
 import 'package:flutter_app/features/admin/screens/dashboard_screen.dart';
 import 'package:flutter_app/features/admin/screens/forests/forest_form_screen.dart';
 import 'package:flutter_app/features/admin/screens/forests/forest_list_screen.dart';
@@ -57,7 +56,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           return ActivationScreen(token: token);
         },
       ),
-      //Agent routes
+      // Agent routes
       GoRoute(path: '/agent/home', builder: (_, __) => const AgentHomeScreen()),
       GoRoute(
         path: '/agent/report',
@@ -71,17 +70,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/agent/profile',
         builder: (_, __) => const AgentProfileScreen(),
       ),
-      //Admin routes wrapped in AdminShell
+      // Admin routes wrapped in AdminShell
       ShellRoute(
         builder: (context, state, child) => AdminShell(child: child),
         routes: [
           GoRoute(
             path: '/admin/dashboard',
             builder: (_, __) => const DashboardScreen(),
-          ),
-          GoRoute(
-            path: '/admin/analytics',
-            builder: (_, __) => const AdminAnalyticsScreen(),
           ),
           GoRoute(
             path: '/admin/forests',

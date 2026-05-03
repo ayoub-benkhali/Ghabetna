@@ -89,13 +89,14 @@ async def get_by_category(db: AsyncSession = Depends(get_db)):
 async def get_top_forests(db: AsyncSession = Depends(get_db)):
     result = await db.execute(text("""
         SELECT
-            COALESCE(forest_name, 'Hors forêt')            AS forest_name,
-            COUNT(*)                                        AS total,
-            COUNT(*) FILTER (WHERE status = 'resolved')    AS resolved,
-            COUNT(*) FILTER (WHERE is_critical = TRUE)     AS critical
+            forest_id,
+            COALESCE(MAX(forest_name), 'Forêt #' || forest_id::text)  AS forest_name,
+            COUNT(*)                                                     AS total,
+            COUNT(*) FILTER (WHERE status = 'resolved')                 AS resolved,
+            COUNT(*) FILTER (WHERE is_critical = TRUE)                  AS critical
         FROM incidents
         WHERE forest_id IS NOT NULL
-        GROUP BY forest_name
+        GROUP BY forest_id
         ORDER BY total DESC
         LIMIT 3
     """))
