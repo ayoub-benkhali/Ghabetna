@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_app/core/api/api_client.dart';
 import 'package:flutter_app/core/api/token_storage.dart';
-import 'package:flutter_app/core/models/auth_user.dart';
+import 'package:flutter_app/features/auth/models/auth_user.dart';
 
 class AuthRepository {
   final Dio _dio = ApiClient.instance.dio;

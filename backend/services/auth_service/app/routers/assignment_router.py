@@ -4,9 +4,14 @@ from app.schemas.user_schema import UserResponse
 from app.utils.deps import require_permission
 from app.schemas.assignment_schema import AssignmentResponse,AssignRequest,SupervisorAssignmentResponse,SupervisorAssignRequest
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.services.assignment_service import _get_agent,_validate_parcelle,_validate_forest
+from app.services.assignment_service import (
+    _get_agent, _validate_parcelle, _validate_forest,
+    get_supervisor_forest_ids, add_supervisor_forest,
+    remove_supervisor_forest, remove_all_supervisor_forests,
+)
 from sqlalchemy import select
 from app.models.user import User
+from app.models.supervisor_forest import supervisor_forest
 
 router=APIRouter(prefix="/assignments",tags=["Assignments"])
 
@@ -49,43 +54,80 @@ async def list_asignments(db:AsyncSession=Depends(get_db),_:None=Depends(require
 
 # ── Supervisor ↔ Forest assignments ───────────────────────────────────────
 
-@router.post("/supervisors/{user_id}",response_model=SupervisorAssignmentResponse,summary="Assign a supervisor to a forest (admin only)")
-async def assign_supervisor(user_id:int,data:SupervisorAssignRequest,db:AsyncSession=Depends(get_db),_:None=Depends(require_permission("assignment:create"))):
-    user=await _get_agent(user_id,db)
-
-    if user.forest_id is not None:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail=f"User {user_id} is already assigned to forest {user.forest_id}. Unassign first")
-    
+# POST /assignments/supervisors/{user_id}  — assign to ONE additional forest
+@router.post("/supervisors/{user_id}", response_model=SupervisorAssignmentResponse,
+             summary="Assign a supervisor to a forest (admin only)")
+async def assign_supervisor(
+    user_id: int,
+    data: SupervisorAssignRequest,
+    db: AsyncSession = Depends(get_db),
+    _: None = Depends(require_permission("assignment:create")),
+):
+    user = await _get_agent(user_id, db)
     await _validate_forest(data.forest_id)
-    user.forest_id=data.forest_id
-    await db.commit()
-    await db.refresh(user)
-    return SupervisorAssignmentResponse(user_id=user.id,forest_id=user.forest_id)
+    existing = await get_supervisor_forest_ids(user_id, db)
+    if data.forest_id in existing:
+        raise HTTPException(status_code=409, detail=f"Supervisor already assigned to forest {data.forest_id}")
+    await add_supervisor_forest(user_id, data.forest_id, db)
+    forest_ids = await get_supervisor_forest_ids(user_id, db)
+    return SupervisorAssignmentResponse(user_id=user.id, forest_ids=forest_ids)
 
-@router.delete(
-    "/supervisors/{user_id}",
-    response_model=SupervisorAssignmentResponse,
-    summary="Remove a supervisor's forest assignment (admin only)",
-)
+
+# DELETE /assignments/supervisors/{user_id}?forest_id=X  — remove from one forest
+@router.delete("/supervisors/{user_id}", response_model=SupervisorAssignmentResponse,
+               summary="Remove a supervisor from a specific forest (admin only)")
 async def unassign_supervisor(
+    user_id: int,
+    forest_id: int,                           # now a query param
+    db: AsyncSession = Depends(get_db),
+    _: None = Depends(require_permission("assignment:delete")),
+):
+    user = await _get_agent(user_id, db)
+    await remove_supervisor_forest(user_id, forest_id, db)
+    forest_ids = await get_supervisor_forest_ids(user_id, db)
+    return SupervisorAssignmentResponse(user_id=user.id, forest_ids=forest_ids)
+
+
+# DELETE /assignments/supervisors/{user_id}/all  — remove from all forests
+@router.delete("/supervisors/{user_id}/all", response_model=SupervisorAssignmentResponse,
+               summary="Remove a supervisor from all forests (admin only)")
+async def unassign_supervisor_all(
     user_id: int,
     db: AsyncSession = Depends(get_db),
     _: None = Depends(require_permission("assignment:delete")),
 ):
     user = await _get_agent(user_id, db)
-    user.forest_id = None
-    await db.commit()
-    await db.refresh(user)
-    return SupervisorAssignmentResponse(user_id=user.id, forest_id=None)
+    await remove_all_supervisor_forests(user_id, db)
+    return SupervisorAssignmentResponse(user_id=user.id, forest_ids=[])
 
 
-@router.get("/supervisors/{user_id}",response_model=SupervisorAssignmentResponse, summary="Get a supervisor's current forest assignment")
-async def get_supervisor_assignment(user_id:int,db:AsyncSession=Depends(get_db),_:None=Depends(require_permission("assignment:read"))):
-    user=await _get_agent(user_id,db)
-    return SupervisorAssignmentResponse(user_id=user.id,forest_id=user.forest_id)
+# GET /assignments/supervisors/{user_id}  — get all forests for a supervisor
+@router.get("/supervisors/{user_id}", response_model=SupervisorAssignmentResponse,
+            summary="Get all forest assignments for a supervisor")
+async def get_supervisor_assignment(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: None = Depends(require_permission("assignment:read")),
+):
+    user = await _get_agent(user_id, db)
+    forest_ids = await get_supervisor_forest_ids(user_id, db)
+    return SupervisorAssignmentResponse(user_id=user.id, forest_ids=forest_ids)
 
-@router.get("/forests/{forest_id}/supervisors",response_model=list[UserResponse],summary="Get all supervisors assigned to a forest")
-async def get_supervisors_for_forest(forest_id:int,db:AsyncSession=Depends(get_db),_:None=Depends(require_permission("assignment:read"))):
+
+# GET /assignments/forests/{forest_id}/supervisors  — unchanged logic, same result
+@router.get("/forests/{forest_id}/supervisors", response_model=list[UserResponse],
+            summary="Get all supervisors assigned to a forest")
+async def get_supervisors_for_forest(
+    forest_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: None = Depends(require_permission("assignment:read")),
+):
     await _validate_forest(forest_id=forest_id)
-    result=await db.execute(select(User).where(User.forest_id==forest_id))
+    result = await db.execute(
+        select(User).join(
+            supervisor_forest,
+            (supervisor_forest.c.user_id == User.id) &
+            (supervisor_forest.c.forest_id == forest_id)
+        )
+    )
     return list(result.scalars().all())

@@ -8,6 +8,8 @@ from app.config import settings
 from app.models.user import User
 from app.utils.jwt import decode_token,create_access_token,create_refresh_token
 from app.utils.password import verify_password,hash_password
+from app.models.supervisor_forest import supervisor_forest
+from app.services.assignment_service import get_supervisor_forest_ids
 
 REFRESH_TOKEN_PREFIX="refresh:"
 BLACKLIST_PREFIX="blacklist:"
@@ -24,6 +26,10 @@ async def login(email:str,password:str,db:AsyncSession,redis:aioredis.Redis):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Invalid Password")
     
     permissions=user.role.permissions if user.role else []
+
+    # ← Query the join table instead 
+    forest_ids = await get_supervisor_forest_ids(user.id, db)
+
     access_token=create_access_token(
         user.id,
         user.role_id,
@@ -31,7 +37,7 @@ async def login(email:str,password:str,db:AsyncSession,redis:aioredis.Redis):
         full_name=user.full_name,
         service_id=user.service_id,
         parcelle_id=user.parcelle_id,
-        forest_id=user.forest_id
+        forest_ids=forest_ids
         )
     refresh_token=create_refresh_token(user.id)
 
@@ -62,6 +68,10 @@ async def refresh(refresh_token:str,db:AsyncSession,redis:aioredis.Redis):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Account not activated")
     
     permissions=user.role.permissions if user.role else []
+
+    # ← Query the join table instead 
+    forest_ids = await get_supervisor_forest_ids(user.id, db)
+    
     new_access_token=create_access_token(
         user.id,
         user.role_id,
@@ -69,7 +79,7 @@ async def refresh(refresh_token:str,db:AsyncSession,redis:aioredis.Redis):
         full_name=user.full_name,
         service_id=user.service_id,
         parcelle_id=user.parcelle_id,
-        forest_id=user.forest_id
+        forest_ids=forest_ids
         )
     return new_access_token
 

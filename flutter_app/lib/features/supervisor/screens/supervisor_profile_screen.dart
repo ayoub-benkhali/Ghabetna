@@ -117,9 +117,9 @@ class SupervisorProfileScreen extends ConsumerWidget {
               const _SupervisorIncidentOverview(),
               const SizedBox(height: 12),
 
-              // ── Assigned forest ──────────────────────────────────────
-              if (user.forestId != null)
-                _AssignedForestCard(forestId: user.forestId!)
+              // ── Assigned forests ─────────────────────────────────────
+              if (user.forestIds.isNotEmpty)
+                ...user.forestIds.map((id) => _AssignedForestCard(forestId: id))
               else
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),

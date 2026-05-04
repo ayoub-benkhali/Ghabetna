@@ -10,7 +10,7 @@ def create_access_token(
         full_name: str = "",
         service_id:int|None=None,
         parcelle_id:int|None=None,
-        forest_id:int|None=None
+        forest_ids: list[int] = [],
 
         )->str:
     expire=datetime.now(timezone.utc)+timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -21,7 +21,7 @@ def create_access_token(
         "full_name":full_name,
         "service_id":service_id,
         "parcelle_id":parcelle_id,
-        "forest_id": forest_id,
+        "forest_ids": forest_ids,
         "type":"access",
         "exp":expire
     }

@@ -26,7 +26,7 @@ class UserResponse(BaseModel):
     role_id:int
     service_id:int|None=None
     parcelle_id:int|None=None
-    forest_id:int|None=None
+    forest_ids: list[int] = []
     is_active:bool
     created_at:datetime
 

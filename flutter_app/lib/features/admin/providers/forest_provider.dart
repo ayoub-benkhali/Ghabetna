@@ -1,4 +1,4 @@
-import 'package:flutter_app/core/providers/user_session_provider.dart';
+import 'package:flutter_app/features/auth/providers/user_session_provider.dart';
 import 'package:flutter_app/features/admin/data/forest_repository.dart';
 import 'package:flutter_app/features/admin/models/forest_model.dart';
 import 'package:flutter_app/features/admin/models/parcelle_model.dart';

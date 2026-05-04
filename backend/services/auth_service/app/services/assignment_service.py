@@ -1,10 +1,10 @@
 import httpx
-from sqlalchemy import select
+from sqlalchemy import select,delete,insert
 from app.config import settings
 from fastapi import status,HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User
-
+from app.models.supervisor_forest import supervisor_forest
 
 async def _validate_parcelle(parcelle_id:int)->None:
     """
@@ -39,3 +39,32 @@ async def _validate_forest(forest_id:int)->None:
             raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY,detail="Forest service returned an unexpected Error")
     except httpx.RequestError:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE,detail="Forest Service is Unreachable")
+    
+async def get_supervisor_forest_ids(user_id: int, db: AsyncSession) -> list[int]:
+    result = await db.execute(
+        select(supervisor_forest.c.forest_id).where(
+            supervisor_forest.c.user_id == user_id
+        )
+    )
+    return list(result.scalars().all())
+
+async def add_supervisor_forest(user_id: int, forest_id: int, db: AsyncSession) -> None:
+    await db.execute(
+        insert(supervisor_forest).values(user_id=user_id, forest_id=forest_id)
+    )
+    await db.commit()
+
+async def remove_supervisor_forest(user_id: int, forest_id: int, db: AsyncSession) -> None:
+    await db.execute(
+        delete(supervisor_forest).where(
+            supervisor_forest.c.user_id == user_id,
+            supervisor_forest.c.forest_id == forest_id,
+        )
+    )
+    await db.commit()
+
+async def remove_all_supervisor_forests(user_id: int, db: AsyncSession) -> None:
+    await db.execute(
+        delete(supervisor_forest).where(supervisor_forest.c.user_id == user_id)
+    )
+    await db.commit()

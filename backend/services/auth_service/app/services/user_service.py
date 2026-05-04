@@ -6,6 +6,7 @@ from app.models.user import User
 from app.models.role import Role
 from app.schemas.user_schema import UserCreate,UserUpdate
 from app.services.email_service import send_activation_email
+from app.models.supervisor_forest import supervisor_forest
 
 async def create_user(data: UserCreate,db:AsyncSession)->User:
     existing=await db.execute(select(User).where(User.email==data.email))
@@ -49,15 +50,37 @@ async def create_user(data: UserCreate,db:AsyncSession)->User:
 
     return user
 
-async def get_users(db:AsyncSession)-> list[User]:
-    result=await db.execute(select(User))
-    return list(result.scalars().all())
+async def get_users(db: AsyncSession) -> list[User]:
+    result = await db.execute(select(User))
+    users = list(result.scalars().all())
 
-async def get_user(user_id:int,db:AsyncSession)->User:
-    result= await db.execute(select(User).where(User.id==user_id))
-    user=result.scalar_one_or_none()
+    # Batch-load all supervisor → forest assignments in one extra query
+    sf_result = await db.execute(select(supervisor_forest))
+    forest_map: dict[int, list[int]] = {}
+    for row in sf_result.fetchall():
+        forest_map.setdefault(row.user_id, []).append(row.forest_id)
+
+    # Inject into __dict__ so Pydantic's from_attributes picks it up
+    for user in users:
+        setattr(user, 'forest_ids', forest_map.get(user.id, []))
+
+    return users
+
+async def get_user(user_id: int, db: AsyncSession) -> User:
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="User Not Found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User Not Found")
+
+    # Load this user's forest assignments
+    sf_result = await db.execute(
+        select(supervisor_forest.c.forest_id).where(
+            supervisor_forest.c.user_id == user_id
+        )
+    )
+    setattr(user, 'forest_ids', [row[0] for row in sf_result.fetchall()])
+
+
     return user
 
 async def update_user(user_id:int,data:UserUpdate,db:AsyncSession)->User:

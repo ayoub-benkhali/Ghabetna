@@ -8,7 +8,7 @@ class UserModel {
   final String roleName;
   final int? serviceId;
   final int? parcelleId;
-  final int? forestId;
+  final List<int> forestIds;
   final bool isActive;
   final DateTime createdAt;
 
@@ -22,7 +22,7 @@ class UserModel {
     required this.roleName,
     required this.serviceId,
     this.parcelleId,
-    this.forestId,
+    this.forestIds = const [],
     required this.isActive,
     required this.createdAt,
   });
@@ -37,7 +37,9 @@ class UserModel {
     roleName: (j['role'] as Map<String, dynamic>)['name'] as String,
     serviceId: j['service_id'] as int?,
     parcelleId: j['parcelle_id'] as int?,
-    forestId: j['forest_id'] as int?,
+    forestIds: (j['forest_ids'] as List<dynamic>? ?? [])
+        .map((e) => e as int)
+        .toList(),
     isActive: j['is_active'] as bool,
     createdAt: DateTime.parse(j['created_at'] as String),
   );

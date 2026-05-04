@@ -1,6 +1,6 @@
 import 'package:flutter_app/core/api/api_client.dart';
-import 'package:flutter_app/core/models/auth_user.dart';
-import 'package:flutter_app/core/providers/user_session_provider.dart';
+import 'package:flutter_app/features/auth/models/auth_user.dart';
+import 'package:flutter_app/features/auth/providers/user_session_provider.dart';
 import 'package:flutter_app/features/auth/data/auth_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:flutter_app/core/providers/user_session_provider.dart';
+import 'package:flutter_app/features/auth/providers/user_session_provider.dart';
 import 'package:flutter_app/features/incidents/data/incident_repository.dart';
 import 'package:flutter_app/features/incidents/models/incident_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

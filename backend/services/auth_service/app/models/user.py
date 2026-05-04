@@ -23,8 +23,6 @@ class User(Base):
 
     service_id:Mapped[int|None]=mapped_column(ForeignKey("services.id",ondelete="SET NULL"),nullable=True)
     parcelle_id:Mapped[int|None]=mapped_column(nullable=True)
-    forest_id:Mapped[int|None]=mapped_column(nullable=True)
-    
 
     is_active: Mapped[bool]=mapped_column(Boolean,default=False)
     activation_token:Mapped[Optional[str]]=mapped_column(String(255),nullable=True)

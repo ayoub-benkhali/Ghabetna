@@ -26,7 +26,21 @@ class AssignmentRepository {
     );
   }
 
-  Future<void> unassignSupervisor(int userId) async {
-    await _dio.delete('/api/assignments/supervisors/$userId');
+  /// Remove from a specific forest
+  Future<void> unassignSupervisorFromForest(int userId, int forestId) async {
+    await _dio.delete(
+      '/api/assignments/supervisors/$userId',
+      queryParameters: {'forest_id': forestId},
+    );
+  }
+
+  /// Remove from all forests at once
+  Future<void> unassignSupervisorFromAll(int userId) async {
+    await _dio.delete('/api/assignments/supervisors/$userId/all');
+  }
+
+  Future<List<int>> getSupervisorForestIds(int userId) async {
+    final resp = await _dio.get('/api/assignments/supervisors/$userId');
+    return (resp.data['forest_ids'] as List).cast<int>();
   }
 }

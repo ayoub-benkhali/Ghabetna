@@ -15,7 +15,7 @@ class AssignmentResponse(BaseModel):
 
 class SupervisorAssignmentResponse(BaseModel):
     user_id:int
-    forest_id:int|None
+    forest_ids: list[int]
 
     class Config:
         from_attributes=True

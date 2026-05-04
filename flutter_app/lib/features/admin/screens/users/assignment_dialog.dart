@@ -19,19 +19,18 @@ class _AssignmentDialogState extends ConsumerState<AssignmentDialog> {
   bool _loading = false;
   String? _error;
 
-  //supervisor state
-  int? _selectedForestId;
+  // Supervisor state — multi-select set of forest IDs
+  Set<int> _selectedForestIds = {};
 
-  //Agent state
+  // Agent state
   int? _selectedForestFilterId;
   int? _selectedParcelleId;
 
   @override
   void initState() {
     super.initState();
-    //pre-select current assignments
     if (widget.user.roleName == 'supervisor') {
-      _selectedForestId = widget.user.forestId;
+      _selectedForestIds = widget.user.forestIds.toSet();
     } else if (widget.user.roleName == 'agent') {
       _selectedParcelleId = widget.user.parcelleId;
     }
@@ -45,12 +44,14 @@ class _AssignmentDialogState extends ConsumerState<AssignmentDialog> {
     final repo = ref.read(assignmentRepositoryProvider);
     try {
       if (widget.user.roleName == 'supervisor') {
-        if (_selectedForestId != null) {
-          await repo.unassignSupervisor(widget.user.id);
-          await repo.assignSupervisorToForest(
-            widget.user.id,
-            _selectedForestId!,
-          );
+        final current = widget.user.forestIds.toSet();
+        final toAdd = _selectedForestIds.difference(current);
+        final toRemove = current.difference(_selectedForestIds);
+        for (final fid in toRemove) {
+          await repo.unassignSupervisorFromForest(widget.user.id, fid);
+        }
+        for (final fid in toAdd) {
+          await repo.assignSupervisorToForest(widget.user.id, fid);
         }
       } else if (widget.user.roleName == 'agent') {
         if (_selectedParcelleId == null) {
@@ -64,36 +65,7 @@ class _AssignmentDialogState extends ConsumerState<AssignmentDialog> {
       }
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-      });
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  Future<void> _removeAssignment() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    final repo = ref.read(assignmentRepositoryProvider);
-    try {
-      if (widget.user.roleName == 'supervisor') {
-        await repo.unassignSupervisor(widget.user.id);
-        setState(() => _selectedForestId = null);
-      } else {
-        await repo.unassignAgent(widget.user.id);
-        setState(() {
-          _selectedParcelleId = null;
-          _selectedForestFilterId = null;
-        });
-      }
-      if (mounted) Navigator.of(context).pop(true);
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
-      });
+      setState(() => _error = e.toString());
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -104,13 +76,13 @@ class _AssignmentDialogState extends ConsumerState<AssignmentDialog> {
     final l = context.l10n;
     final isSupervisor = widget.user.roleName == 'supervisor';
     final hasCurrentAssignment = isSupervisor
-        ? widget.user.forestId != null
+        ? widget.user.forestIds.isNotEmpty
         : widget.user.parcelleId != null;
 
     return AlertDialog(
       title: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.assessment_outlined,
             color: AppColors.primaryGreen,
             size: 22,
@@ -133,18 +105,25 @@ class _AssignmentDialogState extends ConsumerState<AssignmentDialog> {
             _RoleChip(roleName: widget.user.roleName),
             const SizedBox(height: 16),
 
-            if (hasCurrentAssignment)
+            if (hasCurrentAssignment) ...[
               _CurrentAssignmentBanner(
                 isSupervisor: isSupervisor,
-                forestId: widget.user.forestId,
+                forestIds: widget.user.forestIds,
                 parcelleId: widget.user.parcelleId,
               ),
-            if (hasCurrentAssignment) const SizedBox(height: 16),
+              const SizedBox(height: 16),
+            ],
 
             if (isSupervisor)
-              _ForestSelector(
-                selectedForestId: _selectedForestId,
-                onChanged: (v) => setState(() => _selectedForestId = v),
+              _ForestMultiSelector(
+                selectedForestIds: _selectedForestIds,
+                onChanged: (id, checked) => setState(() {
+                  if (checked) {
+                    _selectedForestIds.add(id);
+                  } else {
+                    _selectedForestIds.remove(id);
+                  }
+                }),
               )
             else
               _ParcelleSelector(
@@ -168,41 +147,25 @@ class _AssignmentDialogState extends ConsumerState<AssignmentDialog> {
           ],
         ),
       ),
-      actionsAlignment: MainAxisAlignment.spaceBetween,
+      actionsAlignment: MainAxisAlignment.end,
       actions: [
-        if (hasCurrentAssignment)
-          TextButton.icon(
-            icon: const Icon(Icons.link_off, size: 16, color: AppColors.danger),
-            label: Text(
-              l.cancel,
-              style: const TextStyle(color: AppColors.danger),
-            ),
-            onPressed: _loading ? null : _removeAssignment,
-          ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextButton(
-              onPressed: _loading
-                  ? null
-                  : () => Navigator.of(context).pop(false),
-              child: Text(l.cancel),
-            ),
-            const SizedBox(width: 8),
-            FilledButton(
-              onPressed: _loading ? null : _save,
-              child: _loading
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Text(l.save),
-            ),
-          ],
+        TextButton(
+          onPressed: _loading ? null : () => Navigator.of(context).pop(false),
+          child: Text(l.cancel),
+        ),
+        const SizedBox(width: 8),
+        FilledButton(
+          onPressed: _loading ? null : _save,
+          child: _loading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : Text(l.save),
         ),
       ],
     );
@@ -245,12 +208,12 @@ class _RoleChip extends StatelessWidget {
 
 class _CurrentAssignmentBanner extends ConsumerWidget {
   final bool isSupervisor;
-  final int? forestId;
+  final List<int> forestIds;
   final int? parcelleId;
 
   const _CurrentAssignmentBanner({
     required this.isSupervisor,
-    required this.forestId,
+    required this.forestIds,
     required this.parcelleId,
   });
 
@@ -260,19 +223,24 @@ class _CurrentAssignmentBanner extends ConsumerWidget {
     final forests = ref.watch(forestsProvider);
     String label = '—';
 
-    if (isSupervisor && forestId != null) {
+    if (isSupervisor && forestIds.isNotEmpty) {
+      // Resolve names for all assigned forests
       label = forests.maybeWhen(
-        data: (list) => list
-            .firstWhere(
-              (f) => f.id == forestId,
-              orElse: () => ForestModel(
-                id: forestId!,
-                name: '${l.forests} #$forestId',
-                createdAt: DateTime.now(),
-              ),
-            )
-            .name,
-        orElse: () => '${l.forests} #$forestId',
+        data: (list) => forestIds
+            .map((id) {
+              return list
+                  .firstWhere(
+                    (f) => f.id == id,
+                    orElse: () => ForestModel(
+                      id: id,
+                      name: '${l.forests} #$id',
+                      createdAt: DateTime.now(),
+                    ),
+                  )
+                  .name;
+            })
+            .join(', '),
+        orElse: () => forestIds.map((id) => '${l.forests} #$id').join(', '),
       );
     } else if (!isSupervisor && parcelleId != null) {
       final parcelleAsync = ref.watch(parcelleFlatProvider(parcelleId!));
@@ -309,14 +277,13 @@ class _CurrentAssignmentBanner extends ConsumerWidget {
   }
 }
 
-// Supervisor: single forest dropdown
+// Supervisor: multi-select checkbox list
+class _ForestMultiSelector extends ConsumerWidget {
+  final Set<int> selectedForestIds;
+  final void Function(int id, bool checked) onChanged;
 
-class _ForestSelector extends ConsumerWidget {
-  final int? selectedForestId;
-  final ValueChanged<int?> onChanged;
-
-  const _ForestSelector({
-    required this.selectedForestId,
+  const _ForestMultiSelector({
+    required this.selectedForestIds,
     required this.onChanged,
   });
 
@@ -330,26 +297,36 @@ class _ForestSelector extends ConsumerWidget {
         '${l.errorPrefix} $e',
         style: const TextStyle(color: AppColors.danger),
       ),
-      data: (forests) => DropdownButtonFormField<int?>(
-        initialValue: selectedForestId,
-        decoration: InputDecoration(
-          labelText: l.assignedForest,
-          prefixIcon: const Icon(Icons.forest_outlined),
-        ),
-        items: [
-          DropdownMenuItem<int?>(value: null, child: Text(l.noNoneF)),
-          ...forests.map(
-            (f) => DropdownMenuItem<int?>(value: f.id, child: Text(f.name)),
-          ),
-        ],
-        onChanged: onChanged,
-      ),
+      data: (forests) => forests.isEmpty
+          ? Text(
+              'no forests',
+              style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 13),
+            )
+          : ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 220),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: forests
+                      .map(
+                        (f) => CheckboxListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(f.name),
+                          value: selectedForestIds.contains(f.id),
+                          onChanged: (checked) =>
+                              onChanged(f.id, checked ?? false),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+            ),
     );
   }
 }
 
-// Agent: forest filter → parcelle dropdown (two-step)
-
+// Agent: forest filter → parcelle dropdown
 class _ParcelleSelector extends ConsumerWidget {
   final int? selectedForestId;
   final int? selectedParcelleId;
@@ -374,7 +351,6 @@ class _ParcelleSelector extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Step 1: pick forest
         forestsAsync.when(
           loading: () => const LinearProgressIndicator(),
           error: (e, _) => Text(
@@ -397,7 +373,6 @@ class _ParcelleSelector extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
-        // Step 2: pick parcelle within that forest
         if (selectedForestId != null)
           parcellesAsync!.when(
             loading: () => const LinearProgressIndicator(),

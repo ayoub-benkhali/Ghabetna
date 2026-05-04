@@ -1,4 +1,4 @@
-import 'package:flutter_app/core/providers/user_session_provider.dart';
+import 'package:flutter_app/features/auth/providers/user_session_provider.dart';
 import 'package:flutter_app/features/admin/data/role_repository.dart';
 import 'package:flutter_app/features/admin/data/service_repository.dart';
 import 'package:flutter_app/features/admin/data/user_repository.dart';

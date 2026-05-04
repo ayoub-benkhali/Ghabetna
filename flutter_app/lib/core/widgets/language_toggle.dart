@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_app/core/providers/locale_provider.dart';
+import 'package:flutter_app/features/auth/providers/locale_provider.dart';
 
 class LanguageToggle extends ConsumerWidget {
   /// compact = icon-only for AppBar; compact=false = full tile for sidebar

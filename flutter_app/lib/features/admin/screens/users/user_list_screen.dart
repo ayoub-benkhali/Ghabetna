@@ -322,7 +322,7 @@ class _UserTable extends ConsumerWidget {
                         size: 18,
                         color:
                             (u.roleName == 'supervisor'
-                                ? u.forestId != null
+                                ? u.forestIds.isNotEmpty
                                 : u.parcelleId != null)
                             ? AppColors.primaryGreen
                             : Theme.of(ctx).hintColor,
