@@ -590,7 +590,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noPolygonDrawn => 'لم يُرسم أي مضلع';
 
   @override
-  String get legend => 'المفتاح';
+  String get legend => 'المفتاح:';
 
   @override
   String get drawingInsideForestHint => 'انقر داخل الغابة لإضافة نقاط';
@@ -682,4 +682,52 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get analytics => 'إحصائيات';
+
+  @override
+  String get noDataAvailable => 'لا توجد بيانات متاحة.';
+
+  @override
+  String get incidentsByCategory => 'الحوادث حسب الفئة';
+
+  @override
+  String get incidentsPeakByHour => 'ذروة الحوادث حسب الساعة';
+
+  @override
+  String get incidentsByDayAndHour =>
+      'الحوادث المُبلَّغ عنها حسب اليوم والساعة';
+
+  @override
+  String evolutionTitle(int year) {
+    return 'تطور الحوادث سنة $year';
+  }
+
+  @override
+  String get totalIncidents => 'إجمالي الحوادث';
+
+  @override
+  String get top3Agents => 'أفضل 3 أعوان';
+
+  @override
+  String get agentsSubtitle => 'الحوادث المُبلَّغ عنها';
+
+  @override
+  String get top3Forests => 'أفضل 3 غابات';
+
+  @override
+  String get forestsSubtitle => 'الحوادث حسب الغابة';
+
+  @override
+  String get reportedLabel => 'مُبلَّغ عنها';
+
+  @override
+  String get resolvedLabel => 'مُحلولة';
+
+  @override
+  String get incidentsLabel => 'حوادث';
+
+  @override
+  String get criticalLabel => 'حرجة';
+
+  @override
+  String get noForestsAvailable => 'لا توجد غابات متاحة';
 }

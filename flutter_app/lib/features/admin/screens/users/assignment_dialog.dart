@@ -299,7 +299,7 @@ class _ForestMultiSelector extends ConsumerWidget {
       ),
       data: (forests) => forests.isEmpty
           ? Text(
-              'no forests',
+              l.noForestsRegistered,
               style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 13),
             )
           : ConstrainedBox(

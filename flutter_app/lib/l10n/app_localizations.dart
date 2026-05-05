@@ -1241,7 +1241,7 @@ abstract class AppLocalizations {
   /// No description provided for @legend.
   ///
   /// In fr, this message translates to:
-  /// **'Légende'**
+  /// **'Légende :'**
   String get legend;
 
   /// No description provided for @drawingInsideForestHint.
@@ -1417,6 +1417,96 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Statistiques'**
   String get analytics;
+
+  /// No description provided for @noDataAvailable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune donnée disponible.'**
+  String get noDataAvailable;
+
+  /// No description provided for @incidentsByCategory.
+  ///
+  /// In fr, this message translates to:
+  /// **'Incidents par catégorie'**
+  String get incidentsByCategory;
+
+  /// No description provided for @incidentsPeakByHour.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pic d\'incidents par heure'**
+  String get incidentsPeakByHour;
+
+  /// No description provided for @incidentsByDayAndHour.
+  ///
+  /// In fr, this message translates to:
+  /// **'Incidents signalés par jour et heure'**
+  String get incidentsByDayAndHour;
+
+  /// No description provided for @evolutionTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Évolution des incidents en {year}'**
+  String evolutionTitle(int year);
+
+  /// No description provided for @totalIncidents.
+  ///
+  /// In fr, this message translates to:
+  /// **'Total incidents'**
+  String get totalIncidents;
+
+  /// No description provided for @top3Agents.
+  ///
+  /// In fr, this message translates to:
+  /// **'Top 3 agents'**
+  String get top3Agents;
+
+  /// No description provided for @agentsSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Incidents signalés'**
+  String get agentsSubtitle;
+
+  /// No description provided for @top3Forests.
+  ///
+  /// In fr, this message translates to:
+  /// **'Top 3 forêts'**
+  String get top3Forests;
+
+  /// No description provided for @forestsSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Incidents par forêt'**
+  String get forestsSubtitle;
+
+  /// No description provided for @reportedLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'signalés'**
+  String get reportedLabel;
+
+  /// No description provided for @resolvedLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'résolus'**
+  String get resolvedLabel;
+
+  /// No description provided for @incidentsLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'incidents'**
+  String get incidentsLabel;
+
+  /// No description provided for @criticalLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'critiques'**
+  String get criticalLabel;
+
+  /// No description provided for @noForestsAvailable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune forêt disponible'**
+  String get noForestsAvailable;
 }
 
 class _AppLocalizationsDelegate

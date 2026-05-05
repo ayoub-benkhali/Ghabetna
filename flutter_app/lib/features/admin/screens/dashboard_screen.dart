@@ -9,6 +9,7 @@ import 'package:flutter_app/features/admin/providers/analytics_provider.dart';
 import 'package:flutter_app/features/admin/providers/forest_provider.dart';
 import 'package:flutter_app/features/admin/providers/user_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -28,12 +29,10 @@ class DashboardScreen extends ConsumerWidget {
     final byCategory = ref.watch(byCategoryProvider);
     final topForests = ref.watch(topForestsProvider);
     final peakHours = ref.watch(peakHoursProvider);
+    final l = context.l10n;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(context.l10n.dashboard),
-        actions: kAppBarActions,
-      ),
+      appBar: AppBar(title: Text(l.dashboard), actions: kAppBarActions),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -42,15 +41,9 @@ class DashboardScreen extends ConsumerWidget {
             // ══════════════════════════════════════════════════════════════
             // SECTION 1 — Entity Overview
             // ══════════════════════════════════════════════════════════════
-            Text(
-              context.l10n.overview,
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
+            Text(l.overview, style: Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height: 4),
-            Text(
-              context.l10n.realtimeData,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            Text(l.realtimeData, style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 20),
             const Divider(),
 
@@ -59,18 +52,18 @@ class DashboardScreen extends ConsumerWidget {
               children: [
                 _EntityKpiCard(
                   icon: Icons.forest,
-                  label: context.l10n.forests,
+                  label: l.forests,
                   color: AppColors.primaryGreen,
                   value: forests.when(
                     data: (d) => '${d.length}',
                     loading: () => '…',
-                    error: (_, __) => '!',
+                    error: (_, _) => '!',
                   ),
                 ),
                 const SizedBox(width: 2),
                 _EntityKpiCard(
                   icon: Icons.people,
-                  label: context.l10n.users,
+                  label: l.users,
                   color: AppColors.info,
                   value: users.when(
                     data: (d) => '${d.length}',
@@ -81,7 +74,7 @@ class DashboardScreen extends ConsumerWidget {
                 const SizedBox(width: 2),
                 _EntityKpiCard(
                   icon: Icons.account_tree,
-                  label: context.l10n.services,
+                  label: l.services,
                   color: AppColors.warning,
                   value: services.when(
                     data: (d) => '${d.length}',
@@ -92,7 +85,7 @@ class DashboardScreen extends ConsumerWidget {
                 const SizedBox(width: 2),
                 _EntityKpiCard(
                   icon: Icons.map_outlined,
-                  label: context.l10n.parcelles,
+                  label: l.parcelles,
                   color: AppColors.teal,
                   value: forests.when(
                     data: (list) =>
@@ -128,33 +121,33 @@ class DashboardScreen extends ConsumerWidget {
                   ],
                 ],
               ),
-              error: (e, _) => Text('Erreur: $e'),
+              error: (e, _) => Text('${l.errorPrefix} $e'),
               data: (data) => Row(
                 children: [
                   _EntityKpiCard(
                     icon: Icons.list_alt,
-                    label: 'Total incidents',
+                    label: l.totalIncidents,
                     color: AppColors.info,
                     value: '${data['total']}',
                   ),
                   const SizedBox(width: 2),
                   _EntityKpiCard(
                     icon: Icons.warning_amber,
-                    label: 'Critiques',
+                    label: l.critical,
                     color: AppColors.danger,
                     value: '${data['critical']}',
                   ),
                   const SizedBox(width: 2),
                   _EntityKpiCard(
                     icon: Icons.check_circle_outline,
-                    label: 'Traités',
+                    label: l.resolvedLabel,
                     color: AppColors.success,
                     value: '${data['resolved']}',
                   ),
                   const SizedBox(width: 2),
                   _EntityKpiCard(
                     icon: Icons.hourglass_empty,
-                    label: 'En attente',
+                    label: l.pending,
                     color: AppColors.warning,
                     value: '${data['pending']}',
                   ),
@@ -170,7 +163,7 @@ class DashboardScreen extends ConsumerWidget {
             // ── Monthly Line Chart ─────────────────────────────────────
             monthly.when(
               loading: () => const _ChartLoader(height: 240),
-              error: (e, _) => Text('Erreur: $e'),
+              error: (e, _) => Text('${l.errorPrefix} $e'),
               data: (data) => _MonthlyLineChart(data: data, year: currentYear),
             ),
             const SizedBox(height: 24),
@@ -182,10 +175,10 @@ class DashboardScreen extends ConsumerWidget {
                 Expanded(
                   child: topAgents.when(
                     loading: () => const _ChartLoader(height: 180),
-                    error: (e, _) => Text('Erreur: $e'),
+                    error: (e, _) => Text('${l.errorPrefix} $e'),
                     data: (data) => _HorizontalBarChart(
-                      title: 'Top 3 agents',
-                      subtitle: 'Incidents signalés',
+                      title: l.top3Agents,
+                      subtitle: l.agentsSubtitle,
                       entries: data.map((d) {
                         final row = d as Map<String, dynamic>;
                         return _HBarEntry(
@@ -195,8 +188,8 @@ class DashboardScreen extends ConsumerWidget {
                         );
                       }).toList(),
                       barColor: AppColors.info,
-                      valueLabel: 'signalés',
-                      subLabel: 'résolus',
+                      valueLabel: l.reportedLabel,
+                      subLabel: l.resolvedLabel,
                     ),
                   ),
                 ),
@@ -204,10 +197,10 @@ class DashboardScreen extends ConsumerWidget {
                 Expanded(
                   child: topForests.when(
                     loading: () => const _ChartLoader(height: 180),
-                    error: (e, _) => Text('Erreur: $e'),
+                    error: (e, _) => Text('${l.errorPrefix} $e'),
                     data: (data) => _HorizontalBarChart(
-                      title: 'Top 3 forêts',
-                      subtitle: 'Incidents par forêt',
+                      title: l.top3Forests,
+                      subtitle: l.forestsSubtitle,
                       entries: data.map((d) {
                         final row = d as Map<String, dynamic>;
                         return _HBarEntry(
@@ -217,8 +210,8 @@ class DashboardScreen extends ConsumerWidget {
                         );
                       }).toList(),
                       barColor: AppColors.primaryGreen,
-                      valueLabel: 'incidents',
-                      subLabel: 'critiques',
+                      valueLabel: l.incidentsLabel,
+                      subLabel: l.criticalLabel,
                     ),
                   ),
                 ),
@@ -233,7 +226,7 @@ class DashboardScreen extends ConsumerWidget {
                 Expanded(
                   child: byCategory.when(
                     loading: () => const _ChartLoader(height: 240),
-                    error: (e, _) => Text('$e'),
+                    error: (e, _) => Text('${l.errorPrefix} $e'),
                     data: (data) => _CategoryPieChart(data: data),
                   ),
                 ),
@@ -241,7 +234,7 @@ class DashboardScreen extends ConsumerWidget {
                 Expanded(
                   child: peakHours.when(
                     loading: () => const _ChartLoader(height: 240),
-                    error: (e, _) => Text('Erreur: $e'),
+                    error: (e, _) => Text('${l.errorPrefix} $e'),
                     data: (data) => _PeakHoursHeatmap(data: data),
                   ),
                 ),
@@ -327,23 +320,20 @@ class _MonthlyLineChart extends StatelessWidget {
   final int year;
   const _MonthlyLineChart({required this.data, required this.year});
 
-  static const _monthLabels = [
-    'Jan',
-    'Fév',
-    'Mar',
-    'Avr',
-    'Mai',
-    'Jui',
-    'Jul',
-    'Aoû',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Déc',
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
+    final localeName = l.localeName;
+
+    // Locale-aware 3-letter month abbreviations (Jan/جانفي etc.)
+    final monthLabels = List.generate(
+      12,
+      (i) => DateFormat('MMM', localeName).format(DateTime(year, i + 1, 1)),
+    );
+
+    // Tooltip series names drawn from l10n
+    final tooltipNames = [l.total, l.critical, l.resolved];
+
     final byMonth = <int, Map<String, dynamic>>{};
     for (final item in data) {
       final row = item as Map<String, dynamic>;
@@ -376,7 +366,7 @@ class _MonthlyLineChart extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'Évolution des incidents en $year',
+                    l.evolutionTitle(year),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -384,12 +374,12 @@ class _MonthlyLineChart extends StatelessWidget {
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    _Legend(color: AppColors.info, label: 'Total'),
-                    SizedBox(height: 6),
-                    _Legend(color: AppColors.danger, label: 'Critiques'),
-                    SizedBox(height: 6),
-                    _Legend(color: AppColors.primaryGreen, label: 'Résolus'),
+                  children: [
+                    _Legend(color: AppColors.info, label: l.total),
+                    const SizedBox(height: 6),
+                    _Legend(color: AppColors.danger, label: l.critical),
+                    const SizedBox(height: 6),
+                    _Legend(color: AppColors.primaryGreen, label: l.resolved),
                   ],
                 ),
               ],
@@ -427,7 +417,7 @@ class _MonthlyLineChart extends StatelessWidget {
                           return Padding(
                             padding: const EdgeInsets.only(top: 6),
                             child: Text(
-                              _monthLabels[idx],
+                              monthLabels[idx],
                               style: const TextStyle(fontSize: 10),
                             ),
                           );
@@ -461,9 +451,8 @@ class _MonthlyLineChart extends StatelessWidget {
                   lineTouchData: LineTouchData(
                     touchTooltipData: LineTouchTooltipData(
                       getTooltipItems: (spots) => spots.map((s) {
-                        const names = ['Total', 'Critiques', 'Résolus'];
                         return LineTooltipItem(
-                          '${names[s.barIndex]}: ${s.y.toInt()}',
+                          '${tooltipNames[s.barIndex]}: ${s.y.toInt()}',
                           TextStyle(
                             color: s.bar.color,
                             fontWeight: FontWeight.w600,
@@ -562,12 +551,13 @@ class _HorizontalBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     if (entries.isEmpty) {
       return Card(
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Text(
-            'Aucune donnée disponible.',
+            l.noDataAvailable,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ),
@@ -718,18 +708,33 @@ class _CategoryPieChart extends StatelessWidget {
     Colors.purple,
   ];
 
-  static const _labels = {
-    'feu': 'Feu',
-    'coupe_illegale': 'Coupe illégale',
-    'refuge_suspect': 'Refuge suspect',
-    'trafic': 'Trafic',
-    'dechet': 'Déchet',
-    'maladie': 'Maladie',
-    'autre': 'Autre',
-  };
+  // Maps backend category keys to l10n strings
+  String _categoryLabel(BuildContext context, String cat) {
+    final l = context.l10n;
+    switch (cat) {
+      case 'feu':
+        return l.typeIncendie;
+      case 'coupe_illegale':
+        return l.typeCoupeIllegale;
+      case 'refuge_suspect':
+        return l.typeRefugeSuspect;
+      case 'trafic':
+        return l.typeTrafic;
+      case 'dechet':
+        return l.typeDechet;
+      case 'maladie':
+        return l.typeMaladie;
+      case 'autre':
+        return l.typeAutre;
+      default:
+        return cat;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
+
     if (data.isEmpty) return const SizedBox.shrink();
 
     final sections = <PieChartSectionData>[];
@@ -758,7 +763,7 @@ class _CategoryPieChart extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Nombre d\'incidents par catégorie',
+              l.incidentsByCategory,
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -794,7 +799,7 @@ class _CategoryPieChart extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      _labels[cat] ?? cat,
+                      _categoryLabel(context, cat),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
@@ -808,14 +813,25 @@ class _CategoryPieChart extends StatelessWidget {
   }
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// Peak Hours Heatmap
+// ══════════════════════════════════════════════════════════════════════════════
+
 class _PeakHoursHeatmap extends StatelessWidget {
   final List<dynamic> data;
   const _PeakHoursHeatmap({required this.data});
 
-  static const _days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
+
+    // Locale-aware day abbreviations. dow=0 is Sunday.
+    // DateTime(2024, 1, 7) was a Sunday, so adding dow gives the right weekday.
+    final days = List.generate(
+      7,
+      (dow) => DateFormat('E', l.localeName).format(DateTime(2024, 1, 7 + dow)),
+    );
+
     final Map<(int, int), int> counts = {};
     int maxCount = 1;
 
@@ -835,13 +851,13 @@ class _PeakHoursHeatmap extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Pic d\'incidents par heure',
+              l.incidentsPeakByHour,
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
             Text(
-              'Nombre d\'incidents signalés par jour et heure',
+              l.incidentsByDayAndHour,
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(color: Colors.grey),
@@ -879,7 +895,7 @@ class _PeakHoursHeatmap extends StatelessWidget {
                     SizedBox(
                       width: 36,
                       child: Text(
-                        _days[dow],
+                        days[dow],
                         style: const TextStyle(
                           fontSize: 10,
                           color: Colors.grey,
@@ -894,7 +910,7 @@ class _PeakHoursHeatmap extends StatelessWidget {
                           return Expanded(
                             child: Tooltip(
                               message:
-                                  '${_days[dow]} ${hour.toString().padLeft(2, '0')}h: $count incident${count > 1 ? 's' : ''}',
+                                  '${days[dow]} ${hour.toString().padLeft(2, '0')}h: $count ${l.incidents.toLowerCase()}',
                               child: Container(
                                 height: 22,
                                 margin: const EdgeInsets.symmetric(
@@ -932,9 +948,9 @@ class _PeakHoursHeatmap extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Légende :',
-                  style: TextStyle(fontSize: 10, color: Colors.grey),
+                Text(
+                  l.legend,
+                  style: const TextStyle(fontSize: 10, color: Colors.grey),
                 ),
                 const SizedBox(width: 6),
                 ...List.generate(5, (i) {

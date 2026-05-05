@@ -597,7 +597,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get noPolygonDrawn => 'Aucun polygone dessiné';
 
   @override
-  String get legend => 'Légende';
+  String get legend => 'Légende :';
 
   @override
   String get drawingInsideForestHint =>
@@ -693,4 +693,51 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get analytics => 'Statistiques';
+
+  @override
+  String get noDataAvailable => 'Aucune donnée disponible.';
+
+  @override
+  String get incidentsByCategory => 'Incidents par catégorie';
+
+  @override
+  String get incidentsPeakByHour => 'Pic d\'incidents par heure';
+
+  @override
+  String get incidentsByDayAndHour => 'Incidents signalés par jour et heure';
+
+  @override
+  String evolutionTitle(int year) {
+    return 'Évolution des incidents en $year';
+  }
+
+  @override
+  String get totalIncidents => 'Total incidents';
+
+  @override
+  String get top3Agents => 'Top 3 agents';
+
+  @override
+  String get agentsSubtitle => 'Incidents signalés';
+
+  @override
+  String get top3Forests => 'Top 3 forêts';
+
+  @override
+  String get forestsSubtitle => 'Incidents par forêt';
+
+  @override
+  String get reportedLabel => 'signalés';
+
+  @override
+  String get resolvedLabel => 'résolus';
+
+  @override
+  String get incidentsLabel => 'incidents';
+
+  @override
+  String get criticalLabel => 'critiques';
+
+  @override
+  String get noForestsAvailable => 'Aucune forêt disponible';
 }

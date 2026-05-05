@@ -8,6 +8,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_app/core/widgets/app_bar_actions.dart';
 
+// ── Helpers ────────────────────────────────────────────────────────────────
+
 Map<String, String> _categoryLabels(BuildContext context) {
   final l = context.l10n;
   return {
@@ -21,6 +23,28 @@ Map<String, String> _categoryLabels(BuildContext context) {
   };
 }
 
+// Maps raw backend status keys → translated labels
+String _statusLabel(BuildContext context, String status) {
+  final l = context.l10n;
+  return switch (status) {
+    'pending' => l.pending,
+    'in_progress' => l.inProgress,
+    'resolved' => l.resolved,
+    'rejected' => l.rejected,
+    _ => l.unknown,
+  };
+}
+
+// The four status keys paired with their translated label for the filter sheet
+List<(String, String)> _statusOptions(BuildContext context) => [
+  ('pending', _statusLabel(context, 'pending')),
+  ('in_progress', _statusLabel(context, 'in_progress')),
+  ('resolved', _statusLabel(context, 'resolved')),
+  ('rejected', _statusLabel(context, 'rejected')),
+];
+
+// ── Screen ─────────────────────────────────────────────────────────────────
+
 class SupervisorIncidentScreen extends ConsumerWidget {
   const SupervisorIncidentScreen({super.key});
 
@@ -33,7 +57,6 @@ class SupervisorIncidentScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l.incidents),
         actions: [
-          //view toggle: list and map
           IconButton(
             icon: const Icon(Icons.map_outlined),
             tooltip: l.mapView,
@@ -80,6 +103,8 @@ class SupervisorIncidentScreen extends ConsumerWidget {
   }
 }
 
+// ── Incident tile ──────────────────────────────────────────────────────────
+
 class _IncidentTile extends StatelessWidget {
   final IncidentModel incident;
   const _IncidentTile({required this.incident});
@@ -88,6 +113,7 @@ class _IncidentTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final labels = _categoryLabels(context);
+
     final statusColor = switch (incident.status) {
       'pending' => AppColors.warning,
       'in_progress' => AppColors.info,
@@ -127,7 +153,7 @@ class _IncidentTile extends StatelessWidget {
                 border: Border.all(color: statusColor.withValues(alpha: .4)),
               ),
               child: Text(
-                incident.status,
+                _statusLabel(context, incident.status), // ← was incident.status
                 style: TextStyle(
                   fontSize: 11,
                   color: statusColor,
@@ -146,7 +172,11 @@ class _IncidentTile extends StatelessWidget {
               style: const TextStyle(fontSize: 12),
             ),
             Text(
-              DateFormat('dd MMM yyyy à HH:mm').format(incident.createdAt),
+              // locale-aware format — no hardcoded "à"
+              DateFormat(
+                'dd MMM yyyy – HH:mm',
+                l.localeName,
+              ).format(incident.createdAt),
               style: const TextStyle(fontSize: 11, color: Colors.grey),
             ),
           ],
@@ -158,10 +188,10 @@ class _IncidentTile extends StatelessWidget {
   }
 }
 
-//Simple filter bottom sheet button
+// ── Filter button ──────────────────────────────────────────────────────────
+
 class _FilterButton extends ConsumerWidget {
   final IncidentFilter filter;
-
   const _FilterButton({required this.filter});
 
   @override
@@ -188,6 +218,8 @@ class _FilterButton extends ConsumerWidget {
   }
 }
 
+// ── Filter sheet ───────────────────────────────────────────────────────────
+
 class _FilterSheet extends ConsumerStatefulWidget {
   final IncidentFilter current;
   final WidgetRef ref;
@@ -211,7 +243,9 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final labels = _categoryLabels(context);
+    final categoryLabels = _categoryLabels(context);
+    final statusOptions = _statusOptions(context); // [(key, translatedLabel)]
+
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -227,13 +261,12 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
-            children: ['pending', 'in_progress', 'resolved', 'rejected'].map((
-              s,
-            ) {
+            children: statusOptions.map((entry) {
+              final (key, label) = entry;
               return FilterChip(
-                label: Text(s),
-                selected: _status == s,
-                onSelected: (v) => setState(() => _status = v ? s : null),
+                label: Text(label), // ← was Text(s) with raw key
+                selected: _status == key,
+                onSelected: (v) => setState(() => _status = v ? key : null),
               );
             }).toList(),
           ),
@@ -242,7 +275,7 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
-            children: labels.entries.map((e) {
+            children: categoryLabels.entries.map((e) {
               return FilterChip(
                 label: Text(e.value),
                 selected: _category == e.key,
