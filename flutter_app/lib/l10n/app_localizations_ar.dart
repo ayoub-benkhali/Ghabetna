@@ -730,4 +730,14 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noForestsAvailable => 'لا توجد غابات متاحة';
+
+  @override
+  String forestOverlapError(String name) {
+    return 'لا يمكن أن يتداخل مع الغابة الموجودة \"$name\"';
+  }
+
+  @override
+  String parcelleOverlapError(String name) {
+    return 'لا يمكن أن يتداخل مع القطعة الموجودة \"$name\"';
+  }
 }

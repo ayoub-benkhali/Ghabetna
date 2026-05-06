@@ -267,5 +267,17 @@
   "resolvedLabel": "résolus",
   "incidentsLabel": "incidents",
   "criticalLabel": "critiques",
-  "noForestsAvailable": "Aucune forêt disponible"
+  "noForestsAvailable": "Aucune forêt disponible",
+  "forestOverlapError": "Ne peut pas chevaucher la forêt existante \"{name}\"",
+  "@forestOverlapError": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "parcelleOverlapError": "Ne peut pas chevaucher la parcelle existante \"{name}\"",
+  "@parcelleOverlapError": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  }
 }

@@ -1507,6 +1507,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Aucune forêt disponible'**
   String get noForestsAvailable;
+
+  /// No description provided for @forestOverlapError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ne peut pas chevaucher la forêt existante \"{name}\"'**
+  String forestOverlapError(String name);
+
+  /// No description provided for @parcelleOverlapError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ne peut pas chevaucher la parcelle existante \"{name}\"'**
+  String parcelleOverlapError(String name);
 }
 
 class _AppLocalizationsDelegate

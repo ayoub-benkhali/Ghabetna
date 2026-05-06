@@ -18,16 +18,30 @@ class ForestRepository {
   }
 
   Future<ForestModel> createForest(Map<String, dynamic> body) async {
-    final r = await _dio.post('/api/forests', data: body);
-    return ForestModel.fromJson(r.data);
+    try {
+      final r = await _dio.post('/api/forests', data: body);
+      return ForestModel.fromJson(r.data);
+    } on DioException catch (e) {
+      throw _parseError(e);
+    }
   }
 
   Future<ForestModel> updateForest(int id, Map<String, dynamic> body) async {
-    final r = await _dio.put('/api/forests/$id', data: body);
-    return ForestModel.fromJson(r.data);
+    try {
+      final r = await _dio.put('/api/forests/$id', data: body);
+      return ForestModel.fromJson(r.data);
+    } on DioException catch (e) {
+      throw _parseError(e);
+    }
   }
 
-  Future<void> deleteForest(int id) => _dio.delete('/api/forests/$id');
+  Future<void> deleteForest(int id) async {
+    try {
+      await _dio.delete('/api/forests/$id');
+    } on DioException catch (e) {
+      throw _parseError(e);
+    }
+  }
 
   // ── Parcelles ──────────────────────────────────────────────────────────────
 
@@ -49,8 +63,12 @@ class ForestRepository {
     int forestId,
     Map<String, dynamic> body,
   ) async {
-    final r = await _dio.post('/api/forests/$forestId/parcelles', data: body);
-    return ParcelleModel.fromJson(r.data);
+    try {
+      final r = await _dio.post('/api/forests/$forestId/parcelles', data: body);
+      return ParcelleModel.fromJson(r.data);
+    } on DioException catch (e) {
+      throw _parseError(e);
+    }
   }
 
   Future<ParcelleModel> updateParcelle(
@@ -58,15 +76,24 @@ class ForestRepository {
     int parcelleId,
     Map<String, dynamic> body,
   ) async {
-    final r = await _dio.put(
-      '/api/forests/$forestId/parcelles/$parcelleId',
-      data: body,
-    );
-    return ParcelleModel.fromJson(r.data);
+    try {
+      final r = await _dio.put(
+        '/api/forests/$forestId/parcelles/$parcelleId',
+        data: body,
+      );
+      return ParcelleModel.fromJson(r.data);
+    } on DioException catch (e) {
+      throw _parseError(e);
+    }
   }
 
-  Future<void> deleteParcelle(int forestId, int parcelleId) =>
-      _dio.delete('/api/forests/$forestId/parcelles/$parcelleId');
+  Future<void> deleteParcelle(int forestId, int parcelleId) async {
+    try {
+      await _dio.delete('/api/forests/$forestId/parcelles/$parcelleId');
+    } on DioException catch (e) {
+      throw _parseError(e);
+    }
+  }
 
   Future<ParcelleModel?> getParcelleFlatById(int parcelleId) async {
     try {
@@ -74,7 +101,31 @@ class ForestRepository {
       return ParcelleModel.fromJson(r.data as Map<String, dynamic>);
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) return null;
-      rethrow;
+      throw _parseError(e);
     }
+  }
+
+  // ── Error parsing ─────────────────────────────────────────────────────────
+
+  Exception _parseError(DioException e) {
+    final status = e.response?.statusCode;
+    final data = e.response?.data;
+    // Guard: only index into data when it is actually a Map (body might be a
+    // plain String or null for network-level errors, which would crash with []).
+    final detail = (data is Map) ? data['detail']?.toString() : null;
+
+    if (status == 404) return Exception(detail ?? 'Ressource introuvable.');
+    if (status == 422) {
+      // Pass the server's detail through (e.g. "Parcelle Boundary must be
+      // contained within the forest boundaries") so the user sees a meaningful
+      // message instead of the generic fallback.
+      return Exception(
+        detail ?? 'Données invalides. Vérifiez les champs saisis.',
+      );
+    }
+    if (detail != null) return Exception(detail);
+    return Exception(
+      'Une erreur inattendue s\'est produite (${status ?? 'réseau'}).',
+    );
   }
 }

@@ -740,4 +740,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get noForestsAvailable => 'Aucune forêt disponible';
+
+  @override
+  String forestOverlapError(String name) {
+    return 'Ne peut pas chevaucher la forêt existante \"$name\"';
+  }
+
+  @override
+  String parcelleOverlapError(String name) {
+    return 'Ne peut pas chevaucher la parcelle existante \"$name\"';
+  }
 }

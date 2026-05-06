@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
+import 'package:flutter_app/core/utils/polygon_utils.dart';
 import 'package:flutter_app/features/admin/models/parcelle_model.dart';
 import 'package:flutter_app/features/admin/providers/forest_provider.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -333,6 +334,20 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
       ).showSnackBar(SnackBar(content: Text(l.minThreePoints)));
       return;
     }
+    // ── Client-side overlap check (zero DB queries) ──────────────────────────
+    final newPolygon = _drawingPoints;
+    for (final existing in _existingParcelles) {
+      final existingPoints = _geoJsonToLatLng(existing.boundaryGeojson);
+      if (polygonsOverlap(newPolygon, existingPoints)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l.parcelleOverlapError(existing.name)),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+        return; // bail out before touching the network
+      }
+    }
     setState(() => _loading = true);
     try {
       final body = {
@@ -354,9 +369,10 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
       if (mounted) context.go('/admin/forests/${widget.forestId}/parcelles');
     } catch (e) {
       if (mounted) {
+        final message = e.toString().replaceFirst('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${l.errorPrefix} $e'),
+            content: Text('${l.errorPrefix} $message'),
             backgroundColor: AppColors.danger,
           ),
         );

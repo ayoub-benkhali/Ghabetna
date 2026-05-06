@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
+import 'package:flutter_app/core/utils/polygon_utils.dart';
 import 'package:flutter_app/features/admin/models/forest_model.dart';
 import 'package:flutter_app/features/admin/providers/forest_provider.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -352,6 +353,24 @@ class _State extends ConsumerState<ForestFormScreen> {
   Future<void> _save() async {
     final l = context.l10n;
     if (!_formKey.currentState!.validate()) return;
+
+    // ── Client-side overlap check ──────────────────────────────────────────
+    if (_drawingPoints.length >= 3) {
+      for (final other in _existingForests) {
+        if (other.boundaryGeojson == null) continue;
+        final otherPoints = _geoJsonToLatLng(other.boundaryGeojson!);
+        if (polygonsOverlap(_drawingPoints, otherPoints)) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l.forestOverlapError(other.name)),
+              backgroundColor: AppColors.danger,
+            ),
+          );
+          return;
+        }
+      }
+    }
+
     setState(() => _loading = true);
     try {
       final body = <String, dynamic>{

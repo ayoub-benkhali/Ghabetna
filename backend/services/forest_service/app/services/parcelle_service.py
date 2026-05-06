@@ -44,6 +44,21 @@ async def create_parcelle(forest_id:int,data:ParcelleCreate,db:AsyncSession)->Pa
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Parcelle Boundary must be contained within the forest boundaries"
         )
+    
+    overlap = await db.execute(
+        text("""
+            SELECT EXISTS (
+                SELECT 1 FROM parcelles
+                WHERE forest_id = :fid
+                AND ST_Intersects(boundary, ST_GeomFromGeoJSON(:pgeojson))
+            )
+        """), {"fid": forest_id, "pgeojson": json.dumps(data.boundary_geojson)}
+    )
+    if overlap.scalar():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Parcelle overlaps an existing parcelle in this forest"
+        )
 
     p=Parcelle(forest_id=forest_id,name=data.name,description=data.description,boundary=_geojson_to_wkb_polygon(data.boundary_geojson))
     db.add(p)

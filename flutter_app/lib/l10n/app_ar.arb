@@ -267,5 +267,17 @@
   "resolvedLabel": "مُحلولة",
   "incidentsLabel": "حوادث",
   "criticalLabel": "حرجة",
-  "noForestsAvailable": "لا توجد غابات متاحة"
+  "noForestsAvailable": "لا توجد غابات متاحة",
+  "forestOverlapError": "لا يمكن أن يتداخل مع الغابة الموجودة \"{name}\"",
+  "@forestOverlapError": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "parcelleOverlapError": "لا يمكن أن يتداخل مع القطعة الموجودة \"{name}\"",
+  "@parcelleOverlapError": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  }
 }
