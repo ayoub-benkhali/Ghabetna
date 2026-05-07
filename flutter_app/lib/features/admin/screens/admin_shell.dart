@@ -32,7 +32,7 @@ List<_NavItem> _buildNavItems(BuildContext context) {
     _NavItem(l.forests, Icons.forest_outlined, '/admin/forests'),
     _NavItem(l.users, Icons.people_outline, '/admin/users'),
     _NavItem(l.roles, Icons.shield_outlined, '/admin/roles'),
-    _NavItem(l.services, Icons.account_tree_outlined, '/admin/services'),
+    _NavItem(l.adminServices, Icons.account_tree_outlined, '/admin/services'),
   ];
 }
 

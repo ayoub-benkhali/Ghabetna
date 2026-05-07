@@ -74,7 +74,7 @@ class DashboardScreen extends ConsumerWidget {
                 const SizedBox(width: 2),
                 _EntityKpiCard(
                   icon: Icons.account_tree,
-                  label: l.services,
+                  label: l.adminServices,
                   color: AppColors.warning,
                   value: services.when(
                     data: (d) => '${d.length}',

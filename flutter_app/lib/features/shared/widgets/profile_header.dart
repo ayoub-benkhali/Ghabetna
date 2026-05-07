@@ -88,7 +88,7 @@ class ProfileHeader extends StatelessWidget {
               _Badge(label: user.roleName, icon: Icons.shield_outlined),
               if (user.serviceId != null)
                 _Badge(
-                  label: '${l.services} #${user.serviceId}',
+                  label: '${l.adminServices} #${user.serviceId}',
                   icon: Icons.business_outlined,
                 ),
             ],

@@ -154,7 +154,7 @@ class _UserTable extends ConsumerWidget {
                         columns: [
                           DataColumn(label: Text(l.users.toUpperCase())),
                           DataColumn(label: Text(l.roles.toUpperCase())),
-                          DataColumn(label: Text(l.services.toUpperCase())),
+                          DataColumn(label: Text(l.adminServices.toUpperCase())),
                           DataColumn(label: Text(l.status.toUpperCase())),
                           DataColumn(label: Text(l.actions.toUpperCase())),
                         ],

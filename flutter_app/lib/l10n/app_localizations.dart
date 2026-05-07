@@ -128,12 +128,6 @@ abstract class AppLocalizations {
   /// **'Rôles'**
   String get roles;
 
-  /// No description provided for @services.
-  ///
-  /// In fr, this message translates to:
-  /// **'Services'**
-  String get services;
-
   /// No description provided for @profile.
   ///
   /// In fr, this message translates to:
@@ -1094,17 +1088,17 @@ abstract class AppLocalizations {
   /// **'Cette action supprimera définitivement la forêt et toutes ses parcelles associées.'**
   String get deleteForestWarning;
 
-  /// No description provided for @noForestsHint.
-  ///
-  /// In fr, this message translates to:
-  /// **'Créez votre première forêt et délimitez\nses zones géographiques sur la carte.'**
-  String get noForestsHint;
-
   /// No description provided for @noForestsRegistered.
   ///
   /// In fr, this message translates to:
   /// **'Aucune forêt enregistrée'**
   String get noForestsRegistered;
+
+  /// No description provided for @noForestsHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créez votre première forêt et délimitez\nses zones géographiques sur la carte.'**
+  String get noForestsHint;
 
   /// No description provided for @editForest.
   ///
@@ -1424,6 +1418,12 @@ abstract class AppLocalizations {
   /// **'Aucune donnée disponible.'**
   String get noDataAvailable;
 
+  /// No description provided for @evolutionTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Évolution des incidents en {year}'**
+  String evolutionTitle(int year);
+
   /// No description provided for @incidentsByCategory.
   ///
   /// In fr, this message translates to:
@@ -1441,12 +1441,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Incidents signalés par jour et heure'**
   String get incidentsByDayAndHour;
-
-  /// No description provided for @evolutionTitle.
-  ///
-  /// In fr, this message translates to:
-  /// **'Évolution des incidents en {year}'**
-  String evolutionTitle(int year);
 
   /// No description provided for @totalIncidents.
   ///

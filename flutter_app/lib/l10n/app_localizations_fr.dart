@@ -24,9 +24,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get roles => 'Rôles';
 
   @override
-  String get services => 'Services';
-
-  @override
   String get profile => 'Profil';
 
   @override
@@ -520,11 +517,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Cette action supprimera définitivement la forêt et toutes ses parcelles associées.';
 
   @override
-  String get noForestsHint =>
-      'Créez votre première forêt et délimitez\nses zones géographiques sur la carte.';
+  String get noForestsRegistered => 'Aucune forêt enregistrée';
 
   @override
-  String get noForestsRegistered => 'Aucune forêt enregistrée';
+  String get noForestsHint =>
+      'Créez votre première forêt et délimitez\nses zones géographiques sur la carte.';
 
   @override
   String get editForest => 'Modifier la forêt';
@@ -698,6 +695,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get noDataAvailable => 'Aucune donnée disponible.';
 
   @override
+  String evolutionTitle(int year) {
+    return 'Évolution des incidents en $year';
+  }
+
+  @override
   String get incidentsByCategory => 'Incidents par catégorie';
 
   @override
@@ -705,11 +707,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get incidentsByDayAndHour => 'Incidents signalés par jour et heure';
-
-  @override
-  String evolutionTitle(int year) {
-    return 'Évolution des incidents en $year';
-  }
 
   @override
   String get totalIncidents => 'Total incidents';

@@ -24,16 +24,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get roles => 'الأدوار';
 
   @override
-  String get services => 'الخدمات';
-
-  @override
   String get profile => 'الملف الشخصي';
 
   @override
   String get logout => 'تسجيل الخروج';
 
   @override
-  String get administration => 'الإدارة';
+  String get administration => 'الواجهة الإدارية';
 
   @override
   String get overview => 'نظرة عامة';
@@ -135,7 +132,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get nameRequired => 'الاسم مطلوب';
 
   @override
-  String get tagline => 'كون إنتي صوت الغابة\nو خلي تلبية النداء علينا.';
+  String get tagline => 'كن أنت صوت الغابة\nفتلبية النداء واجبنا!';
 
   @override
   String get forestSurveillance => 'مراقبة الغابات الذكية';
@@ -195,7 +192,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deleteConfirm => 'حذف؟';
 
   @override
-  String get deleteService => 'حذف هذه الخدمة؟';
+  String get deleteService => 'حذف هذه الخدمة الإدارية؟';
 
   @override
   String get deleteForest => 'حذف هذه الغابة؟';
@@ -282,13 +279,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get inProgress => 'قيد التنفيذ';
 
   @override
-  String get resolved => 'مُحلول';
+  String get resolved => 'معالجة';
 
   @override
-  String get rejected => 'مرفوض';
+  String get rejected => 'مرفوضة';
 
   @override
-  String get critical => 'حرج';
+  String get critical => 'مستوى عالي من الخطر';
 
   @override
   String get unknown => 'غير معروف';
@@ -354,7 +351,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get incidentReported => 'تم الإبلاغ عن الحادثة بنجاح';
 
   @override
-  String get criticalIncident => 'حادثة حرجة';
+  String get criticalIncident => 'حادثة ذات مستوى عالي من الخطر';
 
   @override
   String get criticalIncidentHint =>
@@ -516,11 +513,11 @@ class AppLocalizationsAr extends AppLocalizations {
       'سيؤدي هذا الإجراء إلى حذف الغابة وجميع قطعها المرتبطة بشكل نهائي.';
 
   @override
-  String get noForestsHint =>
-      'أنشئ أول غابة وحدد\nمناطقها الجغرافية على الخريطة.';
+  String get noForestsRegistered => 'لا توجد غابات مسجلة';
 
   @override
-  String get noForestsRegistered => 'لا توجد غابات مسجلة';
+  String get noForestsHint =>
+      'أنشئ أول غابة وحدد\nمناطقها الجغرافية على الخريطة.';
 
   @override
   String get editForest => 'تعديل الغابة';
@@ -687,6 +684,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noDataAvailable => 'لا توجد بيانات متاحة.';
 
   @override
+  String evolutionTitle(int year) {
+    return 'تطور الحوادث سنة $year';
+  }
+
+  @override
   String get incidentsByCategory => 'الحوادث حسب الفئة';
 
   @override
@@ -697,21 +699,16 @@ class AppLocalizationsAr extends AppLocalizations {
       'الحوادث المُبلَّغ عنها حسب اليوم والساعة';
 
   @override
-  String evolutionTitle(int year) {
-    return 'تطور الحوادث سنة $year';
-  }
-
-  @override
   String get totalIncidents => 'إجمالي الحوادث';
 
   @override
-  String get top3Agents => 'أفضل 3 أعوان';
+  String get top3Agents => 'أكثر 3 أعوان';
 
   @override
   String get agentsSubtitle => 'الحوادث المُبلَّغ عنها';
 
   @override
-  String get top3Forests => 'أفضل 3 غابات';
+  String get top3Forests => 'أكثر 3 غابات';
 
   @override
   String get forestsSubtitle => 'الحوادث حسب الغابة';
@@ -720,13 +717,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get reportedLabel => 'مُبلَّغ عنها';
 
   @override
-  String get resolvedLabel => 'مُحلولة';
+  String get resolvedLabel => 'معالجة';
 
   @override
   String get incidentsLabel => 'حوادث';
 
   @override
-  String get criticalLabel => 'حرجة';
+  String get criticalLabel => 'مستوى عالي من الخطر';
 
   @override
   String get noForestsAvailable => 'لا توجد غابات متاحة';
