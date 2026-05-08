@@ -16,7 +16,7 @@ List<(String, String, IconData)> _buildCategories(BuildContext context) {
     ('feu', l.typeIncendie, Icons.local_fire_department),
     ('coupe_illegale', l.typeCoupeIllegale, Icons.carpenter_outlined),
     ('refuge_suspect', l.typeRefugeSuspect, Icons.warning_amber),
-    ('trafic', l.typeTrafic, Icons.car_crash_outlined),
+    ('trafic', l.typeTrafic, Icons.dangerous_outlined),
     ('dechet', l.typeDechet, Icons.delete_outline),
     ('maladie', l.typeMaladie, Icons.coronavirus_outlined),
     ('autre', l.typeAutre, Icons.help_outline),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/core/widgets/app_bar_actions.dart';
+import 'package:flutter_app/features/admin/models/forest_model.dart';
+import 'package:flutter_app/features/admin/providers/forest_provider.dart';
 import 'package:flutter_app/features/incidents/models/incident_model.dart';
 import 'package:flutter_app/features/supervisor/providers/supervisor_provider.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -35,7 +37,9 @@ class SupervisorMapScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = context.l10n;
-    final async = ref.watch(allIncidentsProvider);
+    final incidentsAsync = ref.watch(allIncidentsProvider);
+    final forestsAsync = ref.watch(forestsProvider); // ← new
+
     return Scaffold(
       appBar: AppBar(
         title: Text('${l.map} ${l.incidents}'),
@@ -47,20 +51,22 @@ class SupervisorMapScreen extends ConsumerWidget {
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => ref.invalidate(allIncidentsProvider),
+            onPressed: () {
+              ref.invalidate(allIncidentsProvider);
+              ref.invalidate(forestsProvider);
+            },
           ),
           ...kAppBarActions,
         ],
       ),
-      body: async.when(
+      body: incidentsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('${l.errorPrefix} $e')),
         data: (incidents) {
-          //only incidents with GPS coords
           final mapped = incidents
               .where((i) => i.latitude != null && i.longitude != null)
               .toList();
-          //default center to Tunisia
+
           final center = mapped.isEmpty
               ? const LatLng(33.8869, 9.5375)
               : LatLng(
@@ -69,6 +75,15 @@ class SupervisorMapScreen extends ConsumerWidget {
                   mapped.map((i) => i.longitude!).reduce((a, b) => a + b) /
                       mapped.length,
                 );
+
+          // ── Parse assigned forest boundaries (silently skip if still loading) ──
+          final forests = forestsAsync.valueOrNull ?? <ForestModel>[];
+          final forestPolygons = forests
+              .where((f) => f.boundaryGeojson != null)
+              .map((f) => _geoJsonToLatLng(f.boundaryGeojson!))
+              .where((pts) => pts.length >= 3)
+              .toList();
+
           return Stack(
             children: [
               FlutterMap(
@@ -82,6 +97,23 @@ class SupervisorMapScreen extends ConsumerWidget {
                         'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     userAgentPackageName: 'com.ghabetna.app',
                   ),
+
+                  // ── Forest outlines ──────────────────────────────────────
+                  if (forestPolygons.isNotEmpty)
+                    PolygonLayer(
+                      polygons: forestPolygons
+                          .map(
+                            (pts) => Polygon(
+                              points: pts,
+                              color: AppColors.primaryGreen.withValues(
+                                alpha: 0.06,
+                              ),
+                              borderColor: AppColors.primaryGreen,
+                              borderStrokeWidth: 3,
+                            ),
+                          )
+                          .toList(),
+                    ),
                   MarkerLayer(
                     markers: mapped.map((incident) {
                       final color = _markerColor(incident);
@@ -273,5 +305,38 @@ class _CriticalLegendItem extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+List<LatLng> _geoJsonToLatLng(Map<String, dynamic> geojson) {
+  try {
+    final type = geojson['type'] as String?;
+    final coordsList = geojson['coordinates'] as List?;
+    if (coordsList == null || coordsList.isEmpty) return [];
+    dynamic ringData;
+    if (type == 'MultiPolygon') {
+      if (coordsList[0] is! List || (coordsList[0] as List).isEmpty) return [];
+      ringData = (coordsList[0] as List)[0];
+    } else {
+      ringData = coordsList[0];
+    }
+    if (ringData is! List) return [];
+    final result = <LatLng>[];
+    for (final coord in ringData) {
+      if (coord is! List || coord.length < 2) continue;
+      try {
+        final lng = coord[0];
+        final lat = coord[1];
+        if (lng is! num || lat is! num) continue;
+        final latD = lat.toDouble();
+        final lngD = lng.toDouble();
+        if (!latD.isFinite || !lngD.isFinite) continue;
+        if (latD < -90 || latD > 90 || lngD < -180 || lngD > 180) continue;
+        result.add(LatLng(latD, lngD));
+      } catch (_) {}
+    }
+    return result;
+  } catch (_) {
+    return [];
   }
 }
