@@ -3,6 +3,7 @@ import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/core/widgets/app_bar_actions.dart';
 import 'package:flutter_app/features/admin/models/forest_model.dart';
+import 'package:flutter_app/features/admin/models/parcelle_model.dart';
 import 'package:flutter_app/features/admin/providers/forest_provider.dart';
 import 'package:flutter_app/features/incidents/models/incident_model.dart';
 import 'package:flutter_app/features/supervisor/providers/supervisor_provider.dart';
@@ -151,6 +152,7 @@ class _SupervisorMapScreenState extends ConsumerState<SupervisorMapScreen> {
     final l = context.l10n;
     final incidentsAsync = ref.watch(allIncidentsProvider);
     final forestsAsync = ref.watch(forestsProvider);
+    final parcellesAsync = ref.watch(supervisorParcellesProvider);
 
     // Trigger the camera fit as soon as forests resolve, regardless of whether
     // incidents have loaded yet.
@@ -191,6 +193,11 @@ class _SupervisorMapScreenState extends ConsumerState<SupervisorMapScreen> {
               .map((f) => _geoJsonToLatLng(f.boundaryGeojson!))
               .where((pts) => pts.length >= 3)
               .toList();
+          final parcelles = parcellesAsync.valueOrNull ?? <ParcelleModel>[];
+          final parcellePolygons = parcelles
+              .map((p) => _geoJsonToLatLng(p.boundaryGeojson))
+              .where((pts) => pts.length >= 3)
+              .toList();
 
           return Stack(
             children: [
@@ -220,6 +227,20 @@ class _SupervisorMapScreenState extends ConsumerState<SupervisorMapScreen> {
                               ),
                               borderColor: AppColors.primaryGreen,
                               borderStrokeWidth: 3,
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  // ── Parcelle outlines ─────────────────────────────────────── 
+                  if (parcellePolygons.isNotEmpty)
+                    PolygonLayer(
+                      polygons: parcellePolygons
+                          .map(
+                            (pts) => Polygon(
+                              points: pts,
+                              color: Colors.orange.withValues(alpha: 0.18),
+                              borderColor: Colors.orange,
+                              borderStrokeWidth: 1.5,
                             ),
                           )
                           .toList(),

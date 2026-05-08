@@ -44,3 +44,17 @@ final parcelleFlatProvider = FutureProvider.family<ParcelleModel?, int>((
   ref.watch(userSessionProvider);
   return ref.watch(forestRepositoryProvider).getParcelleFlatById(parcelleId);
 });
+
+/// All parcelles across every forest the current user is assigned to.
+/// Fires one [parcellesProvider] request per forest in parallel, then
+/// flattens the results into a single list.
+final supervisorParcellesProvider = FutureProvider<List<ParcelleModel>>((
+  ref,
+) async {
+  final forests = await ref.watch(forestsProvider.future);
+  if (forests.isEmpty) return [];
+  final lists = await Future.wait(
+    forests.map((f) => ref.watch(parcellesProvider(f.id).future)),
+  );
+  return lists.expand((l) => l).toList();
+});
