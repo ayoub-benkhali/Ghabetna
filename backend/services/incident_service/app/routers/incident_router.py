@@ -106,14 +106,25 @@ async def list_all_incidents(
     category: Optional[IncidentCategory] = None,
     forest_id: Optional[int] = None,
     parcelle_id: Optional[int] = None,
+    payload: dict = Depends(get_current_user_payload),
     db: AsyncSession = Depends(get_db),
 ):
     filters = []
+    # ── Scope to supervisor's assigned forests ──────────────────────────────
+    token_forest_ids: list[int] = payload.get("forest_ids") or []
+    if token_forest_ids:
+        filters.append(Incident.forest_id.in_(token_forest_ids))
+
+    # by the token filter above, so a supervisor can't escape their scope
+    # by passing an arbitrary forest_id)
     if status:
         filters.append(Incident.status == status)
     if category:
         filters.append(Incident.category == category)
     if forest_id:
+        # Only honour the caller's forest_id param if it's within their scope
+        if token_forest_ids and forest_id not in token_forest_ids:
+            return []   # requested a forest they're not assigned to
         filters.append(Incident.forest_id == forest_id)
     if parcelle_id:
         filters.append(Incident.parcelle_id == parcelle_id)

@@ -132,3 +132,23 @@ async def get_forests(db: AsyncSession) -> list[ForestReponse]:
     )
     rows = (await db.execute(stmt)).all()
     return [_to_response(forest, int(cnt)) for forest, cnt in rows]
+
+async def get_forests_by_ids(
+    ids: list[int], db: AsyncSession
+    ) -> list[ForestReponse]:
+        """Return only the forests whose IDs are in `ids`, with parcelle counts."""
+        if not ids:
+            return []
+        count_subq = (
+            select(Parcelle.forest_id, func.count(Parcelle.id).label("cnt"))
+            .where(Parcelle.forest_id.in_(ids))
+            .group_by(Parcelle.forest_id)
+            .subquery()
+        )
+        stmt = (
+            select(Forest, func.coalesce(count_subq.c.cnt, 0).label("parcelle_count"))
+            .where(Forest.id.in_(ids))
+            .outerjoin(count_subq, Forest.id == count_subq.c.forest_id)
+        )
+        rows = (await db.execute(stmt)).all()
+        return [_to_response(forest, int(cnt)) for forest, cnt in rows]

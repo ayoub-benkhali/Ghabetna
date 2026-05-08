@@ -4,8 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.schemas.forest_schema import ForestCreate,ForestReponse,ForestUpdate
 from app.services import forest_service
-from app.utils.deps import require_permission
-from app.services.forest_service import _to_response
+from app.utils.deps import require_permission,get_current_user_payload
 from app.models.forest import Forest
 
 router=APIRouter(prefix="/forests",tags=["forests"])
@@ -13,8 +12,14 @@ router=APIRouter(prefix="/forests",tags=["forests"])
 @router.get("",response_model=list[ForestReponse])
 async def list_forests(
     db:AsyncSession=Depends(get_db),
-    _:None=Depends(require_permission("forest:read"))
+    _:None=Depends(require_permission("forest:read")),
+    payload: dict = Depends(get_current_user_payload),
 ):
+    forest_ids: list[int] = payload.get("forest_ids") or []
+    if forest_ids:
+        # Supervisor — scope to assigned forests only
+        return await forest_service.get_forests_by_ids(forest_ids, db)
+    # Admin (or any role with no forest_ids restriction) — return all
     return await forest_service.get_forests(db)
 
 @router.post("",response_model=ForestReponse,status_code=201)

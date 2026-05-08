@@ -23,3 +23,14 @@ def require_permission(permission:str):
                 detail="Invalid Token"
             )
     return checker
+
+async def get_current_user_payload(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+) -> dict:
+    try:
+        return decode_token(credentials.credentials)
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Token",
+        )
