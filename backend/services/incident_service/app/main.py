@@ -7,6 +7,7 @@ import os
 from app.database import engine, Base
 from app.models.incident import Incident
 from app.routers.incident_router import router as incident_router
+from app.routers.analytics_router import router as analytics_router
 from app.config import settings
 from app.workers.geo_enrichment import run_worker
 from app.redis_client import close_redis
@@ -38,6 +39,7 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"],
                    allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 app.include_router(incident_router)
+app.include_router(analytics_router)
 
 @app.get("/health")
 async def health():

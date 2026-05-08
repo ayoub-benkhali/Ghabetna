@@ -1,120 +1,51 @@
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
-from app.database import get_db
+import httpx
+from fastapi import APIRouter, Depends, Query, Request, HTTPException
+from app.config import settings
 from app.utils.deps import require_permission
-from datetime import datetime
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
-# ── 1. KPI Summary Cards ────────────────────────────────────────────────────────
+
+async def _call_incident(path: str, request: Request, params: dict|None = None):
+    """Forward a request to incident_service, passing the JWT through."""
+    headers = {"Authorization": request.headers.get("Authorization", "")}
+    try:
+        async with httpx.AsyncClient(base_url=settings.INCIDENT_SERVICE_URL, timeout=10.0) as client:
+            resp = await client.get(f"/analytics{path}", headers=headers, params=params or {})
+        resp.raise_for_status()
+        return resp.json()
+    except httpx.RequestError:
+        raise HTTPException(status_code=503, detail="Incident Service is unreachable")
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
+
+
 @router.get("/kpis", dependencies=[Depends(require_permission("analytics:read"))])
-async def get_kpis(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(text("""
-        SELECT
-            COUNT(*)                                        AS total,
-            COUNT(*) FILTER (WHERE is_critical = TRUE)     AS critical,
-            COUNT(*) FILTER (WHERE status = 'resolved')    AS resolved,
-            COUNT(*) FILTER (WHERE status = 'pending')     AS pending
-        FROM incidents
-    """))
-    row = result.mappings().one()
-    return dict(row)
+async def get_kpis(request: Request):
+    return await _call_incident("/kpis", request)
 
-
-# ── 2. Monthly Incident Trend (line chart / courbe) ──────────────────────────────
-# Returns one row per month for the given year.
-# Flutter renders as a LineChart with months on x-axis, incident count on y-axis.
 
 @router.get("/daily", dependencies=[Depends(require_permission("analytics:read"))])
-async def get_monthly_trend(
-    year: int = Query(default=None),
-    db: AsyncSession = Depends(get_db),
-):
-    effective_year = year or datetime.utcnow().year
-    result = await db.execute(text("""
-        SELECT
-            EXTRACT(MONTH FROM created_at)::int             AS month,
-            COUNT(*)                                        AS total,
-            COUNT(*) FILTER (WHERE is_critical = TRUE)      AS critical,
-            COUNT(*) FILTER (WHERE status = 'resolved')     AS resolved
-        FROM incidents
-        WHERE EXTRACT(YEAR FROM created_at) = :year
-        GROUP BY EXTRACT(MONTH FROM created_at)
-        ORDER BY month ASC
-    """), {"year": effective_year})
-    return [dict(r) for r in result.mappings().all()]
+async def get_monthly_trend(request: Request, year: int = Query(default=None)):
+    params = {"year": year} if year else {}
+    return await _call_incident("/daily", request, params)
 
-
-# ── 3. Top 3 Agents by Incident Count ────────────────────────────────────────────
-# Horizontal bar chart: agents on y-axis, incident count on x-axis.
 
 @router.get("/top-agents", dependencies=[Depends(require_permission("analytics:read"))])
-async def get_top_agents(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(text("""
-        SELECT
-            agent_name,
-            COUNT(*)                                        AS total,
-            COUNT(*) FILTER (WHERE is_critical = TRUE)     AS critical,
-            COUNT(*) FILTER (WHERE status = 'resolved')    AS resolved
-        FROM incidents
-        GROUP BY agent_name
-        ORDER BY total DESC
-        LIMIT 3
-    """))
-    return [dict(r) for r in result.mappings().all()]
+async def get_top_agents(request: Request):
+    return await _call_incident("/top-agents", request)
 
-
-# ── 4. Incidents by Category ─────────────────────────────────────────────────────
-# Full pie chart.
 
 @router.get("/by-category", dependencies=[Depends(require_permission("analytics:read"))])
-async def get_by_category(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(text("""
-        SELECT
-            category,
-            COUNT(*)                                          AS total,
-            COUNT(*) FILTER (WHERE is_critical = TRUE)       AS critical
-        FROM incidents
-        GROUP BY category
-        ORDER BY total DESC
-    """))
-    return [dict(r) for r in result.mappings().all()]
+async def get_by_category(request: Request):
+    return await _call_incident("/by-category", request)
 
-
-# ── 5. Top 3 Forests by Incident Count ───────────────────────────────────────────
-# Horizontal bar chart: forests on y-axis, incident count on x-axis.
 
 @router.get("/density", dependencies=[Depends(require_permission("analytics:read"))])
-async def get_top_forests(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(text("""
-        SELECT
-            forest_id,
-            COALESCE(MAX(forest_name), 'Forêt #' || forest_id::text)  AS forest_name,
-            COUNT(*)                                                     AS total,
-            COUNT(*) FILTER (WHERE status = 'resolved')                 AS resolved,
-            COUNT(*) FILTER (WHERE is_critical = TRUE)                  AS critical
-        FROM incidents
-        WHERE forest_id IS NOT NULL
-        GROUP BY forest_id
-        ORDER BY total DESC
-        LIMIT 3
-    """))
-    return [dict(r) for r in result.mappings().all()]
+async def get_top_forests(request: Request):
+    return await _call_incident("/density", request)
 
-# ── 6. Peak Incident Hours ─────────────────────────────────────────────────────
-# Heatmap: incident count grouped by day-of-week × hour-of-day.
-# dow: 0 = Sunday … 6 = Saturday  |  hour: 0–23
 
 @router.get("/peak-hours", dependencies=[Depends(require_permission("analytics:read"))])
-async def get_peak_hours(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(text("""
-        SELECT
-            EXTRACT(DOW  FROM created_at)::int   AS dow,
-            EXTRACT(HOUR FROM created_at)::int   AS hour,
-            COUNT(*)                             AS total
-        FROM incidents
-        GROUP BY dow, hour
-        ORDER BY dow, hour
-    """))
-    return [dict(r) for r in result.mappings().all()]
+async def get_peak_hours(request: Request):
+    return await _call_incident("/peak-hours", request)
