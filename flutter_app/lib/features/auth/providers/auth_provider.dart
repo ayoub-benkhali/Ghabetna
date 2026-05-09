@@ -42,6 +42,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   void _forceLogout() {
     if (!mounted) return;
+    if (state.status == AuthStatus.unauthenticated) return;
     _clearUserCache();
     state = const AuthState.unauthenticated();
   }

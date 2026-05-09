@@ -1,3 +1,4 @@
+import 'package:flutter_app/features/auth/providers/auth_provider.dart';
 import 'package:flutter_app/features/auth/providers/user_session_provider.dart';
 import 'package:flutter_app/features/admin/data/forest_repository.dart';
 import 'package:flutter_app/features/admin/models/forest_model.dart';
@@ -9,12 +10,17 @@ final forestRepositoryProvider = Provider((_) => ForestRepository());
 //Forests list
 final forestsProvider = FutureProvider<List<ForestModel>>((ref) {
   ref.watch(userSessionProvider);
+  final auth = ref.watch(authProvider);
+  if (!auth.isAuthenticated) return [];
+
   return ref.watch(forestRepositoryProvider).getForests();
 });
 
 //Single forest
 final forestProvider = FutureProvider.family<ForestModel, int>((ref, id) {
   ref.watch(userSessionProvider);
+  final auth = ref.watch(authProvider);
+  if (!auth.isAuthenticated) throw Exception('Not authenticated');
   return ref.watch(forestRepositoryProvider).getForest(id);
 });
 
@@ -24,6 +30,8 @@ final parcellesProvider = FutureProvider.family<List<ParcelleModel>, int>((
   forestId,
 ) {
   ref.watch(userSessionProvider);
+  final auth = ref.watch(authProvider);
+  if (!auth.isAuthenticated) return [];
   return ref.watch(forestRepositoryProvider).getParcelles(forestId);
 });
 
