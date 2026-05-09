@@ -86,7 +86,7 @@ services:
       - "8001:8000"
     volumes:
       - ./services/auth_service:/app
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    #the auth-service's entry point is in it's Dockerfile for because it handles the seed scrpit execution
 
   forest-service:
     build: ./services/forest_service
