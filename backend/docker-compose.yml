@@ -53,6 +53,7 @@ services:
       timeout: 5s
       retries: 5
 
+  #========= Redis =========
   redis:
     image: redis:7-alpine
     container_name: ghabetna_redis
@@ -65,6 +66,33 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  #========= n8n =========
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: ghabetna_n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://n8n:5678/
+      - GENERIC_TIMEZONE=Africa/Tunis
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+  #========= Ollama =========
+  ollama:
+    image: ollama/ollama
+    container_name: ghabetna_ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
 
   #========= Services =========
   auth-service:
@@ -182,3 +210,5 @@ volumes:
   incident_db_data:
   redis_data:
   incident_uploads:
+  n8n_data:
+  ollama_data:
