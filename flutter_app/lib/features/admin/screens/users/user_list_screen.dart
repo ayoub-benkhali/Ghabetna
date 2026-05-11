@@ -154,7 +154,9 @@ class _UserTable extends ConsumerWidget {
                         columns: [
                           DataColumn(label: Text(l.users.toUpperCase())),
                           DataColumn(label: Text(l.roles.toUpperCase())),
-                          DataColumn(label: Text(l.adminServices.toUpperCase())),
+                          DataColumn(
+                            label: Text(l.adminServices.toUpperCase()),
+                          ),
                           DataColumn(label: Text(l.status.toUpperCase())),
                           DataColumn(label: Text(l.actions.toUpperCase())),
                         ],
@@ -414,8 +416,12 @@ class _UserFormState extends ConsumerState<UserFormDialog> {
                     prefixIcon: const Icon(Icons.email_outlined),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return l.required;
-                    if (!v.contains('@')) return l.emailInvalid;
+                    if (v == null || v.trim().isEmpty) return l.required;
+                    final emailRegex = RegExp(
+                      r'^[a-zA-Z0-9_%+\-]+(\.[a-zA-Z0-9_%+\-]+)*'
+                      r'@[a-zA-Z0-9\-]+(\.[a-zA-Z0-9\-]+)*\.[a-zA-Z]{2,}$',
+                    );
+                    if (!emailRegex.hasMatch(v.trim())) return l.emailInvalid;
                     return null;
                   },
                 )
@@ -482,6 +488,12 @@ class _UserFormState extends ConsumerState<UserFormDialog> {
                   labelText: l.phoneOptional,
                   prefixIcon: const Icon(Icons.phone_outlined),
                 ),
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return null; // optional
+                  final phoneRegex = RegExp(r'^\+?[0-9]{7,15}$');
+                  if (!phoneRegex.hasMatch(v.trim())) return l.phoneInvalid;
+                  return null;
+                },
               ),
               const SizedBox(height: 12),
               // Role dropdown

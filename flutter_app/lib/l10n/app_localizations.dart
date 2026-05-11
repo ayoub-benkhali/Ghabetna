@@ -1513,6 +1513,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ne peut pas chevaucher la parcelle existante \"{name}\"'**
   String parcelleOverlapError(String name);
+
+  /// No description provided for @phoneInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro de téléphone invalide'**
+  String get phoneInvalid;
+
+  /// No description provided for @authError422.
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse e-mail ou données invalides. Vérifiez les champs saisis.'**
+  String get authError422;
 }
 
 class _AppLocalizationsDelegate

@@ -747,4 +747,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String parcelleOverlapError(String name) {
     return 'Ne peut pas chevaucher la parcelle existante \"$name\"';
   }
+
+  @override
+  String get phoneInvalid => 'Numéro de téléphone invalide';
+
+  @override
+  String get authError422 =>
+      'Adresse e-mail ou données invalides. Vérifiez les champs saisis.';
 }

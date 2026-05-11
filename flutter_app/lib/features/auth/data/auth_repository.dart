@@ -85,7 +85,8 @@ class AuthRepository {
     if (status == 401) return 'authError401';
     if (status == 403) return 'authError403';
     if (status == 404) return 'authError404';
-    if (detail != null) return detail.toString();
+    if (status == 422) return 'authError422';
+    if (detail is String) return detail;
     return 'authErrorNetwork';
   }
 }

@@ -271,5 +271,7 @@
     "placeholders": {
       "name": { "type": "String" }
     }
-  }
+  },
+  "phoneInvalid":"Numéro de téléphone invalide",
+  "authError422": "Adresse e-mail ou données invalides. Vérifiez les champs saisis."
 }

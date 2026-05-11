@@ -737,4 +737,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String parcelleOverlapError(String name) {
     return 'لا يمكن أن يتداخل مع القطعة الموجودة \"$name\"';
   }
+
+  @override
+  String get phoneInvalid => 'رقم الهاتف غير صحيح';
+
+  @override
+  String get authError422 =>
+      'البريد الإلكتروني أو البيانات غير صالحة. يرجى مراجعة الحقول المُدخلة.';
 }

@@ -47,6 +47,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         return l.authError404;
       case 'authErrorNetwork':
         return l.authErrorNetwork;
+      case 'authError422':
+        return l.authError422;
       default:
         return key ?? '';
     }
@@ -173,7 +175,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     if (v == null || v.trim().isEmpty) {
                                       return l.emailRequired;
                                     }
-                                    if (!v.contains('@')) return l.emailInvalid;
+                                    final emailRegex = RegExp(
+                                      r'^[a-zA-Z0-9_%+\-]+(\.[a-zA-Z0-9_%+\-]+)*'
+                                      r'@[a-zA-Z0-9\-]+(\.[a-zA-Z0-9\-]+)*\.[a-zA-Z]{2,}$',
+                                    );
+                                    if (!emailRegex.hasMatch(v.trim())) {
+                                      return l.emailInvalid;
+                                    }
                                     return null;
                                   },
                                 ),
