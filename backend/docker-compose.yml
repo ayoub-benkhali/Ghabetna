@@ -105,6 +105,7 @@ services:
       FOREST_SERVICE_URL: http://forest-service:8000
       REDIS_URL: redis://redis:6379/0
       FRONTEND_URL: "http://localhost:3000"
+      N8N_WEBHOOK_URL: http://n8n:5678/webhook/security-event
     depends_on:
       auth-db:
         condition: service_healthy

@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     MAIL_PORT: int = 587
     FRONTEND_URL: str = "http://localhost:3000"
     FOREST_SERVICE_URL: str = "http://forest-service:8000"
+    N8N_WEBHOOK_URL: str = "http://n8n:5678/webhook/security-event"
 
     class Config:
         env_file = ".env"

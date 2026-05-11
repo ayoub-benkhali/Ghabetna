@@ -1,5 +1,5 @@
 import redis.asyncio as aioredis
-from fastapi import Depends,APIRouter
+from fastapi import Depends,APIRouter,Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.database import get_db
@@ -16,13 +16,22 @@ async def get_redis()-> aioredis.Redis:
         _redis_pool=aioredis.from_url(settings.REDIS_URL,decode_responses=True)
     return _redis_pool
 
+def _get_client_ip(request: Request) -> str:
+    """Extracts real IP, respecting X-Forwarded-For from the API gateway."""
+    forwarded_for = request.headers.get("X-Forwarded-For")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    return request.client.host if request.client else "0.0.0.0"
+
 @router.post("/login",response_model=TokenResponse)
 async def login(
+    request: Request,
     data:LoginRequest,
     db:AsyncSession=Depends(get_db),
     redis:aioredis.Redis=Depends(get_redis)
 ):
-    access_token,refresh_token=await auth_service.login(data.email,data.password,db,redis)
+    ip=_get_client_ip(request)
+    access_token,refresh_token=await auth_service.login(data.email,data.password,ip,db,redis)
     return TokenResponse(access_token=access_token,refresh_token=refresh_token)
 
 @router.post("/refresh",response_model=AccessTokenResponse)

@@ -10,44 +10,92 @@ from app.utils.jwt import decode_token,create_access_token,create_refresh_token
 from app.utils.password import verify_password,hash_password
 from app.models.supervisor_forest import supervisor_forest
 from app.services.assignment_service import get_supervisor_forest_ids
+import asyncio
+from app.utils.security_events import emit_security_event
 
 REFRESH_TOKEN_PREFIX="refresh:"
 BLACKLIST_PREFIX="blacklist:"
 
-async def login(email:str,password:str,db:AsyncSession,redis:aioredis.Redis):
-    result=await db.execute(select(User).where(User.email==email))
-    user=result.scalar_one_or_none()
+FAILED_LOGIN_PREFIX = "failed_login:"
+FAILED_LOGIN_TTL_SECONDS = 3600 
 
+
+async def login(
+    email: str,
+    password: str,
+    ip: str,           # NEW
+    db: AsyncSession,
+    redis: aioredis.Redis,
+):
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+
+    failed_attempts = await _get_failed_attempts(redis, ip)
+    role_name = user.role.name if (user and user.role) else "unknown"
+
+    # ── Auth checks ──────────────────────────────────────────────────────────
     if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Invalid Email")
-    if not user.is_active or not user.hashed_password:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Account not activated")
-    if not verify_password(password,user.hashed_password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Invalid Password")
-    
-    permissions=user.role.permissions if user.role else []
+        new_count = await _increment_failed(redis, ip)
+        asyncio.create_task(emit_security_event(
+            event="login_failed",
+            email=email,
+            role="unknown",
+            ip=ip,
+            failed_attempts=new_count,
+        ))
+        raise HTTPException(status_code=401, detail="Invalid Email")
 
-    # ← Query the join table instead 
+    if not user.is_active or not user.hashed_password:
+        asyncio.create_task(emit_security_event(
+            event="login_failed_inactive",
+            email=email,
+            role=role_name,
+            ip=ip,
+            failed_attempts=failed_attempts,
+        ))
+        raise HTTPException(status_code=401, detail="Account not activated")
+
+    if not verify_password(password, user.hashed_password):
+        new_count = await _increment_failed(redis, ip)
+        asyncio.create_task(emit_security_event(
+            event="login_failed",
+            email=email,
+            role=role_name,
+            ip=ip,
+            failed_attempts=new_count,
+        ))
+        raise HTTPException(status_code=401, detail="Invalid Password")
+
+    # ── Success ──────────────────────────────────────────────────────────────
+    await _reset_failed(redis, ip)
+
+    permissions = user.role.permissions if user.role else []
     forest_ids = await get_supervisor_forest_ids(user.id, db)
 
-    access_token=create_access_token(
-        user.id,
-        user.role_id,
-        permissions,
+    access_token = create_access_token(
+        user.id, user.role_id, permissions,
         full_name=user.full_name,
         service_id=user.service_id,
         parcelle_id=user.parcelle_id,
-        forest_ids=forest_ids
-        )
-    refresh_token=create_refresh_token(user.id)
+        forest_ids=forest_ids,
+    )
+    refresh_token = create_refresh_token(user.id)
 
     await redis.setex(
         f"{REFRESH_TOKEN_PREFIX}{refresh_token}",
         timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
-        str(user.id)
+        str(user.id),
     )
 
-    return access_token,refresh_token
+    asyncio.create_task(emit_security_event(
+        event="login_success",
+        email=user.email,
+        role=role_name,
+        ip=ip,
+        failed_attempts=0,
+    ))
+
+    return access_token, refresh_token
 
 async def refresh(refresh_token:str,db:AsyncSession,redis:aioredis.Redis):
     try:
@@ -100,3 +148,16 @@ async def activate_account(token:str,password:str,db:AsyncSession):
     user.activation_token=None
     user.activation_token_expires=None
     await db.commit()
+
+async def _get_failed_attempts(redis: aioredis.Redis, ip: str) -> int:
+    val = await redis.get(f"{FAILED_LOGIN_PREFIX}{ip}")
+    return int(val) if val else 0
+
+async def _increment_failed(redis: aioredis.Redis, ip: str) -> int:
+    key = f"{FAILED_LOGIN_PREFIX}{ip}"
+    count = await redis.incr(key)
+    await redis.expire(key, FAILED_LOGIN_TTL_SECONDS)
+    return count
+
+async def _reset_failed(redis: aioredis.Redis, ip: str) -> None:
+    await redis.delete(f"{FAILED_LOGIN_PREFIX}{ip}")

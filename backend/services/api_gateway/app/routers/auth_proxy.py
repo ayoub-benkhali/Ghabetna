@@ -6,12 +6,21 @@ router=APIRouter(prefix="/api/auth",tags=["Auth"])
 
 async def _proxy(path:str,request:Request)->Response:
     body=await request.body()
+    headers = {"Content-Type": request.headers.get("Content-Type", "application/json")}
+
+    # Inject real client IP only for login, so auth-service can track it
+    if path == "/login":
+        client_ip = request.headers.get("X-Forwarded-For") or \
+                    (request.client.host if request.client else "0.0.0.0")
+        headers["X-Forwarded-For"] = client_ip
+
+
     async with httpx.AsyncClient(base_url=settings.AUTH_SERVICE_URL) as client:
         resp=await client.request(
             method=request.method,
             url=f"/auth{path}",
             content=body,
-            headers={"Content-Type":request.headers.get("Content-Type","application/json")}
+            headers=headers
         )
     return Response(
         content=resp.content,
