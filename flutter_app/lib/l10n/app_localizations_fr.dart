@@ -754,4 +754,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get authError422 =>
       'Adresse e-mail ou données invalides. Vérifiez les champs saisis.';
+
+  @override
+  String get mapStylePlain => 'Carte plan';
+
+  @override
+  String get mapStyleSatellite => 'Satellite';
 }

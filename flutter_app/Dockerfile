@@ -2,7 +2,7 @@
 FROM ghcr.io/cirruslabs/flutter:stable AS build
 WORKDIR /app
 COPY . .
-RUN flutter build web --release
+RUN flutter build web --release --pwa-strategy=none
 
 # Stage 2 - Takes those static files and serves them with Nginx
 FROM nginx:alpine

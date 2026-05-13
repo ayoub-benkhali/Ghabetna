@@ -744,4 +744,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get authError422 =>
       'البريد الإلكتروني أو البيانات غير صالحة. يرجى مراجعة الحقول المُدخلة.';
+
+  @override
+  String get mapStylePlain => 'خريطة مسطحة';
+
+  @override
+  String get mapStyleSatellite => 'صور جوية';
 }

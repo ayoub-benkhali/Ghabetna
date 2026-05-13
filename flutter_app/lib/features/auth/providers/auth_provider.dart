@@ -58,6 +58,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = const AuthState.loading();
     try {
       final user = await _repo.login(email, password);
+      ApiClient.instance.onUnauthorized = _forceLogout;
+      _clearUserCache();
       state = AuthState.authenticated(user);
       return true;
     } catch (e) {

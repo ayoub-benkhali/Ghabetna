@@ -273,5 +273,7 @@
     }
   },
   "phoneInvalid":"Numéro de téléphone invalide",
-  "authError422": "Adresse e-mail ou données invalides. Vérifiez les champs saisis."
+  "authError422": "Adresse e-mail ou données invalides. Vérifiez les champs saisis.",
+  "mapStylePlain": "Carte plan",
+  "mapStyleSatellite": "Satellite"
 }

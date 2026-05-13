@@ -1525,6 +1525,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Adresse e-mail ou données invalides. Vérifiez les champs saisis.'**
   String get authError422;
+
+  /// No description provided for @mapStylePlain.
+  ///
+  /// In fr, this message translates to:
+  /// **'Carte plan'**
+  String get mapStylePlain;
+
+  /// No description provided for @mapStyleSatellite.
+  ///
+  /// In fr, this message translates to:
+  /// **'Satellite'**
+  String get mapStyleSatellite;
 }
 
 class _AppLocalizationsDelegate

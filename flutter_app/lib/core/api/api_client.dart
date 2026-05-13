@@ -10,6 +10,9 @@ class ApiClient {
   void Function()? onUnauthorized;
 
   late final Dio _dio = _build();
+  void configure({required void Function() onUnauthorized}) {
+    this.onUnauthorized = onUnauthorized;
+  }
 
   Dio _build() {
     final dio = Dio(
@@ -35,7 +38,6 @@ class ApiClient {
             final refreshToken = await TokenStorage.getRefreshToken();
             if (refreshToken != null) {
               try {
-                // Use a clean Dio (no interceptor) to avoid infinite loop
                 final refreshDio = Dio(
                   BaseOptions(baseUrl: AppConstants.apiBaseUrl),
                 );
@@ -52,11 +54,14 @@ class ApiClient {
               } catch (_) {
                 await TokenStorage.clear();
                 onUnauthorized?.call();
+                return handler.reject(error); // ← changed from handler.next
               }
             } else {
-              //No refresh token at all
               await TokenStorage.clear();
               onUnauthorized?.call();
+              return handler.reject(
+                error,
+              ); // ← changed from handler.next (falls through)
             }
           }
           return handler.next(error);
