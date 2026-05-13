@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/core/widgets/app_bar_actions.dart';
+import 'package:flutter_app/core/widgets/map_style_layer.dart';
 import 'package:flutter_app/features/admin/models/forest_model.dart';
 import 'package:flutter_app/features/admin/models/parcelle_model.dart';
 import 'package:flutter_app/features/admin/providers/forest_provider.dart';
@@ -98,6 +99,7 @@ class SupervisorMapScreen extends ConsumerStatefulWidget {
 
 class _SupervisorMapScreenState extends ConsumerState<SupervisorMapScreen> {
   final _mapController = MapController();
+  MapStyle _mapStyle = MapStyle.plain;
 
   bool _hasZoomedToForests = false;
 
@@ -209,11 +211,7 @@ class _SupervisorMapScreenState extends ConsumerState<SupervisorMapScreen> {
                   initialZoom: 6.5,
                 ),
                 children: [
-                  TileLayer(
-                    urlTemplate:
-                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    userAgentPackageName: 'com.ghabetna.app',
-                  ),
+                  ...mapTileLayers(_mapStyle),
 
                   // ── Forest outlines ──────────────────────────────────────
                   if (forestPolygons.isNotEmpty)
@@ -231,7 +229,7 @@ class _SupervisorMapScreenState extends ConsumerState<SupervisorMapScreen> {
                           )
                           .toList(),
                     ),
-                  // ── Parcelle outlines ─────────────────────────────────────── 
+                  // ── Parcelle outlines ───────────────────────────────────────
                   if (parcellePolygons.isNotEmpty)
                     PolygonLayer(
                       polygons: parcellePolygons
@@ -323,6 +321,15 @@ class _SupervisorMapScreenState extends ConsumerState<SupervisorMapScreen> {
                     }).toList(),
                   ),
                 ],
+              ),
+              // ── Map style toggle ──────────────────────────────────────────────
+              Positioned(
+                top: 12,
+                right: 12,
+                child: MapStyleButton(
+                  current: _mapStyle,
+                  onChanged: (s) => setState(() => _mapStyle = s),
+                ),
               ),
 
               // ── Legend ───────────────────────────────────────────────────

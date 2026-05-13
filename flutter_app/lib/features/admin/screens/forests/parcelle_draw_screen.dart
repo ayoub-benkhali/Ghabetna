@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/core/utils/polygon_utils.dart';
+import 'package:flutter_app/core/widgets/map_style_layer.dart';
 import 'package:flutter_app/features/admin/models/parcelle_model.dart';
 import 'package:flutter_app/features/admin/providers/forest_provider.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class ParcelleDrawScreen extends ConsumerStatefulWidget {
   final int forestId;
@@ -385,7 +385,7 @@ class _State extends ConsumerState<ParcelleDrawScreen> {
 
 // ── Extracted draw map widget ─────────────────────────────────────────────────
 
-class _ParcelleDrawMapWidget extends StatelessWidget {
+class _ParcelleDrawMapWidget extends StatefulWidget {
   final List<LatLng> forestBoundary;
   final List<ParcelleModel> existingParcelles;
   final List<LatLng> drawingPoints;
@@ -401,16 +401,23 @@ class _ParcelleDrawMapWidget extends StatelessWidget {
   });
 
   @override
+  State<_ParcelleDrawMapWidget> createState() => _ParcelleDrawMapWidgetState();
+}
+
+class _ParcelleDrawMapWidgetState extends State<_ParcelleDrawMapWidget> {
+  MapStyle _mapStyle = MapStyle.plain;
+
+  @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final hasPolygon = drawingPoints.length >= 3;
-    final centerLL = forestBoundary.isNotEmpty
-        ? forestBoundary.first
+    final hasPolygon = widget.drawingPoints.length >= 3;
+    final centerLL = widget.forestBoundary.isNotEmpty
+        ? widget.forestBoundary.first
         : const LatLng(33.8869, 9.5375);
 
     // Pre-convert existing parcelle boundaries outside the build tree so we
     // don't re-parse GeoJSON on every repaint.
-    final existingPolygons = existingParcelles
+    final existingPolygons = widget.existingParcelles
         .map((p) => _geoJsonToLatLng(p.boundaryGeojson))
         .where((pts) => pts.length >= 3)
         .toList();
@@ -420,12 +427,12 @@ class _ParcelleDrawMapWidget extends StatelessWidget {
         FlutterMap(
           options: MapOptions(
             initialCenter: centerLL,
-            initialZoom: forestBoundary.isNotEmpty ? 12 : 8,
+            initialZoom: widget.forestBoundary.isNotEmpty ? 12 : 8,
             minZoom: 6,
             maxZoom: 18,
-            onTap: isDrawing ? (_, ll) => onTap(ll) : null,
+            onTap: widget.isDrawing ? (_, ll) => widget.onTap(ll) : null,
             interactionOptions: InteractionOptions(
-              flags: isDrawing
+              flags: widget.isDrawing
                   ? InteractiveFlag.pinchZoom | InteractiveFlag.doubleTapZoom
                   : InteractiveFlag.all,
               cursorKeyboardRotationOptions:
@@ -433,19 +440,14 @@ class _ParcelleDrawMapWidget extends StatelessWidget {
             ),
           ),
           children: [
-            // ── Base tile layer ─────────────────────────────────────────────
-            TileLayer(
-              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'com.ghabetna.app',
-              maxZoom: 19,
-            ),
+            ...mapTileLayers(_mapStyle),
 
             // ── Forest boundary ─────────────────────────────────────────────
-            if (forestBoundary.length >= 3)
+            if (widget.forestBoundary.length >= 3)
               PolygonLayer(
                 polygons: [
                   Polygon(
-                    points: forestBoundary,
+                    points: widget.forestBoundary,
                     color: AppColors.primaryGreen.withValues(alpha: 0.06),
                     borderColor: AppColors.primaryGreen,
                     borderStrokeWidth: 3,
@@ -484,7 +486,7 @@ class _ParcelleDrawMapWidget extends StatelessWidget {
               PolygonLayer(
                 polygons: [
                   Polygon(
-                    points: _filterValidPoints(drawingPoints),
+                    points: _filterValidPoints(widget.drawingPoints),
                     color: AppColors.info.withValues(alpha: 0.2),
                     borderColor: AppColors.info,
                     borderStrokeWidth: 2.5,
@@ -493,13 +495,13 @@ class _ParcelleDrawMapWidget extends StatelessWidget {
               ),
 
             // ── Current drawing: outline while < 3 pts ─────────────────────
-            if (drawingPoints.length >= 2)
+            if (widget.drawingPoints.length >= 2)
               PolylineLayer(
                 polylines: [
                   Polyline(
                     points: _filterValidPoints([
-                      ...drawingPoints,
-                      if (isDrawing) drawingPoints.first,
+                      ...widget.drawingPoints,
+                      if (widget.isDrawing) widget.drawingPoints.first,
                     ]),
                     color: !hasPolygon
                         ? AppColors.warning.withValues(alpha: 0.7)
@@ -511,7 +513,7 @@ class _ParcelleDrawMapWidget extends StatelessWidget {
 
             // ── Vertex markers ──────────────────────────────────────────────
             MarkerLayer(
-              markers: drawingPoints
+              markers: widget.drawingPoints
                   .asMap()
                   .entries
                   .map(
@@ -531,21 +533,21 @@ class _ParcelleDrawMapWidget extends StatelessWidget {
                   .toList(),
             ),
 
-            RichAttributionWidget(
-              attributions: [
-                TextSourceAttribution(
-                  'OpenStreetMap contributors',
-                  onTap: () => launchUrl(
-                    Uri.parse('https://www.openstreetmap.org/copyright'),
-                  ),
-                ),
-              ],
-            ),
+            mapAttributionWidget(_mapStyle),
           ],
+        ),
+        // ── Map style toggle ──────────────────────────────────────────────
+        Positioned(
+          top: 12,
+          right: 12,
+          child: MapStyleButton(
+            current: _mapStyle,
+            onChanged: (s) => setState(() => _mapStyle = s),
+          ),
         ),
 
         // ── Drawing mode hint banner ────────────────────────────────────────
-        if (isDrawing)
+        if (widget.isDrawing)
           Positioned(
             top: 12,
             left: 0,

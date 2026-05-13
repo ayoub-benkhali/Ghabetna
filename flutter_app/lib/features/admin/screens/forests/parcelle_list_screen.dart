@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
+import 'package:flutter_app/core/widgets/map_style_layer.dart';
 import 'package:flutter_app/features/admin/models/forest_model.dart';
 import 'package:flutter_app/features/admin/models/parcelle_model.dart';
 import 'package:flutter_app/features/admin/providers/forest_provider.dart';
@@ -8,7 +9,6 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 const _parcellePalette = [
   AppColors.info,
@@ -233,20 +233,28 @@ class _ParcelleTile extends ConsumerWidget {
 
 // ── Overview map ──────────────────────────────────────────────────────────────
 
-class _OverviewMap extends StatelessWidget {
+class _OverviewMap extends StatefulWidget {
   final ForestModel forest;
   final List<ParcelleModel> parcelles;
   const _OverviewMap({required this.forest, required this.parcelles});
 
   @override
+  State<_OverviewMap> createState() => _OverviewMapState();
+}
+
+class _OverviewMapState extends State<_OverviewMap> {
+  MapStyle _mapStyle = MapStyle.plain;
+
+  @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final forestPoints = forest.boundaryGeojson != null
-        ? _geoJsonToLatLng(forest.boundaryGeojson!)
+    final forestPoints = widget.forest.boundaryGeojson != null
+        ? _geoJsonToLatLng(widget.forest.boundaryGeojson!)
         : <LatLng>[];
 
-    final center = forest.centerLat != null && forest.centerLng != null
-        ? LatLng(forest.centerLat!, forest.centerLng!)
+    final center =
+        widget.forest.centerLat != null && widget.forest.centerLng != null
+        ? LatLng(widget.forest.centerLat!, widget.forest.centerLng!)
         : forestPoints.isNotEmpty
         ? _centroid(forestPoints)
         : const LatLng(33.8869, 9.5375);
@@ -265,11 +273,7 @@ class _OverviewMap extends StatelessWidget {
             ),
           ),
           children: [
-            TileLayer(
-              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'com.ghabetna.app',
-              maxZoom: 19,
-            ),
+            ...mapTileLayers(_mapStyle),
             if (forestPoints.length >= 3)
               PolygonLayer(
                 polygons: [
@@ -278,7 +282,7 @@ class _OverviewMap extends StatelessWidget {
                     color: AppColors.primaryGreen.withValues(alpha: 0.08),
                     borderColor: AppColors.primaryGreen,
                     borderStrokeWidth: 2.5,
-                    label: forest.name,
+                    label: widget.forest.name,
                     labelStyle: const TextStyle(
                       color: AppColors.darkForest,
                       fontSize: 12,
@@ -287,9 +291,9 @@ class _OverviewMap extends StatelessWidget {
                   ),
                 ],
               ),
-            if (parcelles.isNotEmpty)
+            if (widget.parcelles.isNotEmpty)
               PolygonLayer(
-                polygons: parcelles
+                polygons: widget.parcelles
                     .asMap()
                     .entries
                     .map((e) {
@@ -314,19 +318,19 @@ class _OverviewMap extends StatelessWidget {
                     .cast<Polygon>()
                     .toList(),
               ),
-            RichAttributionWidget(
-              attributions: [
-                TextSourceAttribution(
-                  'OpenStreetMap contributors',
-                  onTap: () => launchUrl(
-                    Uri.parse('https://www.openstreetmap.org/copyright'),
-                  ),
-                ),
-              ],
-            ),
+            mapAttributionWidget(_mapStyle),
           ],
         ),
-        if (parcelles.isNotEmpty)
+        // ── Map style toggle ──────────────────────────────────────────────
+        Positioned(
+          top: 12,
+          right: 12,
+          child: MapStyleButton(
+            current: _mapStyle,
+            onChanged: (s) => setState(() => _mapStyle = s),
+          ),
+        ),
+        if (widget.parcelles.isNotEmpty)
           Positioned(
             bottom: 16,
             left: 16,
@@ -347,7 +351,7 @@ class _OverviewMap extends StatelessWidget {
                     dashed: true,
                   ),
                   const SizedBox(height: 6),
-                  ...parcelles
+                  ...widget.parcelles
                       .take(5)
                       .toList()
                       .asMap()
@@ -363,10 +367,10 @@ class _OverviewMap extends StatelessWidget {
                           ),
                         ),
                       ),
-                  if (parcelles.length > 5) ...[
+                  if (widget.parcelles.length > 5) ...[
                     const SizedBox(height: 4),
                     Text(
-                      '+ ${parcelles.length - 5} ${l.others}',
+                      '+ ${widget.parcelles.length - 5} ${l.others}',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ],

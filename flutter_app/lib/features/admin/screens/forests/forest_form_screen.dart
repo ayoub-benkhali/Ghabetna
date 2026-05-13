@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_app/core/theme/app_colors.dart';
 import 'package:flutter_app/core/utils/polygon_utils.dart';
+import 'package:flutter_app/core/widgets/map_style_layer.dart';
 import 'package:flutter_app/features/admin/models/forest_model.dart';
 import 'package:flutter_app/features/admin/providers/forest_provider.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_app/core/widgets/app_bar_actions.dart';
 
 const _tunisiaCenter = LatLng(33.8869, 9.5375);
@@ -418,7 +418,7 @@ class _State extends ConsumerState<ForestFormScreen> {
 
 // ── Extracted map widget ──────────────────────────────────────────────────────
 
-class _ForestMapWidget extends StatelessWidget {
+class _ForestMapWidget extends StatefulWidget {
   final MapController mapController;
   final List<ForestModel> existingForests;
   final List<LatLng> drawingPoints;
@@ -434,13 +434,20 @@ class _ForestMapWidget extends StatelessWidget {
   });
 
   @override
+  State<_ForestMapWidget> createState() => _ForestMapWidgetState();
+}
+
+class _ForestMapWidgetState extends State<_ForestMapWidget> {
+  MapStyle _mapStyle = MapStyle.plain;
+
+  @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final hasPolygon = drawingPoints.length >= 3;
+    final hasPolygon = widget.drawingPoints.length >= 3;
 
     // Pre-convert existing forest boundaries so we don't re-parse GeoJSON on
     // every repaint triggered by drawing points being added.
-    final existingPolygons = existingForests
+    final existingPolygons = widget.existingForests
         .where((f) => f.boundaryGeojson != null)
         .map((f) => _geoJsonToLatLng(f.boundaryGeojson!))
         .where((pts) => pts.length >= 3)
@@ -449,17 +456,19 @@ class _ForestMapWidget extends StatelessWidget {
     return Stack(
       children: [
         FlutterMap(
-          mapController: mapController,
+          mapController: widget.mapController,
           options: MapOptions(
-            initialCenter: drawingPoints.isNotEmpty
-                ? drawingPoints.first
+            initialCenter: widget.drawingPoints.isNotEmpty
+                ? widget.drawingPoints.first
                 : _tunisiaCenter,
-            initialZoom: drawingPoints.isNotEmpty ? 12 : 8,
+            initialZoom: widget.drawingPoints.isNotEmpty ? 12 : 8,
             minZoom: 6,
             maxZoom: 18,
-            onTap: isDrawing ? (_, latlng) => onTap(latlng) : null,
+            onTap: widget.isDrawing
+                ? (_, latlng) => widget.onTap(latlng)
+                : null,
             interactionOptions: InteractionOptions(
-              flags: isDrawing
+              flags: widget.isDrawing
                   ? InteractiveFlag.pinchZoom | InteractiveFlag.doubleTapZoom
                   : InteractiveFlag.all,
               cursorKeyboardRotationOptions:
@@ -468,11 +477,7 @@ class _ForestMapWidget extends StatelessWidget {
           ),
           children: [
             // ── Base tile layer ───────────────────────────────────────────
-            TileLayer(
-              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'com.ghabetna.app',
-              maxZoom: 19,
-            ),
+            ...mapTileLayers(_mapStyle),
 
             // ── Existing forests overlay ──────────────────────────────────
             //
@@ -498,7 +503,7 @@ class _ForestMapWidget extends StatelessWidget {
               PolygonLayer(
                 polygons: [
                   Polygon(
-                    points: _filterValidPoints(drawingPoints),
+                    points: _filterValidPoints(widget.drawingPoints),
                     color: AppColors.primaryGreen.withValues(alpha: 0.2),
                     borderColor: AppColors.primaryGreen,
                     borderStrokeWidth: 2.5,
@@ -507,13 +512,13 @@ class _ForestMapWidget extends StatelessWidget {
               ),
 
             // ── Current drawing: outline while < 3 pts ────────────────────
-            if (drawingPoints.length >= 2)
+            if (widget.drawingPoints.length >= 2)
               PolylineLayer(
                 polylines: [
                   Polyline(
                     points: _filterValidPoints([
-                      ...drawingPoints,
-                      if (isDrawing) drawingPoints.first,
+                      ...widget.drawingPoints,
+                      if (widget.isDrawing) widget.drawingPoints.first,
                     ]),
                     color: !hasPolygon
                         ? AppColors.warning.withValues(alpha: 0.7)
@@ -525,7 +530,7 @@ class _ForestMapWidget extends StatelessWidget {
 
             // ── Vertex markers ────────────────────────────────────────────
             MarkerLayer(
-              markers: drawingPoints
+              markers: widget.drawingPoints
                   .asMap()
                   .entries
                   .map(
@@ -550,21 +555,20 @@ class _ForestMapWidget extends StatelessWidget {
                   .toList(),
             ),
 
-            RichAttributionWidget(
-              attributions: [
-                TextSourceAttribution(
-                  'OpenStreetMap contributors',
-                  onTap: () => launchUrl(
-                    Uri.parse('https://www.openstreetmap.org/copyright'),
-                  ),
-                ),
-              ],
-            ),
+            mapAttributionWidget(_mapStyle),
           ],
         ),
-
+        // ── Map style toggle ──────────────────────────────────────────────
+        Positioned(
+          top: 12,
+          right: 12,
+          child: MapStyleButton(
+            current: _mapStyle,
+            onChanged: (s) => setState(() => _mapStyle = s),
+          ),
+        ),
         // ── Drawing mode hint banner ──────────────────────────────────────
-        if (isDrawing)
+        if (widget.isDrawing)
           Positioned(
             top: 12,
             left: 0,
