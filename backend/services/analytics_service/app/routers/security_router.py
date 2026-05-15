@@ -116,24 +116,48 @@ async def get_summary(db: AsyncSession = Depends(get_db)) -> SecuritySummaryOut:
 @router.get("/events/recent", dependencies=[Depends(_verify_webhook_secret)])
 async def get_recent_events(db: AsyncSession = Depends(get_db)):
     """
-    n8n Workflow 2 calls this to get the last 30 min of events
-    before sending them to Gemini for summarization.
+    n8n Workflow 2 calls this to get the last 30 min of events AND alerts
+    before sending them to Groq for summarization.
     """
     since = datetime.now(timezone.utc) - timedelta(minutes=30)
-    result = await db.execute(
+
+    # ── Raw events ───────────────────────────────────────────────────────────
+    events_result = await db.execute(
         select(SecurityEvent)
         .where(SecurityEvent.timestamp >= since)
         .order_by(SecurityEvent.timestamp.desc())
     )
-    events = result.scalars().all()
-    return [
-        {
-            "event": e.event,
-            "email": e.email,
-            "role": e.role,
-            "ip": e.ip,
-            "failed_attempts": e.failed_attempts,
-            "timestamp": e.timestamp.isoformat(),
-        }
-        for e in events
-    ]
+    events = events_result.scalars().all()
+
+    # ── Fired alerts ─────────────────────────────────────────────────────────
+    alerts_result = await db.execute(
+        select(SecurityAlert)
+        .where(SecurityAlert.fired_at >= since)
+        .order_by(SecurityAlert.fired_at.desc())
+    )
+    alerts = alerts_result.scalars().all()
+
+    return {
+        "events": [
+            {
+                "event": e.event,
+                "email": e.email,
+                "role": e.role,
+                "ip": e.ip,
+                "failed_attempts": e.failed_attempts,
+                "timestamp": e.timestamp.isoformat(),
+            }
+            for e in events
+        ],
+        "alerts": [
+            {
+                "type": a.alert_type,
+                "severity": a.severity,
+                "email": a.email,
+                "ip": a.ip,
+                "detail": a.detail,
+                "fired_at": a.fired_at.isoformat(),
+            }
+            for a in alerts
+        ],
+    }
