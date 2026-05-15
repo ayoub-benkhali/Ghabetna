@@ -79,7 +79,7 @@ class SecurityCard extends ConsumerWidget {
                   const SizedBox(height: 6),
                   Text(
                     s.summaryText,
-                    style: Theme.of(context).textTheme.bodySmall,
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 6),
                   Text(
@@ -173,7 +173,7 @@ class _AlertRow extends StatelessWidget {
           const SizedBox(width: 6),
           Expanded(
             child: Text(
-              '$label${alert.ip != null ? " — ${alert.ip}" : ""}${alert.detail != null ? " — ${alert.detail}" : ""}',
+              '$label${alert.ip != null ? " from the IP ${alert.ip}" : ""}${alert.detail != null ? ": ${alert.detail}" : ""}',
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(color: color),
