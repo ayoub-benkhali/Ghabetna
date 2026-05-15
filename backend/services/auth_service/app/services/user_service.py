@@ -8,6 +8,8 @@ from app.schemas.user_schema import UserCreate,UserUpdate
 from app.services.email_service import send_activation_email
 from app.models.supervisor_forest import supervisor_forest
 from sqlalchemy.exc import IntegrityError
+import asyncio
+from app.utils.security_events import emit_security_event  
 
 async def create_user(data: UserCreate, db: AsyncSession) -> User:
     # --- 1. Check for duplicate email ---
@@ -54,7 +56,7 @@ async def create_user(data: UserCreate, db: AsyncSession) -> User:
                 status_code=status.HTTP_404_NOT_FOUND, detail="Service Not Found"
             )
 
-    # --- 4. Insert with IntegrityError safety net ---   ← NEW
+    # --- 4. Insert with IntegrityError safety net --- 
     user = User(
         email=data.email,
         full_name=data.full_name,
@@ -82,6 +84,15 @@ async def create_user(data: UserCreate, db: AsyncSession) -> User:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)
 
     await db.refresh(user)
+
+    # ── Security event ──────────────────────────────────────────────────────
+    asyncio.create_task(emit_security_event(
+        event="user_created",
+        email=user.email,
+        role="pending_activation",
+        ip="admin_action",
+        failed_attempts=0,
+    ))
 
     try:
         await send_activation_email(user.email, user.full_name, token)
@@ -129,8 +140,10 @@ async def update_user(user_id:int,data:UserUpdate,db:AsyncSession)->User:
         user.full_name=data.full_name
     if data.role_id is not None:
         role_result=await db.execute(select(Role).where(Role.id==data.role_id))
-        if not role_result.scalar_one_or_none():
+        role=role_result.scalar_one_or_none()          # ← store the object
+        if not role:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Role Not Found")
+        old_role_name = user.role.name if user.role else "unknown"  # ← capture before change
         user.role_id=data.role_id
     if data.cin is not None:
         user.cin = data.cin
@@ -146,10 +159,32 @@ async def update_user(user_id:int,data:UserUpdate,db:AsyncSession)->User:
         user.service_id=data.service_id
     await db.commit()
     await db.refresh(user)
+
+    # ── Security event (only fires if role changed) ─────────────────────────
+    if data.role_id is not None:
+        new_role_name = user.role.name if user.role else "unknown"
+        asyncio.create_task(emit_security_event(
+            event="role_change",
+            email=user.email,
+            role=new_role_name,
+            ip="admin_action",
+            failed_attempts=0,
+        ))
+
     return user
 
 async def delete_user(user_id:int,db:AsyncSession):
     user=await get_user(user_id,db)
-    #soft delete for now
+    role_name = user.role.name if user.role else "unknown"
+    #soft delete
     user.is_active=False
     await db.commit()
+
+    # ── Security event ──────────────────────────────────────────────────────
+    asyncio.create_task(emit_security_event(
+        event="account_deactivated",
+        email=user.email,
+        role=role_name,
+        ip="admin_action",
+        failed_attempts=0,
+    ))
