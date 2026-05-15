@@ -275,5 +275,19 @@
   "phoneInvalid":"Numéro de téléphone invalide",
   "authError422": "Adresse e-mail ou données invalides. Vérifiez les champs saisis.",
   "mapStylePlain": "Carte plan",
-  "mapStyleSatellite": "Satellite"
+  "mapStyleSatellite": "Satellite",
+  "securityDataUnavailable": "Données de sécurité indisponibles",
+  "securityTitle": "Sécurité",
+  "noAlertsLast24h": "Aucune alerte dans les dernières 24 heures.",
+  "aiSummary": "Résumé IA",
+  "lastUpdatedAt": "Dernière mise à jour à {time}",
+  "@lastUpdatedAt": { "placeholders": { "time": { "type": "String" } } },
+  "threatHigh": "ÉLEVÉ",
+  "threatMedium": "MOYEN",
+  "threatLow": "BAS",
+  "alertBruteForce": "Brute Force",
+  "alertOffHoursLogin": "Connexion hors horaires",
+  "alertFromIp": "depuis l'IP {ip}",
+  "@alertFromIp": { "placeholders": { "ip": { "type": "String" } } },
+  "securitySectionSubtitle": "Événements d'authentification & analyse des menaces"
 }

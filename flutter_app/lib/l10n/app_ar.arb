@@ -275,5 +275,20 @@
   "phoneInvalid":"رقم الهاتف غير صحيح",
   "authError422": "البريد الإلكتروني أو البيانات غير صالحة. يرجى مراجعة الحقول المُدخلة.",
   "mapStylePlain": "خريطة مسطحة",
-  "mapStyleSatellite": "صور جوية"
+  "mapStyleSatellite": "صور جوية",
+
+  "securityDataUnavailable": "بيانات الأمان غير متوفرة",
+  "securityTitle": "الأمان",
+  "noAlertsLast24h": "لا تنبيهات في الـ 24 ساعة الماضية.",
+  "aiSummary": "ملخص الذكاء الاصطناعي",
+  "lastUpdatedAt": "آخر تحديث {time}",
+  "@lastUpdatedAt": { "placeholders": { "time": { "type": "String" } } },
+  "threatHigh": "عالٍ",
+  "threatMedium": "متوسط",
+  "threatLow": "منخفض",
+  "alertBruteForce": "هجوم متكرر",
+  "alertOffHoursLogin": "دخول خارج أوقات العمل",
+  "alertFromIp": "من عنوان IP {ip}",
+  "@alertFromIp": { "placeholders": { "ip": { "type": "String" } } },
+  "securitySectionSubtitle": "تسجيل الدخول و تحليل التهديدات"
 }

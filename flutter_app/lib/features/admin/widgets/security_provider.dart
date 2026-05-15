@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_app/features/admin/providers/security_provider.dart';
 import 'package:flutter_app/features/admin/data/security_repository.dart';
@@ -10,13 +11,14 @@ class SecurityCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final summary = ref.watch(securitySummaryProvider);
+    final l = context.l10n;
 
     return summary.when(
       loading: () => const _SecurityCardShell(
         child: Center(child: CircularProgressIndicator()),
       ),
-      error: (_, __) => const _SecurityCardShell(
-        child: Center(child: Text('Security data unavailable')),
+      error: (_, _) => _SecurityCardShell(
+        child: Center(child: Text(l.securityDataUnavailable)),
       ),
       data: (s) => _SecurityCardShell(
         child: Column(
@@ -28,7 +30,7 @@ class SecurityCard extends ConsumerWidget {
                 const Icon(Icons.security, size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  'Security',
+                  l.securityTitle,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const Spacer(),
@@ -40,7 +42,7 @@ class SecurityCard extends ConsumerWidget {
             // ── Active alerts list ──────────────────────────────
             if (s.activeAlerts.isEmpty)
               Text(
-                'No alerts in the last 24 hours.',
+                l.noAlertsLast24h,
                 style: Theme.of(context).textTheme.bodySmall,
               )
             else
@@ -69,7 +71,7 @@ class SecurityCard extends ConsumerWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        'AI Summary',
+                        l.aiSummary,
                         style: Theme.of(
                           context,
                         ).textTheme.labelSmall?.copyWith(color: Colors.grey),
@@ -83,7 +85,9 @@ class SecurityCard extends ConsumerWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Last updated ${DateFormat('HH:mm').format(s.generatedAt.toLocal())}',
+                    l.lastUpdatedAt(
+                      DateFormat('HH:mm').format(s.generatedAt.toLocal()),
+                    ),
                     style: Theme.of(
                       context,
                     ).textTheme.labelSmall?.copyWith(color: Colors.grey),
@@ -119,10 +123,16 @@ class _ThreatBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final color = switch (level) {
       'high' => Colors.red,
       'medium' => Colors.orange,
       _ => Colors.green,
+    };
+    final label = switch (level) {
+      'high' => l.threatHigh,
+      'medium' => l.threatMedium,
+      _ => l.threatLow,
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -132,7 +142,7 @@ class _ThreatBadge extends StatelessWidget {
         border: Border.all(color: color.withOpacity(0.4)),
       ),
       child: Text(
-        level.toUpperCase(),
+        label,
         style: TextStyle(
           color: color,
           fontSize: 11,
@@ -149,6 +159,7 @@ class _AlertRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final color = switch (alert.severity) {
       'high' => Colors.red,
       'medium' => Colors.orange,
@@ -160,8 +171,8 @@ class _AlertRow extends StatelessWidget {
       _ => '🔵',
     };
     final label = switch (alert.alertType) {
-      'brute_force' => 'Brute force',
-      'off_hours_admin_login' => 'Off-hours login',
+      'brute_force' => l.alertBruteForce,
+      'off_hours_admin_login' => l.alertOffHoursLogin,
       _ => alert.alertType.replaceAll('_', ' '),
     };
 
@@ -173,7 +184,7 @@ class _AlertRow extends StatelessWidget {
           const SizedBox(width: 6),
           Expanded(
             child: Text(
-              '$label${alert.ip != null ? " from the IP ${alert.ip}" : ""}${alert.detail != null ? ": ${alert.detail}" : ""}',
+              '$label${alert.ip != null ? " ${l.alertFromIp(alert.ip!)}" : ""}${alert.detail != null ? ": ${alert.detail}" : ""}',
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(color: color),

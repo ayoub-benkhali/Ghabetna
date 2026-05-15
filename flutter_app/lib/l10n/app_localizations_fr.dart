@@ -760,4 +760,45 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get mapStyleSatellite => 'Satellite';
+
+  @override
+  String get securityDataUnavailable => 'Données de sécurité indisponibles';
+
+  @override
+  String get securityTitle => 'Sécurité';
+
+  @override
+  String get noAlertsLast24h => 'Aucune alerte dans les dernières 24 heures.';
+
+  @override
+  String get aiSummary => 'Résumé IA';
+
+  @override
+  String lastUpdatedAt(String time) {
+    return 'Dernière mise à jour à $time';
+  }
+
+  @override
+  String get threatHigh => 'ÉLEVÉ';
+
+  @override
+  String get threatMedium => 'MOYEN';
+
+  @override
+  String get threatLow => 'BAS';
+
+  @override
+  String get alertBruteForce => 'Brute Force';
+
+  @override
+  String get alertOffHoursLogin => 'Connexion hors horaires';
+
+  @override
+  String alertFromIp(String ip) {
+    return 'depuis l\'IP $ip';
+  }
+
+  @override
+  String get securitySectionSubtitle =>
+      'Événements d\'authentification & analyse des menaces';
 }

@@ -1537,6 +1537,78 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Satellite'**
   String get mapStyleSatellite;
+
+  /// No description provided for @securityDataUnavailable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Données de sécurité indisponibles'**
+  String get securityDataUnavailable;
+
+  /// No description provided for @securityTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sécurité'**
+  String get securityTitle;
+
+  /// No description provided for @noAlertsLast24h.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune alerte dans les dernières 24 heures.'**
+  String get noAlertsLast24h;
+
+  /// No description provided for @aiSummary.
+  ///
+  /// In fr, this message translates to:
+  /// **'Résumé IA'**
+  String get aiSummary;
+
+  /// No description provided for @lastUpdatedAt.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dernière mise à jour à {time}'**
+  String lastUpdatedAt(String time);
+
+  /// No description provided for @threatHigh.
+  ///
+  /// In fr, this message translates to:
+  /// **'ÉLEVÉ'**
+  String get threatHigh;
+
+  /// No description provided for @threatMedium.
+  ///
+  /// In fr, this message translates to:
+  /// **'MOYEN'**
+  String get threatMedium;
+
+  /// No description provided for @threatLow.
+  ///
+  /// In fr, this message translates to:
+  /// **'BAS'**
+  String get threatLow;
+
+  /// No description provided for @alertBruteForce.
+  ///
+  /// In fr, this message translates to:
+  /// **'Brute Force'**
+  String get alertBruteForce;
+
+  /// No description provided for @alertOffHoursLogin.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion hors horaires'**
+  String get alertOffHoursLogin;
+
+  /// No description provided for @alertFromIp.
+  ///
+  /// In fr, this message translates to:
+  /// **'depuis l\'IP {ip}'**
+  String alertFromIp(String ip);
+
+  /// No description provided for @securitySectionSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Événements d\'authentification & analyse des menaces'**
+  String get securitySectionSubtitle;
 }
 
 class _AppLocalizationsDelegate

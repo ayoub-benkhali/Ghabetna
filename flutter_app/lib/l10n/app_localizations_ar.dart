@@ -750,4 +750,44 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get mapStyleSatellite => 'صور جوية';
+
+  @override
+  String get securityDataUnavailable => 'بيانات الأمان غير متوفرة';
+
+  @override
+  String get securityTitle => 'الأمان';
+
+  @override
+  String get noAlertsLast24h => 'لا تنبيهات في الـ 24 ساعة الماضية.';
+
+  @override
+  String get aiSummary => 'ملخص الذكاء الاصطناعي';
+
+  @override
+  String lastUpdatedAt(String time) {
+    return 'آخر تحديث $time';
+  }
+
+  @override
+  String get threatHigh => 'عالٍ';
+
+  @override
+  String get threatMedium => 'متوسط';
+
+  @override
+  String get threatLow => 'منخفض';
+
+  @override
+  String get alertBruteForce => 'هجوم متكرر';
+
+  @override
+  String get alertOffHoursLogin => 'دخول خارج أوقات العمل';
+
+  @override
+  String alertFromIp(String ip) {
+    return 'من عنوان IP $ip';
+  }
+
+  @override
+  String get securitySectionSubtitle => 'تسجيل الدخول و تحليل التهديدات';
 }
