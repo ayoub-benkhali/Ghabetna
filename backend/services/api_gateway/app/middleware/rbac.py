@@ -65,6 +65,9 @@ ROUTE_PERMISSIONS: dict[tuple[str, str], str] = {
     ("GET",   "/api/incidents"):    "incident:read",
     ("PUT",   "/api/incidents/"):   "incident:update",
     ("DELETE","/api/incidents/"):   "incident:delete",
+
+    # Security (admin only — analytics:read permission covers this)
+    ("GET", "/api/analytics/security"):  "analytics:read",
 }
 
 PARCELLE_PERMISSIONS = {

@@ -8,6 +8,7 @@ import 'package:flutter_app/core/widgets/app_bar_actions.dart';
 import 'package:flutter_app/features/admin/providers/analytics_provider.dart';
 import 'package:flutter_app/features/admin/providers/forest_provider.dart';
 import 'package:flutter_app/features/admin/providers/user_provider.dart';
+import 'package:flutter_app/features/admin/widgets/security_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -240,6 +241,21 @@ class DashboardScreen extends ConsumerWidget {
                 ),
               ],
             ),
+            // ══════════════════════════════════════════════════════════════
+            // SECTION — Security
+            // ══════════════════════════════════════════════════════════════
+            const SizedBox(height: 32),
+            Text('Security', style: Theme.of(context).textTheme.headlineMedium),
+            const SizedBox(height: 4),
+            Text(
+              'Authentication events & threat analysis',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 20),
+            const Divider(),
+            const SizedBox(height: 16),
+            const SecurityCard(),
+            const SizedBox(height: 32),
           ],
         ),
       ),

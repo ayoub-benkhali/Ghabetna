@@ -53,6 +53,23 @@ services:
       timeout: 5s
       retries: 5
 
+  analytics-db:
+    image: postgres:16-alpine
+    container_name: ghabetna_analytics_db
+    environment:
+      POSTGRES_USER: ${ANALYTICS_DB_USER}
+      POSTGRES_PASSWORD: ${ANALYTICS_DB_PASSWORD}
+      POSTGRES_DB: ${ANALYTICS_DB_NAME}
+    ports:
+      - "${ANALYTICS_DB_PORT}:5432"
+    volumes:
+      - analytics_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${ANALYTICS_DB_USER} -d ${ANALYTICS_DB_NAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   #========= Redis =========
   redis:
     image: redis:7-alpine
@@ -188,8 +205,10 @@ services:
     environment:
       INCIDENT_SERVICE_URL: http://incident-service:8000
       JWT_SECRET: ${JWT_SECRET}
+      ANALYTICS_DATABASE_URL: postgresql+asyncpg://${ANALYTICS_DB_USER}:${ANALYTICS_DB_PASSWORD}@analytics-db:5432/${ANALYTICS_DB_NAME}
+      SECURITY_WEBHOOK_SECRET: ${SECURITY_WEBHOOK_SECRET}
     depends_on:
-      incident-db:
+      analytics-db:
         condition: service_healthy
     ports:
       - "8004:8000"
@@ -209,6 +228,7 @@ volumes:
   auth_db_data:
   forest_db_data:
   incident_db_data:
+  analytics_db_data:
   redis_data:
   incident_uploads:
   n8n_data:

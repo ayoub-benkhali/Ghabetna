@@ -56,3 +56,44 @@ async def density(request: Request):
 async def peak_hours(request: Request):
     await verify_and_inject(request)
     return await _proxy("/peak-hours", request)
+
+# ── Security endpoints ────────────────────────────────────────────────────────
+
+@router.get("/security/summary")
+async def security_summary(request: Request):
+    await verify_and_inject(request)
+    # Security router is mounted at /security, NOT /analytics/security
+    async with httpx.AsyncClient(base_url=settings.ANALYTICS_SERVICE_URL) as client:
+        resp = await client.request(
+            method=request.method,
+            url="/security/summary",
+            headers={
+                "Content-Type": request.headers.get("Content-Type", "application/json"),
+                "Authorization": request.headers.get("Authorization", ""),
+            },
+            params=dict(request.query_params),
+        )
+    return Response(
+        content=resp.content,
+        status_code=resp.status_code,
+        media_type=resp.headers.get("content-type"),
+    )
+
+@router.get("/security/alerts")
+async def security_alerts(request: Request):
+    await verify_and_inject(request)
+    async with httpx.AsyncClient(base_url=settings.ANALYTICS_SERVICE_URL) as client:
+        resp = await client.request(
+            method=request.method,
+            url="/security/alerts",
+            headers={
+                "Content-Type": request.headers.get("Content-Type", "application/json"),
+                "Authorization": request.headers.get("Authorization", ""),
+            },
+            params=dict(request.query_params),
+        )
+    return Response(
+        content=resp.content,
+        status_code=resp.status_code,
+        media_type=resp.headers.get("content-type"),
+    )
