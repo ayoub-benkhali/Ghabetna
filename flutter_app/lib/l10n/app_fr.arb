@@ -289,5 +289,7 @@
   "alertOffHoursLogin": "Connexion hors horaires",
   "alertFromIp": "depuis l'IP {ip}",
   "@alertFromIp": { "placeholders": { "ip": { "type": "String" } } },
-  "securitySectionSubtitle": "Événements d'authentification & analyse des menaces"
+  "securitySectionSubtitle": "Événements d'authentification & analyse des menaces",
+  "assignedAgents": "Agents assignés à la parcelle",
+  "noAgentsAssigned": "Aucun agent assigné à cette parcelle"
 }

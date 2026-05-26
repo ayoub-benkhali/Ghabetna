@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_app/core/api/api_client.dart';
+import 'package:flutter_app/features/admin/models/user_model.dart';
 
 class AssignmentRepository {
   final Dio _dio = ApiClient.instance.dio;
@@ -42,5 +43,10 @@ class AssignmentRepository {
   Future<List<int>> getSupervisorForestIds(int userId) async {
     final resp = await _dio.get('/api/assignments/supervisors/$userId');
     return (resp.data['forest_ids'] as List).cast<int>();
+  }
+
+  Future<List<UserModel>> getAgentsForParcelle(int parcelleId) async {
+    final r = await _dio.get('/api/assignments/parcelles/$parcelleId/agents');
+    return (r.data as List).map((e) => UserModel.fromJson(e)).toList();
   }
 }

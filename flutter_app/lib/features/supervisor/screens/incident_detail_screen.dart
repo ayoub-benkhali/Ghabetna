@@ -130,6 +130,9 @@ class _IncidentDetail extends ConsumerWidget {
           _GeoContextCard(incidentId: incident.id),
           const SizedBox(height: 16),
 
+          _ParcelleAgentsCard(parcelleId: incident.parcelleId),
+          const SizedBox(height: 16),
+
           _DescriptionCard(incident: incident),
           const SizedBox(height: 16),
           _SupervisorActionCard(
@@ -857,6 +860,128 @@ class _GeoRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Parcelle agents card ──────────────────────────────────────────────────────
+class _ParcelleAgentsCard extends ConsumerWidget {
+  final int? parcelleId;
+  const _ParcelleAgentsCard({required this.parcelleId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (parcelleId == null) return const SizedBox.shrink();
+
+    final l = context.l10n;
+    final theme = Theme.of(context);
+    final asyncAgents = ref.watch(parcelleAgentsProvider(parcelleId));
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Header ──
+            Row(
+              children: [
+                const Icon(Icons.people_outline, color: AppColors.primaryGreen),
+                const SizedBox(width: 8),
+                Text(
+                  l.assignedAgents, // add this key to your l10n
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 24),
+            // ── Async content ──
+            asyncAgents.when(
+              loading: () => const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+              error: (_, __) => Text(
+                l.geoContextUnavailable,
+                style: const TextStyle(color: AppColors.danger),
+              ),
+              data: (agents) {
+                if (agents.isEmpty) {
+                  return Row(
+                    children: [
+                      const Icon(
+                        Icons.person_off_outlined,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        l.noAgentsAssigned, // add this key
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  );
+                }
+                return Column(
+                  children: agents
+                      .map(
+                        (agent) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 14,
+                                backgroundColor: AppColors.primaryGreen
+                                    .withOpacity(.12),
+                                child: Text(
+                                  agent.fullName.isNotEmpty
+                                      ? agent.fullName[0].toUpperCase()
+                                      : '?',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.primaryGreen,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      agent.fullName,
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                    if (agent.phoneNumber != null)
+                                      Text(
+                                        agent.phoneNumber!,
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(color: Colors.grey),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                      .toList(),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

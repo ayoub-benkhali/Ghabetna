@@ -1,6 +1,6 @@
 from fastapi import APIRouter,Depends, HTTPException, status
 from app.database import get_db
-from app.schemas.user_schema import UserResponse
+from app.schemas.user_schema import UserResponse, UserWithRoleResponse
 from app.utils.deps import require_permission
 from app.schemas.assignment_schema import AssignmentResponse,AssignRequest,SupervisorAssignmentResponse,SupervisorAssignRequest
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -39,7 +39,7 @@ async def get_user_assignment(user_id:int,db:AsyncSession=Depends(get_db),_:None
     user=await _get_agent(user_id,db)
     return AssignmentResponse(user_id=user.id,parcelle_id=user.parcelle_id)
 
-@router.get("/parcelles/{parcelle_id}/agents",response_model=list[UserResponse],summary="Get all agents assigned to a parcelle")
+@router.get("/parcelles/{parcelle_id}/agents",response_model=list[UserWithRoleResponse],summary="Get all agents assigned to a parcelle")
 async def get_agents_for_parcelle(parcelle_id:int,db:AsyncSession=Depends(get_db),_:None=Depends(require_permission("assignment:read"))):
     result=await db.execute(select(User).where(User.parcelle_id==parcelle_id))
     return list(result.scalars().all())

@@ -790,4 +790,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get securitySectionSubtitle => 'تسجيل الدخول و تحليل التهديدات';
+
+  @override
+  String get assignedAgents => 'الأعوان المخصصون للقطعة';
+
+  @override
+  String get noAgentsAssigned => 'لا يوجد أعوان مخصصون لهذه القطعة';
 }

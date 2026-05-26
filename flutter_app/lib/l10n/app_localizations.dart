@@ -1609,6 +1609,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Événements d\'authentification & analyse des menaces'**
   String get securitySectionSubtitle;
+
+  /// No description provided for @assignedAgents.
+  ///
+  /// In fr, this message translates to:
+  /// **'Agents assignés à la parcelle'**
+  String get assignedAgents;
+
+  /// No description provided for @noAgentsAssigned.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun agent assigné à cette parcelle'**
+  String get noAgentsAssigned;
 }
 
 class _AppLocalizationsDelegate

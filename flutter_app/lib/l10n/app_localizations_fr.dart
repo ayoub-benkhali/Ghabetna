@@ -801,4 +801,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get securitySectionSubtitle =>
       'Événements d\'authentification & analyse des menaces';
+
+  @override
+  String get assignedAgents => 'Agents assignés à la parcelle';
+
+  @override
+  String get noAgentsAssigned => 'Aucun agent assigné à cette parcelle';
 }
