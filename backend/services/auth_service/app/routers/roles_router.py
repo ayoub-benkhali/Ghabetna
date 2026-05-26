@@ -16,9 +16,7 @@ VALID_PERMISSONS={
     "assignment:create", "assignment:read", "assignment:delete",
     "incident:create","incident:read", "incident:update", "incident:validate",
     "service:create", "service:read", "service:update", "service:delete",
-    "score:read", "score:update",
     "analytics:read",
-    "notification:send",
 }
 
 @router.get("",response_model=list[RoleResponse])

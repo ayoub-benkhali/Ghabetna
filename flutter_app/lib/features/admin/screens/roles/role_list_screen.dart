@@ -35,10 +35,7 @@ const _allPermissions = [
   'incident:read',
   'incident:update',
   'incident:validate',
-  'score:read',
-  'score:update',
   'analytics:read',
-  'notification:send',
 ];
 
 const _resourceColors = {

@@ -100,17 +100,6 @@ services:
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false
     volumes:
       - n8n_data:/home/node/.n8n
-
-  #========= Ollama =========
-  ollama:
-    image: ollama/ollama
-    container_name: ghabetna_ollama
-    restart: unless-stopped
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-
   #========= Services =========
   auth-service:
     build: ./services/auth_service
@@ -232,4 +221,3 @@ volumes:
   redis_data:
   incident_uploads:
   n8n_data:
-  ollama_data:

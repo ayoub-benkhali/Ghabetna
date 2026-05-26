@@ -34,6 +34,16 @@ class SecurityCard extends ConsumerWidget {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const Spacer(),
+                if (s.activeAlerts.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Text(
+                      '${s.activeAlerts.take(5).length} alert${s.activeAlerts.take(5).length == 1 ? '' : 's'}',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelSmall?.copyWith(color: Colors.grey),
+                    ),
+                  ),
                 _ThreatBadge(level: s.threatLevel),
               ],
             ),
@@ -46,7 +56,7 @@ class SecurityCard extends ConsumerWidget {
                 style: Theme.of(context).textTheme.bodySmall,
               )
             else
-              ...s.activeAlerts.map((a) => _AlertRow(alert: a)),
+              ...s.activeAlerts.take(5).map((a) => _AlertRow(alert: a)),
 
             const SizedBox(height: 16),
             const Divider(),

@@ -27,9 +27,7 @@ ROLES_DATA = [
             "service:create", "service:read", "service:update", "service:delete",
             "assignment:create", "assignment:read", "assignment:delete",
             "incident:read", "incident:update", "incident:validate",
-            "score:read", "score:update",
             "analytics:read",
-            "notification:send",
         ],
     },
     {
@@ -42,7 +40,6 @@ ROLES_DATA = [
             "parcelle:read",
             "assignment:create", "assignment:read", "assignment:delete",
             "incident:read", "incident:update", "incident:validate",
-            "score:read", "score:update",
             "analytics:read",
         ],
     },
@@ -52,7 +49,6 @@ ROLES_DATA = [
         "permissions": [
             "forest:read",
             "incident:create", "incident:read",
-            "score:read",
         ],
     },
 ]
