@@ -871,12 +871,15 @@ class _ParcelleAgentsCard extends ConsumerWidget {
   const _ParcelleAgentsCard({required this.parcelleId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    if (parcelleId == null) return const SizedBox.shrink();
+Widget build(BuildContext context, WidgetRef ref) {
+// Copy the nullable field into a local so Dart promotes it to non-null
+// after the check below (instance fields aren't promoted across calls).
+final id = parcelleId;
+if (id == null) return const SizedBox.shrink();
+final l = context.l10n;
+final theme = Theme.of(context);
+final asyncAgents = ref.watch(parcelleAgentsProvider(id));
 
-    final l = context.l10n;
-    final theme = Theme.of(context);
-    final asyncAgents = ref.watch(parcelleAgentsProvider(parcelleId));
 
     return Card(
       child: Padding(

@@ -1,5 +1,6 @@
 import 'dart:async';
-
+import 'package:flutter_app/features/admin/models/user_model.dart';
+import 'package:flutter_app/features/admin/providers/assignment_provider.dart';
 import 'package:flutter_app/features/auth/providers/user_session_provider.dart';
 import 'package:flutter_app/features/incidents/models/incident_model.dart';
 import 'package:flutter_app/features/supervisor/data/supervisor_incident_repository.dart';
@@ -97,4 +98,14 @@ final singleIncidentProvider = FutureProvider.autoDispose
       }
 
       return incident;
+    });
+
+/// Returns the agents assigned to a given parcelle.
+/// Used by the supervisor's incident detail screen to display the field team
+/// responsible for the parcelle where an incident was reported.
+final parcelleAgentsProvider = FutureProvider.autoDispose
+    .family<List<UserModel>, int>((ref, parcelleId) async {
+      return ref
+          .watch(assignmentRepositoryProvider)
+          .getAgentsForParcelle(parcelleId);
     });
