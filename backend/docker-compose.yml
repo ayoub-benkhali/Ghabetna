@@ -172,6 +172,7 @@ services:
       - forest-service
       - incident-service
       - analytics-service
+      - chat-service
     ports:
       - "8000:8000"
     volumes:
@@ -236,3 +237,4 @@ volumes:
   redis_data:
   incident_uploads:
   n8n_data:
+  chat_chroma:
