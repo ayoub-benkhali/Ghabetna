@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     FOREST_SERVICE_URL:str="http://forest-service:8000"
     INCIDENT_SERVICE_URL:str="http://incident-service:8000"
     ANALYTICS_SERVICE_URL: str = "http://analytics-service:8000"
+    CHAT_SERVICE_URL: str = "http://chat-service:8000"
     JWT_SECRET: str
     JWT_ALGORITHM: str = "HS256"
 

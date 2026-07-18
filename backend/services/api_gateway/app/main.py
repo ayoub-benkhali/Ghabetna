@@ -9,6 +9,7 @@ from app.routers.service_proxy import router as services_router
 from app.routers.assignment_proxy import router as assignments_router
 from app.routers.incident_proxy import router as incidents_router
 from app.routers.analytics_proxy import router as analytics_router
+from app.routers.chat_proxy import router as chat_router
 import os
 from contextlib import asynccontextmanager
 from fastapi.staticfiles import StaticFiles
@@ -39,6 +40,7 @@ app.include_router(services_router)
 app.include_router(assignments_router)
 app.include_router(incidents_router)
 app.include_router(analytics_router)
+app.include_router(chat_router)
 
 @app.get("/health")
 async def health():
