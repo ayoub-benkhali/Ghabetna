@@ -115,7 +115,6 @@ services:
       - chat_chroma:/app/chroma_db
     ports:
       - "8005:8000"
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
   auth-service:
     build: ./services/auth_service
     container_name: ghabetna_auth_service
