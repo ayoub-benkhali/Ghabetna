@@ -1621,6 +1621,30 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Aucun agent assigné à cette parcelle'**
   String get noAgentsAssigned;
+
+  /// No description provided for @chat.
+  ///
+  /// In fr, this message translates to:
+  /// **'Assistant'**
+  String get chat;
+
+  /// No description provided for @chatSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Assistant forestier'**
+  String get chatSubtitle;
+
+  /// No description provided for @chatNewConversation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle conversation'**
+  String get chatNewConversation;
+
+  /// No description provided for @chatInputHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Posez votre question...'**
+  String get chatInputHint;
 }
 
 class _AppLocalizationsDelegate

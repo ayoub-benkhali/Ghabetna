@@ -115,7 +115,7 @@ class _ParcelleLayout extends ConsumerWidget {
                     : ListView.separated(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         itemCount: parcelles.length,
-                        separatorBuilder: (_, __) => Divider(
+                        separatorBuilder: (_, _) => Divider(
                           height: 1,
                           color: Theme.of(context).dividerColor,
                         ),

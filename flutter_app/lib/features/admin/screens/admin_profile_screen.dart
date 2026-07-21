@@ -318,7 +318,7 @@ class _SysStatTile extends StatelessWidget {
                 width: 16,
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
-              error: (_, __) => const Icon(Icons.error_outline, size: 14),
+              error: (_, _) => const Icon(Icons.error_outline, size: 14),
               data: (v) => Text(
                 '$v',
                 style: TextStyle(

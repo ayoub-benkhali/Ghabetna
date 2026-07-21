@@ -14,10 +14,10 @@ class SupervisorIncidentRepository {
     final resp = await _dio.get(
       '/api/incidents',
       queryParameters: {
-        if (status != null) 'status': status,
-        if (category != null) 'category': category,
-        if (forestId != null) 'forest_id': forestId,
-        if (parcelleId != null) 'parcelle_id': parcelleId,
+        'status': ?status,
+        'category': ?category,
+        'forest_id': ?forestId,
+        'parcelle_id': ?parcelleId,
       },
     );
     return (resp.data as List)
@@ -34,7 +34,7 @@ class SupervisorIncidentRepository {
       '/api/incidents/$id',
       data: {
         'status': status,
-        if (comment != null) 'supervisor_comment': comment,
+        'supervisor_comment': ?comment,
       },
     );
     return IncidentModel.fromJson(resp.data as Map<String, dynamic>);

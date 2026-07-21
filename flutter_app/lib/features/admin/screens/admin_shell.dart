@@ -33,6 +33,7 @@ List<_NavItem> _buildNavItems(BuildContext context) {
     _NavItem(l.users, Icons.people_outline, '/admin/users'),
     _NavItem(l.roles, Icons.shield_outlined, '/admin/roles'),
     _NavItem(l.adminServices, Icons.account_tree_outlined, '/admin/services'),
+    _NavItem(l.chat, Icons.smart_toy_outlined, '/admin/chat'),
   ];
 }
 

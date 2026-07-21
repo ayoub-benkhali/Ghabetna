@@ -69,7 +69,7 @@ class DashboardScreen extends ConsumerWidget {
                   value: users.when(
                     data: (d) => '${d.length}',
                     loading: () => '…',
-                    error: (_, __) => '!',
+                    error: (_, _) => '!',
                   ),
                 ),
                 const SizedBox(width: 2),
@@ -80,7 +80,7 @@ class DashboardScreen extends ConsumerWidget {
                   value: services.when(
                     data: (d) => '${d.length}',
                     loading: () => '…',
-                    error: (_, __) => '!',
+                    error: (_, _) => '!',
                   ),
                 ),
                 const SizedBox(width: 2),
@@ -92,7 +92,7 @@ class DashboardScreen extends ConsumerWidget {
                     data: (list) =>
                         '${list.fold(0, (sum, f) => sum + f.parcelleCount)}',
                     loading: () => '…',
-                    error: (_, __) => '!',
+                    error: (_, _) => '!',
                   ),
                 ),
               ],
@@ -517,7 +517,7 @@ class _MonthlyLineChart extends StatelessWidget {
       barWidth: dotted ? 2 : 3,
       dotData: FlDotData(
         show: true,
-        getDotPainter: (spot, _, __, ___) => FlDotCirclePainter(
+        getDotPainter: (spot, _, _, _) => FlDotCirclePainter(
           radius: 3,
           color: color,
           strokeWidth: 1.5,

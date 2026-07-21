@@ -292,5 +292,9 @@
   "@alertFromIp": { "placeholders": { "ip": { "type": "String" } } },
   "securitySectionSubtitle": "تسجيل الدخول و تحليل التهديدات",
   "assignedAgents": "الأعوان المخصصون للقطعة",
-  "noAgentsAssigned": "لا يوجد أعوان مخصصون لهذه القطعة"
+  "noAgentsAssigned": "لا يوجد أعوان مخصصون لهذه القطعة",
+  "chat": "المساعد",
+"chatSubtitle": "المساعد الحرجي",
+"chatNewConversation": "محادثة جديدة",
+"chatInputHint": "اطرح سؤالك..."
 }

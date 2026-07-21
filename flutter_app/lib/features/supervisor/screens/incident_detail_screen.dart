@@ -179,10 +179,10 @@ class _HeaderCard extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.danger.withOpacity(.12),
+                      color: AppColors.danger.withValues(alpha: .12),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: AppColors.danger.withOpacity(.4),
+                        color: AppColors.danger.withValues(alpha: .4),
                       ),
                     ),
                     child: Row(
@@ -248,9 +248,9 @@ class _StatusChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
-        color: _color.withOpacity(.12),
+        color: _color.withValues(alpha: .12),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _color.withOpacity(.4)),
+        border: Border.all(color: _color.withValues(alpha: .4)),
       ),
       child: Text(
         labels[status] ?? status,
@@ -284,7 +284,7 @@ class _ImageCard extends StatelessWidget {
                 child: Image.network(
                   imageUrl,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const Icon(
+                  errorBuilder: (_, _, _) => const Icon(
                     Icons.broken_image_outlined,
                     size: 64,
                     color: Colors.white38,
@@ -357,7 +357,7 @@ class _ImageCard extends StatelessWidget {
                   }
                   return child;
                 },
-                errorBuilder: (_, error, __) {
+                errorBuilder: (_, error, _) {
                   debugPrint('Image load error for $imageUrl: $error');
                   return const SizedBox(
                     height: 80,
@@ -480,9 +480,9 @@ class _DescriptionCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.info.withOpacity(.08),
+                  color: AppColors.info.withValues(alpha: .08),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.info.withOpacity(.25)),
+                  border: Border.all(color: AppColors.info.withValues(alpha: .25)),
                 ),
                 child: Text(incident.supervisorComment!),
               ),
@@ -559,7 +559,7 @@ class _SupervisorActionCardState extends ConsumerState<_SupervisorActionCard> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: _selectedStatus,
+              initialValue: _selectedStatus,
               decoration: InputDecoration(
                 labelText: l.status,
                 border: const OutlineInputBorder(),
@@ -687,7 +687,7 @@ class _GeoContextCard extends ConsumerWidget {
       // nothing — the parent screen already shows a full-screen spinner on
       // the very first load, and subsequent polling re-fetches are silent.
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
       data: (incident) => _GeoContextCardContent(incident: incident),
     );
   }
@@ -784,7 +784,7 @@ class _GeoContextCardContent extends ConsumerWidget {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
               ),
-              error: (_, __) => Text(
+              error: (_, _) => Text(
                 l.geoContextUnavailable,
                 style: const TextStyle(color: AppColors.danger),
               ),
@@ -909,7 +909,7 @@ final asyncAgents = ref.watch(parcelleAgentsProvider(id));
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
               ),
-              error: (_, __) => Text(
+              error: (_, _) => Text(
                 l.geoContextUnavailable,
                 style: const TextStyle(color: AppColors.danger),
               ),
@@ -942,7 +942,7 @@ final asyncAgents = ref.watch(parcelleAgentsProvider(id));
                               CircleAvatar(
                                 radius: 14,
                                 backgroundColor: AppColors.primaryGreen
-                                    .withOpacity(.12),
+                                    .withValues(alpha: .12),
                                 child: Text(
                                   agent.fullName.isNotEmpty
                                       ? agent.fullName[0].toUpperCase()

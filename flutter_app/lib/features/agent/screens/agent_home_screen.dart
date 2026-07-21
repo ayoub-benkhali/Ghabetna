@@ -18,6 +18,11 @@ class AgentHomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l.appTitle),
         actions: [
+        IconButton(
+        icon: const Icon(Icons.smart_toy_outlined),
+         tooltip: l.chat,
+         onPressed: () => context.push('/agent/chat'),
+         ),
           IconButton(
             icon: const Icon(Icons.person_outline),
             tooltip: l.myProfile,

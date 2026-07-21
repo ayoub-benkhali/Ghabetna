@@ -23,6 +23,7 @@ import 'package:flutter_app/features/supervisor/screens/supervisor_profile_scree
 import 'package:flutter_app/features/supervisor/screens/supervisor_shell.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_app/features/chat/screens/chat_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
@@ -47,8 +48,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
-      GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+      GoRoute(path: '/splash', builder: (_, _) => const SplashScreen()),
+      GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(
         path: '/activate',
         builder: (context, state) {
@@ -57,18 +58,22 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       // Agent routes
-      GoRoute(path: '/agent/home', builder: (_, __) => const AgentHomeScreen()),
+      GoRoute(path: '/agent/home', builder: (_, _) => const AgentHomeScreen()),
       GoRoute(
         path: '/agent/report',
-        builder: (_, __) => const ReportIncidentScreen(),
+        builder: (_, _) => const ReportIncidentScreen(),
       ),
       GoRoute(
         path: '/agent/incidents',
-        builder: (_, __) => const MyIncidentsScreen(),
+        builder: (_, _) => const MyIncidentsScreen(),
       ),
       GoRoute(
         path: '/agent/profile',
-        builder: (_, __) => const AgentProfileScreen(),
+        builder: (_, _) => const AgentProfileScreen(),
+      ),
+      GoRoute(
+         path: '/agent/chat',
+         builder: (_, _) => const ChatScreen(),
       ),
       // Admin routes wrapped in AdminShell
       ShellRoute(
@@ -76,15 +81,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: '/admin/dashboard',
-            builder: (_, __) => const DashboardScreen(),
+            builder: (_, _) => const DashboardScreen(),
           ),
           GoRoute(
             path: '/admin/forests',
-            builder: (_, __) => const ForestListScreen(),
+            builder: (_, _) => const ForestListScreen(),
             routes: [
               GoRoute(
                 path: 'new',
-                builder: (_, __) => const ForestFormScreen(),
+                builder: (_, _) => const ForestFormScreen(),
               ),
               GoRoute(
                 path: ':forestId/edit',
@@ -119,19 +124,23 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/admin/users',
-            builder: (_, __) => const UserListScreen(),
+            builder: (_, _) => const UserListScreen(),
           ),
           GoRoute(
             path: '/admin/roles',
-            builder: (_, __) => const RoleListScreen(),
+            builder: (_, _) => const RoleListScreen(),
           ),
           GoRoute(
             path: '/admin/services',
-            builder: (_, __) => const ServiceListScreen(),
+            builder: (_, _) => const ServiceListScreen(),
           ),
           GoRoute(
             path: '/admin/profile',
-            builder: (_, __) => const AdminProfileScreen(),
+            builder: (_, _) => const AdminProfileScreen(),
+          ),
+          GoRoute(
+           path: '/admin/chat',
+          builder: (_, _) => const ChatScreen(),
           ),
         ],
       ),
@@ -140,7 +149,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: '/supervisor/incidents',
-            builder: (_, __) => const SupervisorIncidentScreen(),
+            builder: (_, _) => const SupervisorIncidentScreen(),
           ),
           GoRoute(
             path: '/supervisor/incidents/:id',
@@ -150,11 +159,15 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/supervisor/map',
-            builder: (_, __) => const SupervisorMapScreen(),
+            builder: (_, _) => const SupervisorMapScreen(),
           ),
           GoRoute(
             path: '/supervisor/profile',
-            builder: (_, __) => const SupervisorProfileScreen(),
+            builder: (_, _) => const SupervisorProfileScreen(),
+          ),
+          GoRoute(
+            path: '/supervisor/chat',
+            builder: (_, _) => const ChatScreen(),
           ),
           // we'll add /supervisor/agents and /supervisor/analytics later
         ],

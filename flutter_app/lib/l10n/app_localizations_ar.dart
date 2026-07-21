@@ -796,4 +796,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noAgentsAssigned => 'لا يوجد أعوان مخصصون لهذه القطعة';
+
+  @override
+  String get chat => 'المساعد';
+
+  @override
+  String get chatSubtitle => 'المساعد الحرجي';
+
+  @override
+  String get chatNewConversation => 'محادثة جديدة';
+
+  @override
+  String get chatInputHint => 'اطرح سؤالك...';
 }

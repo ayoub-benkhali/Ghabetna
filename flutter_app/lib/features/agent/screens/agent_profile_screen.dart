@@ -311,7 +311,7 @@ class _ParcelleAssignmentTile extends ConsumerWidget {
         leading: Icon(Icons.map_outlined, color: AppColors.primaryGreen),
         title: LinearProgressIndicator(),
       ),
-      error: (_, __) => ListTile(
+      error: (_, _) => ListTile(
         leading: const Icon(Icons.map_outlined, color: AppColors.primaryGreen),
         title: Text(l.assignedParcelle),
         subtitle: Text('${l.parcelles} #$parcelleId'),

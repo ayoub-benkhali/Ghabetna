@@ -29,6 +29,7 @@ List<_NavItem> _buildNavItems(BuildContext context) {
   return [
     _NavItem(l.incidents, Icons.list_alt_outlined, '/supervisor/incidents'),
     _NavItem(l.map, Icons.map_outlined, '/supervisor/map'),
+    _NavItem(l.chat, Icons.smart_toy_outlined, '/supervisor/chat'),
   ];
 }
 
@@ -99,16 +100,15 @@ class _WideLayout extends ConsumerWidget {
                   // User info chip
                   if (user != null)
                     InkWell(
-                      onTap: ()=>context.go('/supervisor/profile'),
+                      onTap: () => context.go('/supervisor/profile'),
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
                         child: Row(
                           children: [
                             CircleAvatar(
                               radius: 16,
-                              backgroundColor: AppColors.sidebarActive.withValues(
-                                alpha: 0.3,
-                              ),
+                              backgroundColor: AppColors.sidebarActive
+                                  .withValues(alpha: 0.3),
                               child: Text(
                                 user.fullName.isNotEmpty
                                     ? user.fullName[0].toUpperCase()
@@ -137,11 +137,12 @@ class _WideLayout extends ConsumerWidget {
                                   ),
                                   Text(
                                     l.supervisor,
-                                    style: Theme.of(context).textTheme.labelSmall
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
                                         ?.copyWith(
-                                          color: AppColors.sidebarText.withValues(
-                                            alpha: 0.6,
-                                          ),
+                                          color: AppColors.sidebarText
+                                              .withValues(alpha: 0.6),
                                         ),
                                   ),
                                 ],

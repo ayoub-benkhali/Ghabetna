@@ -15,7 +15,7 @@ class AnalyticsRepository {
   Future<List<dynamic>> getMonthlyTrend({int? year}) async {
     final r = await _dio.get(
       '/api/analytics/daily',
-      queryParameters: {if (year != null) 'year': year},
+      queryParameters: {'year': ?year},
     );
     return r.data as List<dynamic>;
   }
