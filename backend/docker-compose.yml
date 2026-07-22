@@ -70,6 +70,23 @@ services:
       timeout: 5s
       retries: 5
 
+  chat-db:
+    image: postgres:16-alpine
+    container_name: ghabetna_chat_db
+    environment:
+      POSTGRES_USER: ${CHAT_DB_USER}
+      POSTGRES_PASSWORD: ${CHAT_DB_PASSWORD}
+      POSTGRES_DB: ${CHAT_DB_NAME}
+    ports:
+      - "${CHAT_DB_PORT}:5432"
+    volumes:
+      - chat_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${CHAT_DB_USER} -d ${CHAT_DB_NAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   #========= Redis =========
   redis:
     image: redis:7-alpine
@@ -110,6 +127,10 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_ALGORITHM: ${JWT_ALGORITHM}
       CHROMA_PERSIST_DIR: /app/chroma_db
+      CHAT_DATABASE_URL: postgresql+asyncpg://${CHAT_DB_USER}:${CHAT_DB_PASSWORD}@chat-db:5432/${CHAT_DB_NAME}
+    depends_on:
+      chat-db:
+        condition: service_healthy
     volumes:
       - ./services/chat_service:/app
       - chat_chroma:/app/chroma_db
@@ -233,6 +254,7 @@ volumes:
   forest_db_data:
   incident_db_data:
   analytics_db_data:
+  chat_db_data:
   redis_data:
   incident_uploads:
   n8n_data:
