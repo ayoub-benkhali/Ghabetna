@@ -1,22 +1,22 @@
 import httpx
-from fastapi import APIRouter,Request,Response
+from fastapi import APIRouter, Request, Response
 from app.config import settings
-from app.middleware.rbac import verify_and_inject
 
-router=APIRouter(prefix="/api/roles",tags=["Roles"])
+router = APIRouter(prefix="/api/chat", tags=["Chat"])
 
-async def _proxy(path:str,request:Request,payload:dict|None)->Response:
-    body=await request.body()
-    headers={
-        "Content-Type":request.headers.get("Content-Type","application/json"),
-        "Authorization": request.headers.get("Authorization","")
+async def _proxy(path: str, request: Request) -> Response:
+    body = await request.body()
+    headers = {
+        "Content-Type": request.headers.get("Content-Type", "application/json"),
+        "Authorization": request.headers.get("Authorization", ""),
     }
-    async with httpx.AsyncClient(base_url=settings.AUTH_SERVICE_URL) as client:
-        resp=await client.request(
+    async with httpx.AsyncClient(base_url=settings.CHAT_SERVICE_URL) as client:
+        resp = await client.request(
             method=request.method,
-            url=f"/roles{path}",
+            url=f"/chat{path}",
             content=body,
-            headers=headers
+            headers=headers,
+            timeout=30.0,
         )
     return Response(
         content=resp.content,
@@ -24,12 +24,26 @@ async def _proxy(path:str,request:Request,payload:dict|None)->Response:
         media_type=resp.headers.get("content-type")
     )
 
-@router.api_route("",methods=["GET","POST"])
-async def roles_root(request:Request):
-    payload=await verify_and_inject(request)
-    return await _proxy("",request,payload)
+@router.post("/message")
+async def send_message(request: Request):
+    return await _proxy("/message", request)
 
-@router.api_route("/{role_id}",methods=["GET", "PUT", "DELETE"])
-async def roles_by_id(role_id:int,request:Request):
-    payload=await verify_and_inject(request)
-    return await _proxy(f"/{role_id}",request,payload)
+@router.get("/conversations")
+async def list_conversations(request: Request):
+    return await _proxy("/conversations", request)
+
+@router.get("/conversations/{conversation_id}")
+async def get_conversation(conversation_id: str, request: Request):
+    return await _proxy(f"/conversations/{conversation_id}", request)
+
+@router.delete("/conversations/{conversation_id}")
+async def delete_conversation(conversation_id: str, request: Request):
+    return await _proxy(f"/conversations/{conversation_id}", request)
+
+@router.delete("/session/{session_id}")
+async def clear_session(session_id: str, request: Request):
+    return await _proxy(f"/session/{session_id}", request)
+
+@router.get("/health")
+async def health(request: Request):
+    return await _proxy("/health", request)
