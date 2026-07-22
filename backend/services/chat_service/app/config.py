@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     CHROMA_PERSIST_DIR: str = "/app/chroma_db"
     CHAT_SERVICE_PORT: int = 8000
+    CHAT_DATABASE_URL: str
 
     class Config:
         env_file = ".env"
