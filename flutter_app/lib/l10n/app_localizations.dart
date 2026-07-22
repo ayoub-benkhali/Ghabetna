@@ -194,6 +194,42 @@ abstract class AppLocalizations {
   /// **'Langue'**
   String get language;
 
+  /// No description provided for @chat.
+  ///
+  /// In fr, this message translates to:
+  /// **'Assistant'**
+  String get chat;
+
+  /// No description provided for @chatSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Assistant forestier'**
+  String get chatSubtitle;
+
+  /// No description provided for @chatNewConversation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle conversation'**
+  String get chatNewConversation;
+
+  /// No description provided for @chatInputHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Posez votre question...'**
+  String get chatInputHint;
+
+  /// No description provided for @chatHistoryTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Historique des conversations'**
+  String get chatHistoryTitle;
+
+  /// No description provided for @chatHistoryEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune conversation pour le moment'**
+  String get chatHistoryEmpty;
+
   /// No description provided for @rolesAndPermissions.
   ///
   /// In fr, this message translates to:
@@ -1621,30 +1657,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Aucun agent assigné à cette parcelle'**
   String get noAgentsAssigned;
-
-  /// No description provided for @chat.
-  ///
-  /// In fr, this message translates to:
-  /// **'Assistant'**
-  String get chat;
-
-  /// No description provided for @chatSubtitle.
-  ///
-  /// In fr, this message translates to:
-  /// **'Assistant forestier'**
-  String get chatSubtitle;
-
-  /// No description provided for @chatNewConversation.
-  ///
-  /// In fr, this message translates to:
-  /// **'Nouvelle conversation'**
-  String get chatNewConversation;
-
-  /// No description provided for @chatInputHint.
-  ///
-  /// In fr, this message translates to:
-  /// **'Posez votre question...'**
-  String get chatInputHint;
 }
 
 class _AppLocalizationsDelegate

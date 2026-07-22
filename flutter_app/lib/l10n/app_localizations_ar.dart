@@ -57,6 +57,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get language => 'اللغة';
 
   @override
+  String get chat => 'المساعد';
+
+  @override
+  String get chatSubtitle => 'المساعد الحرجي';
+
+  @override
+  String get chatNewConversation => 'محادثة جديدة';
+
+  @override
+  String get chatInputHint => 'اطرح سؤالك...';
+
+  @override
+  String get chatHistoryTitle => 'سجل المحادثات';
+
+  @override
+  String get chatHistoryEmpty => 'لا توجد محادثات بعد';
+
+  @override
   String get rolesAndPermissions => 'الأدوار والصلاحيات';
 
   @override
@@ -796,16 +814,4 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noAgentsAssigned => 'لا يوجد أعوان مخصصون لهذه القطعة';
-
-  @override
-  String get chat => 'المساعد';
-
-  @override
-  String get chatSubtitle => 'المساعد الحرجي';
-
-  @override
-  String get chatNewConversation => 'محادثة جديدة';
-
-  @override
-  String get chatInputHint => 'اطرح سؤالك...';
 }

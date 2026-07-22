@@ -16,6 +16,12 @@
   "myReports": "Mes signalements",
   "myProfile": "Mon Profil",
   "language": "Langue",
+  "chat": "Assistant",
+  "chatSubtitle": "Assistant forestier",
+  "chatNewConversation": "Nouvelle conversation",
+  "chatInputHint": "Posez votre question...",
+  "chatHistoryTitle": "Historique des conversations",
+  "chatHistoryEmpty": "Aucune conversation pour le moment",
   "rolesAndPermissions": "Rôles & Permissions",
   "forestManagement": "Gestion des Forêts",
   "adminServices": "Services Administratifs",
@@ -291,9 +297,5 @@
   "@alertFromIp": { "placeholders": { "ip": { "type": "String" } } },
   "securitySectionSubtitle": "Événements d'authentification & analyse des menaces",
   "assignedAgents": "Agents assignés à la parcelle",
-  "noAgentsAssigned": "Aucun agent assigné à cette parcelle",
-  "chat": "Assistant",
-"chatSubtitle": "Assistant forestier",
-"chatNewConversation": "Nouvelle conversation",
-"chatInputHint": "Posez votre question..."
+  "noAgentsAssigned": "Aucun agent assigné à cette parcelle"
 }

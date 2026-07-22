@@ -16,6 +16,12 @@
   "myReports": "بلاغاتي",
   "myProfile": "ملفي الشخصي",
   "language": "اللغة",
+  "chat": "المساعد",
+  "chatSubtitle": "المساعد الحرجي",
+  "chatNewConversation": "محادثة جديدة",
+  "chatInputHint": "اطرح سؤالك...",
+  "chatHistoryTitle": "سجل المحادثات",
+  "chatHistoryEmpty": "لا توجد محادثات بعد",
   "rolesAndPermissions": "الأدوار والصلاحيات",
   "forestManagement": "إدارة الغابات",
   "adminServices": "الخدمات الإدارية",
@@ -292,9 +298,5 @@
   "@alertFromIp": { "placeholders": { "ip": { "type": "String" } } },
   "securitySectionSubtitle": "تسجيل الدخول و تحليل التهديدات",
   "assignedAgents": "الأعوان المخصصون للقطعة",
-  "noAgentsAssigned": "لا يوجد أعوان مخصصون لهذه القطعة",
-  "chat": "المساعد",
-"chatSubtitle": "المساعد الحرجي",
-"chatNewConversation": "محادثة جديدة",
-"chatInputHint": "اطرح سؤالك..."
+  "noAgentsAssigned": "لا يوجد أعوان مخصصون لهذه القطعة"
 }

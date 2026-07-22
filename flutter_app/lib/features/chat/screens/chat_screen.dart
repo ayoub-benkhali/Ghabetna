@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/core/api/api_client.dart';
 import 'package:flutter_app/core/extensions/context_ext.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 /// Un message échangé avec le chatbot.
 class ChatMessage {
@@ -20,8 +21,14 @@ class ChatMessage {
 /// Écran de chat générique, branché sur le chat_service backend.
 /// Accessible depuis n'importe quel rôle authentifié (agent, superviseur,
 /// admin) — ne dépend d'aucun code du module visiteur.
+///
+/// Si [conversationId] est fourni, l'écran recharge cette conversation
+/// depuis le serveur au lieu d'en démarrer une nouvelle.
 class ChatScreen extends ConsumerStatefulWidget {
-  const ChatScreen({super.key});
+  final String? conversationId;
+  final String basePath;
+
+  const ChatScreen({super.key, this.conversationId, this.basePath = '/agent/chat'});
 
   @override
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
@@ -33,11 +40,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final List<ChatMessage> _messages = [];
   String? _sessionId;
   bool _isLoading = false;
+  bool _isLoadingHistory = false;
 
   @override
   void initState() {
     super.initState();
-    _addWelcomeMessage();
+    if (widget.conversationId != null) {
+      _loadConversation(widget.conversationId!);
+    } else {
+      _addWelcomeMessage();
+    }
   }
 
   @override
@@ -45,6 +57,36 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _messageCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadConversation(String conversationId) async {
+    setState(() => _isLoadingHistory = true);
+    try {
+      final response = await ApiClient.instance.dio
+          .get('/api/chat/conversations/$conversationId');
+      final data = response.data;
+      final loaded = (data['messages'] as List)
+          .map((m) => ChatMessage(
+                text: m['content'],
+                isUser: m['role'] == 'user',
+                timestamp: DateTime.parse(m['created_at']),
+              ))
+          .toList();
+
+      setState(() {
+        _sessionId = conversationId;
+        _messages
+          ..clear()
+          ..addAll(loaded);
+        _isLoadingHistory = false;
+      });
+      _scrollToBottom();
+    } on DioException {
+      setState(() {
+        _isLoadingHistory = false;
+      });
+      _addWelcomeMessage();
+    }
   }
 
   void _addWelcomeMessage() {
@@ -147,6 +189,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.history),
+            tooltip: l.chatHistoryTitle,
+            onPressed: () => context.push('${widget.basePath}/history'),
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: l.chatNewConversation,
             onPressed: () {
@@ -159,7 +206,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
         ],
       ),
-      body: Column(
+      body: _isLoadingHistory
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
         children: [
           Expanded(
             child: ListView.builder(

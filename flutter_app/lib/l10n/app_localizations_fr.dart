@@ -57,6 +57,24 @@ class AppLocalizationsFr extends AppLocalizations {
   String get language => 'Langue';
 
   @override
+  String get chat => 'Assistant';
+
+  @override
+  String get chatSubtitle => 'Assistant forestier';
+
+  @override
+  String get chatNewConversation => 'Nouvelle conversation';
+
+  @override
+  String get chatInputHint => 'Posez votre question...';
+
+  @override
+  String get chatHistoryTitle => 'Historique des conversations';
+
+  @override
+  String get chatHistoryEmpty => 'Aucune conversation pour le moment';
+
+  @override
   String get rolesAndPermissions => 'Rôles & Permissions';
 
   @override
@@ -807,16 +825,4 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get noAgentsAssigned => 'Aucun agent assigné à cette parcelle';
-
-  @override
-  String get chat => 'Assistant';
-
-  @override
-  String get chatSubtitle => 'Assistant forestier';
-
-  @override
-  String get chatNewConversation => 'Nouvelle conversation';
-
-  @override
-  String get chatInputHint => 'Posez votre question...';
 }
